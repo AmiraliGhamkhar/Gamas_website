@@ -2,33 +2,12 @@ import { useEffect } from 'react'
 import Preloader from './components/Preloader'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
+import Story from './components/Story'
+import Bento from './components/Bento'
+import BotDemo from './components/BotDemo'
+import HowItWorks from './components/HowItWorks'
 import MobileSticky from './components/MobileSticky'
 import { tgLink } from './lib/constants'
-
-function TokensPreview() {
-  return (
-    <section className="mx-auto max-w-content px-4 sm:px-6 lg:px-8 pb-8">
-      <div className="glass rounded-glass p-6 sm:p-8">
-        <h2 className="font-display text-xl">توکن‌های طراحی — فاز ۲ اعمال شد</h2>
-        <p className="mt-2 text-sm leading-6 text-white/60">
-          پری‌لودر ≤۱ ثانیه (یک‌بار در سشن، بدون بلاک LCP) + نوبار شیشه‌ای sticky + هیروی نهایی با CTAs تلگرامی. فونت Vazirmatn/Lalezar ساب‌ست woff2، گرادیان indigo→violet→cyan، glass/glow.
-        </p>
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-xl bg-bg border border-white/10 p-4"><span className="block h-8 w-full rounded-lg bg-bg border border-white/5" /><span className="mt-2 block text-xs text-white/60">#0A0A0F — bg</span></div>
-          <div className="rounded-xl bg-gradient-primary p-4"><span className="block h-8 w-full rounded-lg bg-white/20" /><span className="mt-2 block text-xs text-white">indigo→violet→cyan</span></div>
-          <div className="rounded-xl glass p-4"><span className="block h-8 w-full rounded-lg bg-white/10" /><span className="mt-2 block text-xs text-white/60">glass — blur 16px</span></div>
-          <div className="rounded-xl bg-accent p-4"><span className="block h-8 w-full rounded-lg bg-white/20" /><span className="mt-2 block text-xs text-white">#06B6D4 — accent</span></div>
-        </div>
-        <div className="mt-6 flex flex-wrap gap-2 text-xs">
-          <span className="glass rounded-pill px-3 py-1.5">RTL: lang=fa dir=rtl</span>
-          <span className="glass rounded-pill px-3 py-1.5">logical: ms-/me-</span>
-          <span className="glass rounded-pill px-3 py-1.5">digits: ۰۱۲۳۴۵۶۷۸۹</span>
-          <span className="glass rounded-pill px-3 py-1.5">transform/opacity only ✓</span>
-        </div>
-      </div>
-    </section>
-  )
-}
 
 function SectionPlaceholder({ id, title }) {
   return (
@@ -68,9 +47,12 @@ export default function App() {
       <Navbar />
       <main className="flex-1">
         <Hero />
-        <TokensPreview />
-        <SectionPlaceholder id="features" title="بخش ویژگی‌ها — فاز ۳ (Bento: صوت/ویدیو/پاورپوینت، اسلایدبه‌اسلاید، پیشرفت زنده، fallback رونوشت، STT فارسی)" />
-        <SectionPlaceholder id="how" title="نحوه کار — ۴ گام: ارسال → رونویسی → ساختاردهی → دریافت (فاز ۳)" />
+        <Story />
+        <Bento />
+        <BotDemo />
+        <HowItWorks />
+        <SectionPlaceholder id="access" title="دسترسی و قیمت — TODO placeholder (دسترسی فعلاً توسط ادمین) — فاز ۴" />
+        <SectionPlaceholder id="testimonials" title="نظرات — TODO placeholder — فاز ۴" />
         <SectionPlaceholder id="privacy" title="حریم خصوصی و محدودیت‌ها — صداقت: ارسال به STT/LLM خارجی، حد ۲ گیگ، PDF/ZIP مردود (فاز ۴)" />
         <SectionPlaceholder id="faq" title="FAQ + JSON-LD FAQPage — فرمت‌ها، حجم، حریم خصوصی، دقت متغیر، هزینه (فاز ۴)" />
       </main>
