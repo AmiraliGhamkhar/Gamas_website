@@ -1,0 +1,2 @@
+# Deny direct access to SQLite
+Require all denied

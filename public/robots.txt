@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://gamas.bot/sitemap.xml

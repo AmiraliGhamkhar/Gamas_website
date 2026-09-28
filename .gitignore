@@ -1,0 +1,12 @@
+node_modules
+dist
+.ssg-temp
+.env
+.env.local
+data/*.sqlite
+data/*.sqlite3
+data/*.db
+data/*.db-wal
+data/*.db-shm
+*.session
+.DS_Store
