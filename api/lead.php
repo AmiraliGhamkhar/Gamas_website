@@ -1,228 +1,188 @@
 <?php
+
+/**
+ * Gamas — /api/lead.php
+ * ---------------------------------------------------------------------------
+ *   GET   → issues a CSRF token for the signup form (the only non-POST verb)
+ *   POST  → stores an email address
+ *
+ * Minimum PHP: 7.4.  Requires only pdo_sqlite (falls back to flat files).
+ *
+ * Layers, in order:
+ *   same-origin  →  method  →  honeypot  →  rate limit  →  CSRF
+ *   →  timing check  →  validation  →  storage
+ *
+ * Every response is JSON (UTF-8), carries a correct status code, and never
+ * contains a filesystem path or stack trace.
+ */
+
 declare(strict_types=1);
 
-// Gamas — /api/lead.php
-// Stores email → SQLite with honeypot, rate-limit, CSRF, same-origin CORS
-// PHP 8, no framework
+require_once __DIR__ . '/bootstrap.php';
 
-// Secure session cookie
-$secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'domain' => '',
-    'secure' => $secure,
-    'httponly' => true,
-    'samesite' => 'Lax',
-]);
-session_start();
+// ---------------------------------------------------------------------------
+// 1. Same-origin. Strict for POST (browsers always send Origin there),
+//    lenient for the token GET (browsers do NOT send Origin on same-origin
+//    GET, and the token is useless without the matching cookie).
+// ---------------------------------------------------------------------------
+$method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 
-header('Content-Type: application/json; charset=utf-8');
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('Referrer-Policy: strict-origin-when-cross-origin');
+gamas_require_same_origin($method !== 'GET');
 
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? '');
-$referer = $_SERVER['HTTP_REFERER'] ?? '';
-
-// ---------- Same-origin CORS ----------
-function isSameOrigin(string $origin, string $referer, string $host): bool
-{
-    if ($origin !== '') {
-        $oHost = parse_url($origin, PHP_URL_HOST);
-        $oHost = is_string($oHost) ? $oHost : '';
-        // Allow exact host match (with or without port)
-        // Strip port from host for comparison
-        $hostNoPort = explode(':', $host)[0];
-        $oHostNoPort = explode(':', $oHost)[0];
-        return $oHostNoPort === $hostNoPort;
-    }
-    if ($referer !== '') {
-        $rHost = parse_url($referer, PHP_URL_HOST);
-        $rHost = is_string($rHost) ? $rHost : '';
-        $hostNoPort = explode(':', $host)[0];
-        $rHostNoPort = explode(':', $rHost)[0];
-        return $rHostNoPort === $hostNoPort;
-    }
-    // No Origin/Referer — could be direct fetch with same-origin and no header,
-    // or a non-browser client. For POST we require at least one to be present
-    // to enforce same-origin; for GET token we allow.
-    return false;
-}
-
-$requiresOriginCheck = ($method === 'POST');
-if ($origin !== '') {
-    $hostNoPort = explode(':', $host)[0];
-    $oHost = parse_url($origin, PHP_URL_HOST);
-    $oHost = is_string($oHost) ? explode(':', $oHost)[0] : '';
-    if ($oHost !== $hostNoPort) {
-        http_response_code(403);
-        echo json_encode(['error' => 'origin_not_allowed', 'message' => 'Origin not allowed'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Vary: Origin');
-    header('Access-Control-Allow-Credentials: true');
-    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token, X-Requested-With');
-} elseif ($requiresOriginCheck && $referer !== '') {
-    $hostNoPort = explode(':', $host)[0];
-    $rHost = parse_url($referer, PHP_URL_HOST);
-    $rHost = is_string($rHost) ? explode(':', $rHost)[0] : '';
-    if ($rHost !== $hostNoPort) {
-        http_response_code(403);
-        echo json_encode(['error' => 'origin_not_allowed', 'message' => 'Referer not allowed'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-} elseif ($requiresOriginCheck && $origin === '' && $referer === '') {
-    // No Origin and no Referer on POST — block to enforce same-origin
-    // Allow if it's a same-origin fetch without Origin (some browsers) — but we already checked.
-    // For strictness, we block.
-    http_response_code(403);
-    echo json_encode(['error' => 'origin_required', 'message' => 'Origin or Referer required'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-if ($method === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
-// ---------- CSRF ----------
-if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['csrf_token'];
-
+// ---------------------------------------------------------------------------
+// 2. GET — hand out a CSRF token
+// ---------------------------------------------------------------------------
 if ($method === 'GET') {
-    // Token endpoint for frontend
-    echo json_encode(['csrf_token' => $csrfToken, 'ok' => true], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-if ($method !== 'POST') {
-    http_response_code(405);
-    header('Allow: GET, POST, OPTIONS');
-    echo json_encode(['error' => 'method_not_allowed'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-// ---------- Read input (support JSON and form) ----------
-$contentType = $_SERVER['CONTENT_TYPE'] ?? ($_SERVER['HTTP_CONTENT_TYPE'] ?? '');
-$raw = file_get_contents('php://input');
-$json = null;
-if ($raw !== false && $raw !== '') {
-    $decoded = json_decode($raw, true);
-    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-        $json = $decoded;
+    // Generous limit: a form can be reloaded, and several forms share a page
+    if (!gamas_rate_limit('lead_token', 60, 3600)) {
+        gamas_json(
+            ['error' => 'rate_limited', 'message' => 'تعداد درخواست‌ها زیاد است. کمی بعد تلاش کنید.'],
+            429,
+            ['Retry-After' => '3600']
+        );
     }
-}
-$input = $json ?? $_POST;
-
-// ---------- CSRF validation ----------
-$provided = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_SERVER['HTTP_X_CSRFTOKEN'] ?? '');
-if (empty($provided)) {
-    $provided = $input['csrf_token'] ?? $_POST['csrf_token'] ?? '';
-}
-if (empty($provided) || !is_string($provided) || !hash_equals($csrfToken, $provided)) {
-    http_response_code(403);
-    echo json_encode(['error' => 'csrf_invalid', 'message' => 'توکن امنیتی نامعتبر است. صفحه را رفرش کنید.'], JSON_UNESCAPED_UNICODE);
-    exit;
+    gamas_json(['ok' => true, 'csrf_token' => gamas_csrf_issue()]);
 }
 
-// ---------- Honeypot ----------
-$honeypot = '';
-if (isset($input['website'])) $honeypot = (string)$input['website'];
-elseif (isset($input['company'])) $honeypot = (string)$input['company'];
-elseif (isset($_POST['website'])) $honeypot = (string)$_POST['website'];
+// ---------------------------------------------------------------------------
+// 3. Everything else must be POST (OPTIONS → 204 for preflight)
+// ---------------------------------------------------------------------------
+gamas_require_method(['POST']);
+
+$input = gamas_input();
+
+// ---------------------------------------------------------------------------
+// 4. Honeypot — a field real users cannot see or reach.
+//    Bots get a 200 "success" so they never learn they were caught.
+// ---------------------------------------------------------------------------
+$honeypot = gamas_field($input, 'website', 128);
+if ($honeypot === '') {
+    $honeypot = gamas_field($input, 'company', 128);
+}
+if ($honeypot === '') {
+    $honeypot = gamas_field($input, 'url', 128);
+}
 if (trim($honeypot) !== '') {
-    // Silently pretend success to avoid revealing trap
-    echo json_encode(['ok' => true, 'message' => 'درخواست دریافت شد.'], JSON_UNESCAPED_UNICODE);
-    exit;
+    gamas_log('honeypot tripped');
+    gamas_json(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.']);
 }
 
-// ---------- Rate limit + DB ----------
-$ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-    $ip = '0.0.0.0';
+// ---------------------------------------------------------------------------
+// 5. Rate limiting — file based, per IP
+// ---------------------------------------------------------------------------
+if (!gamas_rate_limit('lead_hour', 5, 3600)) {
+    gamas_json(
+        ['error' => 'rate_limited', 'message' => 'تعداد درخواست‌ها زیاد است. لطفاً یک ساعت بعد تلاش کنید.'],
+        429,
+        ['Retry-After' => '3600']
+    );
 }
-$ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 512);
+if (!gamas_rate_limit('lead_minute', 3, 60)) {
+    gamas_json(
+        ['error' => 'rate_limited', 'message' => 'کمی صبر کنید و دوباره تلاش کنید.'],
+        429,
+        ['Retry-After' => '60']
+    );
+}
+
+// ---------------------------------------------------------------------------
+// 6. CSRF — token from the header, falling back to the JSON body
+// ---------------------------------------------------------------------------
+$token = gamas_header('X-CSRF-Token');
+if ($token === null || $token === '') {
+    $token = gamas_header('X-CSRFTOKEN');
+}
+if ($token === null || $token === '') {
+    $token = gamas_field($input, 'csrf_token', 255);
+}
+
+$csrf = gamas_csrf_verify($token);
+if (!$csrf['ok']) {
+    gamas_log('csrf rejected');
+    gamas_json(
+        ['error' => 'csrf_invalid', 'message' => 'توکن امنیتی نامعتبر است. صفحه را رفرش کنید.'],
+        403
+    );
+}
+
+// ---------------------------------------------------------------------------
+// 7. Timing check — a form submitted in under GAMAS_MIN_FILL_SECONDS was
+//    not filled in by a human. Pretend success so the bot learns nothing.
+//
+//    Deliberately lenient (1s): this returns a FAKE success, so a false
+//    positive silently loses a real lead. The honeypot, CSRF, rate limit
+//    and origin checks are the primary anti-spam layers; this is a backstop.
+// ---------------------------------------------------------------------------
+if ($csrf['age'] >= 0 && $csrf['age'] < GAMAS_MIN_FILL_SECONDS) {
+    gamas_log('timing check tripped (age ' . $csrf['age'] . 's)');
+    gamas_json(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.']);
+}
+
+// ---------------------------------------------------------------------------
+// 8. Validate the email
+// ---------------------------------------------------------------------------
+$email = gamas_normalise_email(gamas_field($input, 'email', 254));
+if ($email === '') {
+    gamas_json(['error' => 'invalid_email', 'message' => 'ایمیل نامعتبر است.'], 400);
+}
+
+$source = preg_replace('/[^a-z0-9_-]/i', '', gamas_field($input, 'source', 64)) ?? '';
+if ($source === '') {
+    $source = 'unknown';
+}
+
+$ua = preg_replace('/[\x00-\x1F\x7F]/', '', substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 512)) ?? '';
+
+// ---------------------------------------------------------------------------
+// 9. Persist — SQLite when available, NDJSON otherwise
+// ---------------------------------------------------------------------------
+$record = [
+    'email'   => $email,
+    'source'  => $source,
+    'ip'      => gamas_client_ip(),
+    'ua'      => $ua,
+    'created' => gmdate('c'),
+];
 
 try {
-    $dbPath = __DIR__ . '/../data/gamas.sqlite';
-    $dbDir = dirname($dbPath);
-    if (!is_dir($dbDir)) {
-        if (!mkdir($dbDir, 0755, true) && !is_dir($dbDir)) {
-            throw new RuntimeException('Failed to create data dir');
+    $pdo = gamas_db();
+
+    if ($pdo instanceof PDO) {
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO leads (email, source, ip, user_agent) VALUES (:e, :s, :ip, :ua)'
+            );
+            $stmt->execute([
+                ':e'  => $email,
+                ':s'  => $source,
+                ':ip' => $record['ip'],
+                ':ua' => $ua,
+            ]);
+            gamas_log('lead stored (source=' . $source . ')');
+            gamas_json(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.']);
+        } catch (PDOException $e) {
+            // UNIQUE violation → already registered. Say so without leaking
+            // anything about who is or is not in the list.
+            if ((string)$e->getCode() === '23000') {
+                gamas_json(['ok' => true, 'message' => 'این ایمیل قبلاً ثبت شده است.']);
+            }
+            // Any other SQLite failure (disk full, corrupt DB, permissions)
+            // falls through to the flat-file store rather than losing the
+            // lead. Losing a signup is worse than a duplicate row.
+            gamas_log('lead insert failed, falling back to ndjson: ' . $e->getMessage());
         }
     }
-    $pdo = new PDO('sqlite:' . $dbPath, null, null, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
-    // Ensure WAL for concurrency
-    $pdo->exec("PRAGMA journal_mode=WAL;");
-    $pdo->exec("PRAGMA busy_timeout=5000;");
-    $pdo->exec("CREATE TABLE IF NOT EXISTS leads (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT NOT NULL UNIQUE,
-        ip TEXT NOT NULL,
-        user_agent TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_leads_ip_created ON leads(ip, created_at)");
 
-    // Rate limit: 5 per hour per IP
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE ip = :ip AND created_at > datetime('now', '-1 hour')");
-    $stmt->execute([':ip' => $ip]);
-    $count = (int)$stmt->fetchColumn();
-    if ($count >= 5) {
-        http_response_code(429);
-        header('Retry-After: 3600');
-        echo json_encode(['error' => 'rate_limited', 'message' => 'تعداد درخواست‌ها زیاد است. لطفاً یک ساعت بعد تلاش کنید.'], JSON_UNESCAPED_UNICODE);
-        exit;
+    // Flat-file fallback (no pdo_sqlite, or the DB refused to open)
+    if (gamas_append_record('leads', $record)) {
+        gamas_log('lead stored to ndjson (source=' . $source . ')');
+        gamas_json(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.']);
     }
 
-    // ---------- Email validation ----------
-    $email = '';
-    if (isset($input['email'])) $email = trim((string)$input['email']);
-    elseif (isset($_POST['email'])) $email = trim((string)$_POST['email']);
-
-    if ($email === '' || strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'invalid_email', 'message' => 'ایمیل نامعتبر است.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    // Normalize
-    $email = strtolower($email);
-    // Additional simple check: no newline injection
-    if (preg_match('/[\r\n]/', $email)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'invalid_email'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
-    $stmt = $pdo->prepare("INSERT INTO leads (email, ip, user_agent) VALUES (:email, :ip, :ua)");
-    $stmt->execute([':email' => $email, ':ip' => $ip, ':ua' => $ua]);
-
-    echo json_encode(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.'], JSON_UNESCAPED_UNICODE);
-    exit;
-} catch (PDOException $e) {
-    // Duplicate email — treat as success to avoid enumeration
-    if (stripos($e->getMessage(), 'UNIQUE') !== false || $e->getCode() === '23000') {
-        echo json_encode(['ok' => true, 'message' => 'این ایمیل قبلاً ثبت شده است.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    error_log('lead.php PDO error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['error' => 'server_error', 'message' => 'خطای سرور. لطفاً بعداً تلاش کنید.'], JSON_UNESCAPED_UNICODE);
-    exit;
+    gamas_log('lead storage unavailable');
+    gamas_json(['error' => 'server_error', 'message' => 'خطای سرور. لطفاً بعداً تلاش کنید.'], 500);
 } catch (Throwable $e) {
-    error_log('lead.php error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['error' => 'server_error', 'message' => 'خطای سرور.'], JSON_UNESCAPED_UNICODE);
-    exit;
+    // Log the detail, return nothing useful
+    gamas_log('lead endpoint error: ' . $e->getMessage());
+    gamas_json(['error' => 'server_error', 'message' => 'خطای سرور. لطفاً بعداً تلاش کنید.'], 500);
 }

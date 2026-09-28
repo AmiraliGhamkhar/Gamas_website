@@ -1,2 +1,28 @@
-# Deny direct access to SQLite
-Require all denied
+# =============================================================================
+#  Gamas — private data directory
+#  ---------------------------------------------------------------------------
+#  This is only the LAST-RESORT storage location. api/bootstrap.php prefers
+#  /home/USER/gamas_data (a sibling of public_html, outside the web root).
+#  It falls back to public_html/data only when that cannot be created.
+#
+#  Blocking HTTP access here does NOT stop PHP writing to the directory:
+#  the web server denies browser requests, the PHP process uses the
+#  filesystem directly. That is exactly what we want.
+# =============================================================================
+
+# --- Apache 2.4 -------------------------------------------------------------
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+
+# --- Apache 2.2 fallback (no mod_authz_core) --------------------------------
+# Without this the bare `Require all denied` above is an unknown directive
+# and returns 500 for the whole directory.
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>
+
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>

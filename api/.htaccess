@@ -1,0 +1,47 @@
+# =============================================================================
+#  Gamas — /api hardening
+#  Endpoints here are called with fetch() from the site, never browsed directly.
+# =============================================================================
+
+<IfModule mod_autoindex.c>
+  Options -Indexes -MultiViews
+</IfModule>
+
+# The shared bootstrap only defines functions/constants — never allow a
+# direct HTTP request to reach it (defence in depth if PHP ever fails to run).
+<FilesMatch "(?i)^(bootstrap|config|lib)\.php$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Never serve raw config, logs, or data files that land next to the endpoints.
+<FilesMatch "(?i)\.(?:ini|log|bak|old|orig|save|swp|sql|sqlite3?|db|json|md|yml|yaml|dist|example)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_mime.c>
+  AddDefaultCharset UTF-8
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always unset X-Powered-By
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "DENY"
+
+  # API responses must never be cached — /api/lead.php?v=csrf hands out tokens
+  <FilesMatch "(?i)\.php$">
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, private"
+  </FilesMatch>
+</IfModule>

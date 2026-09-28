@@ -1,159 +1,104 @@
 <?php
+
+/**
+ * Gamas — /api/track.php
+ * ---------------------------------------------------------------------------
+ * Anonymous CTA click counter.
+ *
+ *   POST  { "section": "hero" }   →  records the click
+ *
+ * POST only. There is deliberately no GET/read endpoint: exposing aggregate
+ * counts publicly is a small information leak for no benefit, since nothing
+ * in the UI reads them.
+ *
+ * No CSRF token is required. This endpoint records a number, not a state
+ * change the visitor would care about, and it is called through
+ * navigator.sendBeacon() — which cannot set custom headers. It is protected
+ * by the same-origin check and per-IP rate limiting instead.
+ *
+ * Minimum PHP: 7.4.  Requires only pdo_sqlite (falls back to flat files).
+ */
+
 declare(strict_types=1);
 
-// Gamas — /api/track.php
-// CTA click counter — same-origin CORS, rate-limit, no CSRF (beacon), SQLite
-// PHP 8, no framework
+require_once __DIR__ . '/bootstrap.php';
 
-header('Content-Type: application/json; charset=utf-8');
-header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: strict-origin-when-cross-origin');
+// ---------------------------------------------------------------------------
+// 1. Same-origin only
+// ---------------------------------------------------------------------------
+gamas_require_same_origin();
 
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? '');
-$referer = $_SERVER['HTTP_REFERER'] ?? '';
+// ---------------------------------------------------------------------------
+// 2. POST only (OPTIONS → 204)
+// ---------------------------------------------------------------------------
+gamas_require_method(['POST']);
 
-// ---------- Same-origin CORS ----------
-$hostNoPort = explode(':', $host)[0];
-if ($origin !== '') {
-    $oHost = parse_url($origin, PHP_URL_HOST);
-    $oHost = is_string($oHost) ? explode(':', $oHost)[0] : '';
-    if ($oHost !== $hostNoPort) {
-        http_response_code(403);
-        echo json_encode(['error' => 'origin_not_allowed'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Vary: Origin');
-    header('Access-Control-Allow-Credentials: true');
-    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type');
-} elseif ($referer !== '') {
-    $rHost = parse_url($referer, PHP_URL_HOST);
-    $rHost = is_string($rHost) ? explode(':', $rHost)[0] : '';
-    if ($rHost !== $hostNoPort) {
-        http_response_code(403);
-        echo json_encode(['error' => 'origin_not_allowed'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+// ---------------------------------------------------------------------------
+// 3. Rate limit before doing any work
+// ---------------------------------------------------------------------------
+if (!gamas_rate_limit('track_minute', 30, 60)) {
+    gamas_json(['error' => 'rate_limited'], 429, ['Retry-After' => '60']);
+}
+if (!gamas_rate_limit('track_hour', 200, 3600)) {
+    gamas_json(['error' => 'rate_limited'], 429, ['Retry-After' => '3600']);
 }
 
-if ($method === 'OPTIONS') {
-    http_response_code(204);
-    exit;
+// ---------------------------------------------------------------------------
+// 4. Read + validate the section
+// ---------------------------------------------------------------------------
+$input = gamas_input(2048);
+
+$section = gamas_field($input, 'section', 64);
+if ($section === '') {
+    // sendBeacon with a Blob can arrive without the JSON being parsed; also
+    // accept a plain form field.
+    $section = gamas_field($_POST, 'section', 64);
+}
+$section = strtolower($section);
+
+// Whitelist-shaped: lowercase ascii, digits, underscore, hyphen only.
+// This is what keeps the value safe in SQL, in the NDJSON file, and in logs.
+if ($section === '' || preg_match('/^[a-z0-9_-]{1,64}$/', $section) !== 1) {
+    gamas_json(['error' => 'invalid_section', 'message' => 'بخش نامعتبر'], 400);
 }
 
-// Allow GET for reading counts (optional) and POST for increment
-if (!in_array($method, ['POST', 'GET'], true)) {
-    http_response_code(405);
-    header('Allow: GET, POST, OPTIONS');
-    echo json_encode(['error' => 'method_not_allowed'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+$ua = preg_replace('/[\x00-\x1F\x7F]/', '', substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 512)) ?? '';
 
-// ---------- Read input ----------
-$raw = file_get_contents('php://input');
-$json = null;
-if ($raw !== false && $raw !== '') {
-    $decoded = json_decode($raw, true);
-    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-        $json = $decoded;
-    }
-}
-$input = $json ?? $_POST;
-$section = '';
-if (isset($input['section'])) $section = trim((string)$input['section']);
-elseif (isset($_GET['section'])) $section = trim((string)$_GET['section']);
-
-// For GET without section, return all counts (optional)
-$isReadOnly = ($method === 'GET' && $section === '');
+$record = [
+    'section' => $section,
+    'ip'      => gamas_client_ip(),
+    'ua'      => $ua,
+    'created' => gmdate('c'),
+];
 
 try {
-    $dbPath = __DIR__ . '/../data/gamas.sqlite';
-    $dbDir = dirname($dbPath);
-    if (!is_dir($dbDir)) {
-        if (!mkdir($dbDir, 0755, true) && !is_dir($dbDir)) {
-            throw new RuntimeException('Failed to create data dir');
+    $total = null;
+    $pdo = gamas_db();
+
+    if ($pdo instanceof PDO) {
+        try {
+            $stmt = $pdo->prepare('INSERT INTO clicks (section, ip, user_agent) VALUES (:s, :ip, :ua)');
+            $stmt->execute([':s' => $section, ':ip' => $record['ip'], ':ua' => $ua]);
+
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM clicks WHERE section = :s');
+            $stmt->execute([':s' => $section]);
+            $count = $stmt->fetchColumn();
+            $total = $count === false ? null : (int)$count;
+        } catch (PDOException $e) {
+            // A failed insert here must never surface as an error to the
+            // visitor — they clicked a link and should see nothing.
+            gamas_log('track insert failed: ' . $e->getMessage());
         }
-    }
-    $pdo = new PDO('sqlite:' . $dbPath, null, null, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
-    $pdo->exec("PRAGMA journal_mode=WAL;");
-    $pdo->exec("PRAGMA busy_timeout=5000;");
-    $pdo->exec("CREATE TABLE IF NOT EXISTS clicks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        section TEXT NOT NULL,
-        ip TEXT,
-        user_agent TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_clicks_section ON clicks(section)");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_clicks_ip_created ON clicks(ip, created_at)");
-
-    if ($isReadOnly) {
-        // Return aggregated counts per section
-        $stmt = $pdo->query("SELECT section, COUNT(*) as cnt FROM clicks GROUP BY section");
-        $rows = $stmt->fetchAll();
-        $out = [];
-        foreach ($rows as $r) {
-            $out[$r['section']] = (int)$r['cnt'];
-        }
-        echo json_encode(['ok' => true, 'counts' => $out], JSON_UNESCAPED_UNICODE);
-        exit;
+    } else {
+        gamas_append_record('clicks', $record);
     }
 
-    // Validate section for POST (and GET with section)
-    // Allow landing_*, plus known sections
-    if ($section === '' || strlen($section) > 64 || !preg_match('/^[a-z0-9_\-]+$/', $section)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'invalid_section', 'message' => 'بخش نامعتبر'], JSON_UNESCAPED_UNICODE);
-        exit;
+    $out = ['ok' => true, 'section' => $section];
+    if ($total !== null) {
+        $out['total'] = $total;
     }
-    // Normalize: allow both "hero" and "landing_hero"
-    $section = strtolower($section);
-
-    // Rate limit: 30 per minute per IP, 100 per hour
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-    if (!filter_var($ip, FILTER_VALIDATE_IP)) $ip = '0.0.0.0';
-
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM clicks WHERE ip = :ip AND created_at > datetime('now', '-1 minute')");
-    $stmt->execute([':ip' => $ip]);
-    if ((int)$stmt->fetchColumn() >= 30) {
-        http_response_code(429);
-        header('Retry-After: 60');
-        echo json_encode(['error' => 'rate_limited'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM clicks WHERE ip = :ip AND created_at > datetime('now', '-1 hour')");
-    $stmt->execute([':ip' => $ip]);
-    if ((int)$stmt->fetchColumn() >= 200) {
-        http_response_code(429);
-        header('Retry-After: 3600');
-        echo json_encode(['error' => 'rate_limited'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
-    $ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 512);
-
-    if ($method === 'POST') {
-        $stmt = $pdo->prepare("INSERT INTO clicks (section, ip, user_agent) VALUES (:section, :ip, :ua)");
-        $stmt->execute([':section' => $section, ':ip' => $ip, ':ua' => $ua]);
-    }
-
-    // Return total for this section
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM clicks WHERE section = :section");
-    $stmt->execute([':section' => $section]);
-    $total = (int)$stmt->fetchColumn();
-
-    echo json_encode(['ok' => true, 'section' => $section, 'total' => $total], JSON_UNESCAPED_UNICODE);
-    exit;
+    gamas_json($out);
 } catch (Throwable $e) {
-    error_log('track.php error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['error' => 'server_error'], JSON_UNESCAPED_UNICODE);
-    exit;
+    gamas_log('track endpoint error: ' . $e->getMessage());
+    gamas_json(['error' => 'server_error'], 500);
 }

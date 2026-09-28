@@ -1,0 +1,187 @@
+# =============================================================================
+#  Gamas — production Apache configuration
+#  ---------------------------------------------------------------------------
+#  This file lives at public/.htaccess so Vite copies it to dist/.htaccess on
+#  every build. Upload dist/ (including this dotfile!) to public_html.
+#
+#  Target: cPanel shared hosting, Apache 2.4. Apache 2.2 fallbacks included.
+#
+#  !! DO NOT add php_value / php_flag here. !!
+#  On cPanel, PHP normally runs as CGI / FPM / LSAPI, where php_value and
+#  php_flag are unknown directives and produce a hard 500 on every PHP
+#  request. PHP settings live in api/.user.ini instead.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. Basics — no directory listings, no content negotiation surprises
+# -----------------------------------------------------------------------------
+<IfModule mod_dir.c>
+  DirectoryIndex index.html
+</IfModule>
+
+<IfModule mod_autoindex.c>
+  Options -Indexes -MultiViews
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddDefaultCharset UTF-8
+
+  # cPanel's mime.types is missing these on older builds
+  AddType image/avif                        .avif
+  AddType image/webp                        .webp
+  AddType font/woff2                        .woff2
+  AddType text/javascript                   .js .mjs
+  AddType application/json                  .json
+  AddType image/svg+xml                     .svg .svgz
+  AddCharset UTF-8 .html .css .js .json .xml .svg .txt
+</IfModule>
+
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # ---------------------------------------------------------------------------
+  # 2. ACME / AutoSSL must stay reachable (cPanel certificate renewal)
+  # ---------------------------------------------------------------------------
+  RewriteRule ^\.well-known/ - [L]
+
+  # ---------------------------------------------------------------------------
+  # 3. Canonical redirect — force HTTPS and a single hostname (non-www)
+  #    Handled first so no internal path ever leaks over http:// or www.
+  #
+  #    X-Forwarded-Proto is honoured only when it explicitly says "http", so
+  #    this stays loop-free behind Cloudflare (Flexible *and* Full SSL).
+  #
+  #    >>> TO MAKE www.gamas.bot CANONICAL INSTEAD: see DEPLOY.md §7. <<<
+  # ---------------------------------------------------------------------------
+  RewriteCond %{HTTP:X-Forwarded-Proto} ^http$ [NC,OR]
+  RewriteCond %{HTTPS} !=on [OR]
+  RewriteCond %{HTTP_HOST} ^www\. [NC]
+  RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L,NE]
+
+  # ---------------------------------------------------------------------------
+  # 4. Deny everything that should never be served
+  # ---------------------------------------------------------------------------
+  # 4a. Dotfiles: .env, .git, .htaccess, .user.ini, .DS_Store, .vite, ...
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteRule (^|/)\. - [F,L]
+
+  # 4b. Private / source / build directories
+  RewriteRule (?:^|/)(vendor|node_modules|src|\.git|\.vite|data|logs)(?:/|$) - [F,L,NC]
+
+  # 4c. Config, backup, database, log and archive files
+  RewriteRule (?:^|/)(?:composer\.(?:json|lock)|package\.json|package-lock\.json|php\.ini|\.user\.ini|phpunit\.xml(?:\.dist)?|error_log[0-9]*|\.htpasswd) - [F,L,NC]
+  RewriteRule \.(?:bak|old|orig|save|backup|swp|swo|~|sql|sqlite|sqlite3|db|ini|conf|cnf|config|sh|log|yml|yaml|dist|example|map|md|tar|tgz|zip|rar|7z|gz)$ - [F,L,NC]
+
+  # 4d. vite-react-ssg build manifests (also stripped by scripts/postbuild.mjs)
+  RewriteRule (?:^|/)static-loader-data-manifest-[a-z0-9]+\.json$ - [F,L,NC]
+
+  # ---------------------------------------------------------------------------
+  # 5. Cache-Control buckets (applied by mod_headers in §7)
+  #    RewriteRule ... - [E=VAR] only tags the request; the header itself is
+  #    set in §7 where mod_headers can read the tag.
+  #
+  #    In .htaccess (per-directory) context the leading slash is normally
+  #    stripped, so "/" arrives as "" and "/index.html" as "index.html". The
+  #    optional /? below makes these work either way.
+  # ---------------------------------------------------------------------------
+  RewriteRule ^/?(?:index\.html)?$ - [E=GAMAS_NOCACHE:1]
+  RewriteRule ^/?assets/.+         - [E=GAMAS_IMMUTABLE:1]
+  RewriteRule ^/?fonts/.+          - [E=GAMAS_FONTLONG:1]
+  RewriteRule ^/?images/.+         - [E=GAMAS_IMGLONG:1]
+
+  # ---------------------------------------------------------------------------
+  # 6. SPA fallback
+  #    vite-react-ssg emits a single pre-rendered index.html. Deep links and
+  #    any stray path hydrate from it — but real files, directories, /api and
+  #    PHP endpoints are never rewritten, so missing assets still 404 and the
+  #    PHP API is untouched.
+  # ---------------------------------------------------------------------------
+  RewriteCond %{REQUEST_URI} !^/api/ [NC]
+  RewriteCond %{REQUEST_URI} !\.php$ [NC]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+
+# -----------------------------------------------------------------------------
+# 7. Security headers
+# -----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  # Strip the PHP version banner
+  Header always unset X-Powered-By
+  Header always unset Server
+
+  Header always set X-Content-Type-Options    "nosniff"
+  Header always set Referrer-Policy           "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options           "DENY"
+  Header always set Permissions-Policy        "geolocation=(), microphone=(), camera=(), payment=(), usb=(), midi=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+
+  # HSTS — 180 days, subdomains deliberately NOT included so unrelated
+  # http:// subdomains on the same account keep working.
+  # Raise to 31536000; add ; preload only once you are certain.
+  Header always set Strict-Transport-Security "max-age=15552000"
+
+  # ---------------------------------------------------------------------------
+  # Content-Security-Policy
+  #
+  #  script-src 'unsafe-inline'  — required. vite-react-ssg injects one inline
+  #                                script (window.__VITE_REACT_SSG_HASH__).
+  #                                Its value changes per build so it cannot be
+  #                                pinned with a static hash. See DEPLOY.md §8
+  #                                for how to drop it if you want a strict CSP.
+  #  style-src  'unsafe-inline'  — required. GSAP animates by writing inline
+  #                                element styles, and React sets style props.
+  #                                Dropping this breaks every animation.
+  #  font-src 'self'             — fonts are self-hosted from /fonts.
+  #  connect-src 'self'          — /api/lead.php and /api/track.php only.
+  # ---------------------------------------------------------------------------
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests"
+
+  # --- Cache-Control, driven by the env tags set in §5 ---
+  # index.html: always revalidate so a new deploy is picked up immediately
+  Header always set Cache-Control "no-cache, no-store, must-revalidate, max-age=0" env=GAMAS_NOCACHE
+  Header always set Cache-Control "no-cache, no-store, must-revalidate, max-age=0" env=REDIRECT_GAMAS_NOCACHE
+
+  # /assets/*: Vite fingerprints these filenames (app-41j1zoxc.js) → immutable
+  Header always set Cache-Control "public, max-age=31536000, immutable" env=GAMAS_IMMUTABLE
+  Header always set Cache-Control "public, max-age=31536000, immutable" env=REDIRECT_GAMAS_IMMUTABLE
+
+  # /fonts/*: filename carries a version number (…-v16-…) → immutable
+  Header always set Cache-Control "public, max-age=31536000, immutable" env=GAMAS_FONTLONG
+  Header always set Cache-Control "public, max-age=31536000, immutable" env=REDIRECT_GAMAS_FONTLONG
+
+  # /images/*: not fingerprinted → long but revalidatable
+  Header always set Cache-Control "public, max-age=2592000, must-revalidate" env=GAMAS_IMGLONG
+  Header always set Cache-Control "public, max-age=2592000, must-revalidate" env=REDIRECT_GAMAS_IMGLONG
+
+  # Tell caches the body varies by encoding (set by §9 mod_deflate)
+  Header append Vary Accept-Encoding
+</IfModule>
+
+
+# -----------------------------------------------------------------------------
+# 8. Compression
+#    Only text-ish types. woff2 / avif / webp / jpg are already compressed —
+#    re-compressing them just burns the shared host's CPU.
+#    AddOutputFilterByType lives in mod_filter on 2.4 and in core on 2.2,
+#    so both spellings are guarded.
+# -----------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  <IfModule mod_filter.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/json application/xml application/rss+xml image/svg+xml application/manifest+json
+  </IfModule>
+  <IfModule !mod_filter.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/json application/xml application/rss+xml image/svg+xml application/manifest+json
+  </IfModule>
+</IfModule>
+
+<IfModule mod_brotli.c>
+  <IfModule mod_filter.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/css text/xml text/javascript application/javascript application/json application/xml image/svg+xml
+  </IfModule>
+</IfModule>
