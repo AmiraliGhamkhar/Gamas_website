@@ -1,12 +1,26 @@
 node_modules
 dist
+
+# vite-react-ssg build scratch dirs (both spellings seen across versions)
 .ssg-temp
+.vite-react-ssg-temp
+
+# Secrets
 .env
 .env.local
-data/*.sqlite
-data/*.sqlite3
-data/*.db
-data/*.db-wal
-data/*.db-shm
-*.session
+.env.*
+!.env.example
+
+# Runtime data — lives OUTSIDE public_html by default (/home/USER/gamas_data).
+# These patterns only cover the public_html/data fallback.
+data/*
+!data/.htaccess
+
+# Editor / OS
 .DS_Store
+Thumbs.db
+*.swp
+
+# Local logs
+*.log
+!*.md

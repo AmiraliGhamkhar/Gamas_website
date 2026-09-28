@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+
+const LEAD_API = '/api/lead.php'
 
 export default function LeadForm({ source = 'access' }) {
   const [email, setEmail] = useState('')
@@ -7,17 +9,23 @@ export default function LeadForm({ source = 'access' }) {
   const [msg, setMsg] = useState('')
   const [honeypot, setHoneypot] = useState('') // website
 
-  useEffect(() => {
-    // Fetch CSRF token
-    let cancelled = false
-    fetch('/api/lead.php', { credentials: 'same-origin' })
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled && data && data.csrf_token) setCsrf(data.csrf_token)
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
+  const fetchToken = useCallback(async () => {
+    const res = await fetch(LEAD_API, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return ''
+    const data = await res.json().catch(() => ({}))
+    const token = data && typeof data.csrf_token === 'string' ? data.csrf_token : ''
+    if (token) setCsrf(token)
+    return token
   }, [])
+
+  useEffect(() => {
+    // Fetch CSRF token on mount; onSubmit retries if this ever failed.
+    fetchToken().catch(() => {})
+  }, [fetchToken])
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -30,15 +38,34 @@ export default function LeadForm({ source = 'access' }) {
     }
     setStatus('loading')
     setMsg('')
+
+    // The token is issued on mount; if that request failed (cold cache,
+    // transient 429, blocked cookie) fetch a fresh one instead of failing.
+    let token = csrf
+    if (!token) {
+      try {
+        token = await fetchToken()
+      } catch {
+        token = ''
+      }
+    }
+    if (!token) {
+      setStatus('error')
+      setMsg('اتصال امن برقرار نشد. صفحه را رفرش کنید.')
+      return
+    }
+
     try {
-      const res = await fetch('/api/lead.php', {
+      const res = await fetch(LEAD_API, {
         method: 'POST',
         credentials: 'same-origin',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': csrf,
+          'Accept': 'application/json',
+          'X-CSRF-Token': token,
         },
-        body: JSON.stringify({ email: trimmed, csrf_token: csrf, website: honeypot, source }),
+        body: JSON.stringify({ email: trimmed, csrf_token: token, website: honeypot, source }),
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && (data.ok || data.csrf_token)) {
