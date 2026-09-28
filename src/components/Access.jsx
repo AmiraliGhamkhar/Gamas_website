@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { tgLink } from '../lib/constants'
+import { trackCTA } from '../lib/track'
+import LeadForm from './LeadForm'
 
 export default function Access() {
   const ref = useRef(null)
@@ -62,9 +64,12 @@ export default function Access() {
               <span className="h-1 w-1 rounded-full bg-white/30" />
               بدون نیاز به کارت بانکی
             </div>
-            <a href={tgLink('access')} target="_blank" rel="noopener noreferrer" className="mt-6 flex w-full items-center justify-center gap-2 rounded-pill bg-white text-zinc-900 px-4 py-2.5 text-sm font-medium hover:bg-white/90 transition">
+            <a href={tgLink('access')} target="_blank" rel="noopener noreferrer" onClick={() => trackCTA('access')} className="mt-4 flex w-full items-center justify-center gap-2 rounded-pill bg-white text-zinc-900 px-4 py-2.5 text-sm font-medium hover:bg-white/90 transition">
               درخواست دسترسی — @GamasBot
             </a>
+            <div className="mt-4 h-px bg-white/5" />
+            <p className="mt-4 text-xs font-medium text-white/60">یا ایمیل بگذار — خبرت می‌کنیم:</p>
+            <LeadForm source="access" />
           </div>
 
           {/* Plans TODO */}

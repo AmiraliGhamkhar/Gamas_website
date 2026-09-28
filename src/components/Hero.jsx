@@ -1,4 +1,5 @@
 import { tgLink } from '../lib/constants'
+import { trackCTA } from '../lib/track'
 
 export default function Hero() {
   return (
@@ -42,6 +43,7 @@ export default function Hero() {
                 href={tgLink('hero')}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackCTA('hero')}
                 className="group inline-flex items-center justify-center gap-2.5 rounded-pill bg-gradient-primary px-7 py-3.5 text-[15px] font-medium text-white shadow-glow hover:opacity-[0.96] active:opacity-90 transition will-change-transform"
               >
                 <span>شروع در تلگرام</span>

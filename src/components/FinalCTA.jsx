@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { tgLink } from '../lib/constants'
+import { trackCTA } from '../lib/track'
 
 export default function FinalCTA() {
   const ref = useRef(null)
@@ -51,6 +52,7 @@ export default function FinalCTA() {
                   href={tgLink('final_cta')}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackCTA('final_cta')}
                   className="inline-flex items-center justify-center gap-2 rounded-pill bg-gradient-primary px-7 py-3.5 text-[15px] font-medium text-white shadow-glow hover:opacity-95 transition"
                 >
                   شروع در تلگرام

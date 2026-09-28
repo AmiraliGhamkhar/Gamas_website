@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tgLink } from '../lib/constants'
+import { trackCTA } from '../lib/track'
 
 const navLinks = [
   { href: '#features', label: 'ویژگی‌ها' },
@@ -70,6 +71,7 @@ export default function Navbar() {
             href={tgLink('navbar')}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackCTA('navbar')}
             className="hidden sm:inline-flex items-center gap-2 rounded-pill bg-gradient-primary px-5 py-2.5 text-[13.5px] font-medium text-white shadow-glow hover:opacity-[0.92] active:opacity-90 transition"
           >
             شروع در تلگرام
@@ -123,7 +125,7 @@ export default function Navbar() {
             href={tgLink('navbar')}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={() => { setOpen(false); trackCTA('navbar'); }}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-pill bg-gradient-primary px-5 py-3 text-sm font-medium text-white shadow-glow"
           >
             شروع در تلگرام — @GamasBot

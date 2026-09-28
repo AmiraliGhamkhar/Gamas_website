@@ -1,4 +1,5 @@
 import { tgLink } from '../lib/constants'
+import { trackCTA } from '../lib/track'
 
 export default function Footer() {
   return (
@@ -39,7 +40,7 @@ export default function Footer() {
             <div className="col-span-2 sm:col-span-1">
               <p className="font-medium text-white/70">شروع</p>
               <div className="mt-3 flex flex-col gap-2">
-                <a href={tgLink('footer')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-pill bg-gradient-primary px-4 py-2 text-xs font-medium text-white shadow-glow">
+                <a href={tgLink('footer')} target="_blank" rel="noopener noreferrer" onClick={() => trackCTA('footer')} className="inline-flex items-center justify-center gap-2 rounded-pill bg-gradient-primary px-4 py-2 text-xs font-medium text-white shadow-glow">
                   شروع در تلگرام
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </a>

@@ -1,4 +1,5 @@
 import { tgLink } from '../lib/constants'
+import { trackCTA } from '../lib/track'
 
 export default function MobileSticky() {
   return (
@@ -7,6 +8,7 @@ export default function MobileSticky() {
         href={tgLink('mobile_sticky')}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => trackCTA('mobile_sticky')}
         className="flex w-full items-center justify-center gap-2 rounded-pill bg-gradient-primary py-3 text-[14px] font-medium text-white shadow-glow active:opacity-90 transition"
       >
         شروع در تلگرام — رایگان امتحان کن
