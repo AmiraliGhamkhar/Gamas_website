@@ -163,6 +163,9 @@
 
   # --- Cache-Control, driven by the env tags set in §5 ---
   # index.html: always revalidate so a new deploy is picked up immediately
+  <FilesMatch "(?i)\.html?$">
+    Header always set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+  </FilesMatch>
   Header always set Cache-Control "no-cache, no-store, must-revalidate, max-age=0" env=GAMAS_NOCACHE
   Header always set Cache-Control "no-cache, no-store, must-revalidate, max-age=0" env=REDIRECT_GAMAS_NOCACHE
 
