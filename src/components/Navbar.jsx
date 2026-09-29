@@ -6,7 +6,7 @@ const navLinks = [
   { href: '#features', label: 'ویژگی‌ها' },
   { href: '#how', label: 'نحوه کار' },
   { href: '#privacy', label: 'حریم خصوصی' },
-  { href: '#faq', label: 'پرسش‌های متداول' },
+  { href: '#faq', label: 'پرسش‌ها' },
 ]
 
 export default function Navbar() {
@@ -70,12 +70,12 @@ export default function Navbar() {
         <a href="#" className="flex min-h-11 items-center gap-3" aria-label="گاماس — صفحه اصلی">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary font-display text-sm text-white">گ</span>
           <span className="font-semibold text-[17px]">گاماس</span>
-          <bdi dir="ltr" lang="en" className="hidden text-xs text-white/45 sm:inline">Gamas Bot</bdi>
+          <bdi dir="ltr" lang="en" className="hidden text-xs text-ink-subtle sm:inline">Gamas Bot</bdi>
         </a>
 
         <nav aria-label="ناوبری اصلی" className="hidden items-center gap-1 text-sm md:flex">
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="flex min-h-11 items-center rounded-pill px-3">
+            <a key={link.href} href={link.href} className="link-underline flex min-h-11 items-center rounded-pill px-3">
               {link.label}
             </a>
           ))}
@@ -151,9 +151,6 @@ export default function Navbar() {
               <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </a>
-          <p className="pt-3 text-center text-xs leading-6">
-            منوی ربات: ساخت جزوه / راهنما / قالب‌ها / حریم خصوصی
-          </p>
         </div>
       </nav>
     </header>

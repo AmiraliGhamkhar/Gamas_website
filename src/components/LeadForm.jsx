@@ -121,7 +121,7 @@ export default function LeadForm({ source = 'access' }) {
             disabled={status === 'loading' || status === 'success'}
             aria-invalid={status === 'error'}
             aria-describedby={`email-message-${source}`}
-            className="min-w-0 flex-1 rounded-pill border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-subtle disabled:opacity-60"
+            className="min-w-0 flex-1 rounded-pill border border-subtle bg-surface-dark px-4 py-3 text-sm text-white placeholder:text-on-dark-subtle focus:outline-none focus:border-primary-on-dark disabled:opacity-60"
           />
           <button
             type="submit"
@@ -140,13 +140,13 @@ export default function LeadForm({ source = 'access' }) {
         id={`email-message-${source}`}
         role={status === 'error' ? 'alert' : 'status'}
         aria-live={status === 'error' ? 'assertive' : 'polite'}
-        className={`rounded-xl border border-subtle bg-surface-muted px-3 py-2 text-xs leading-5 text-muted ${msg ? '' : 'sr-only'}`}
+        className={`rounded-xl border border-subtle bg-surface-dark px-3 py-2 text-xs leading-5 text-on-dark-muted ${msg ? '' : 'sr-only'}`}
       >
         {msg}
       </p>
 
-      <p className="text-[12px] leading-5 text-white/30">
-        با ثبت ایمیل، نشانی ایمیل، بخش فرم، IP و مشخصات مرورگر برای مدیریت فهرست دسترسی در فضای خصوصی میزبان ذخیره می‌شود؛ ایمیل خودکار ارسال نمی‌شود. <a href="#privacy" className="underline">جزئیات حریم خصوصی</a>.
+      <p className="text-[12px] leading-5 text-on-dark-subtle">
+        فقط برای مدیریت فهرست دسترسی ذخیره می‌شود؛ ایمیلی ارسال نمی‌شود. <a href="#privacy" className="link-underline">جزئیات</a>.
       </p>
     </form>
   )

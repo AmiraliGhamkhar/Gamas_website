@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Story from './components/Story'
@@ -14,24 +13,6 @@ import Footer from './components/Footer'
 import MobileSticky from './components/MobileSticky'
 
 export default function App() {
-  useEffect(() => {
-    let cancelled = false
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    document.fonts?.ready.then(async () => {
-      if (cancelled || reducedMotion) return
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import('gsap'),
-        import('gsap/ScrollTrigger'),
-      ])
-      if (cancelled) return
-      gsap.registerPlugin(ScrollTrigger)
-      ScrollTrigger.refresh()
-    })
-
-    return () => { cancelled = true }
-  }, [])
-
   return (
     <div className="min-h-dvh flex flex-col">
       <a className="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
