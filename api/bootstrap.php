@@ -149,8 +149,10 @@ function gamas_json(array $payload, int $status = 200, array $extraHeaders = [])
 }
 
 /**
- * Best-effort logging: server error_log + our own rotating-free app.log
- * inside the private data dir. Never throws, never breaks the response.
+ * Best-effort logging: server error_log + our own app.log inside the private
+ * data dir. Never throws, never breaks the response. One previous copy is
+ * kept (app.log.1): on shared hosting an unbounded log eventually eats the
+ * account quota, and there is no logrotate on shared hosting.
  */
 function gamas_log(string $message): void
 {
@@ -159,8 +161,13 @@ function gamas_log(string $message): void
     try {
         $dir = gamas_data_dir() . '/logs';
         if (gamas_ensure_dir($dir)) {
+            $file = $dir . '/app.log';
+            // Rotate before opening: >1 MiB → keep one previous copy.
+            if (@filesize($file) > 1048576) {
+                @rename($file, $dir . '/app.log.1');
+            }
             $line = gmdate('c') . ' ' . gamas_client_ip() . ' ' . $flat . "\n";
-            $fp = @fopen($dir . '/app.log', 'ab');
+            $fp = @fopen($file, 'ab');
             if ($fp !== false) {
                 if (flock($fp, LOCK_EX)) {
                     fwrite($fp, $line);
@@ -168,7 +175,7 @@ function gamas_log(string $message): void
                     flock($fp, LOCK_UN);
                 }
                 fclose($fp);
-                @chmod($dir . '/app.log', 0640);
+                @chmod($file, 0640);
             }
         }
     } catch (Throwable $e) {

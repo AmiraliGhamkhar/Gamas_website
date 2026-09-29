@@ -305,15 +305,19 @@ grep -v 'test@example.com' ~/gamas_data/leads.ndjson > /tmp/l && mv /tmp/l ~/gam
 
 ## 7. Switching the canonical host to `www`
 
-Currently `www.gamas.bot` → `gamas.bot`. To flip it, edit `public/.htaccess`
-§3 and change the last two lines of the redirect block to:
+Currently `www.gamas.bot` → `gamas.bot`. The redirect in `public/.htaccess`
+§3 is split in two rules: **3a** (www → apex, any scheme) and **3b**
+(http → https, skipped when the edge already terminated TLS). To flip the
+canonical host, replace **rule 3a** with:
 
 ```apache
   RewriteCond %{HTTP_HOST} ^(?!www\.)(.+)$ [NC]
   RewriteRule ^ https://www.%1%{REQUEST_URI} [R=301,L,NE]
 ```
 
-…keeping the two conditions above them (`X-Forwarded-Proto` and `%{HTTPS}`).
+Leave **rule 3b** (the `X-Forwarded-Proto` / `%{HTTPS}` conditions) untouched —
+it only deals with the scheme, and removing those conditions re-introduces the
+Cloudflare Flexible redirect loop described in the file's comments.
 Then update `index.html`:
 
 - `<link rel="canonical" href="https://gamas.bot/">` → `https://www.gamas.bot/`

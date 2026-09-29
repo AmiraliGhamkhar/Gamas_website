@@ -81,11 +81,14 @@ export default function BotDemo() {
     if (typeof window === 'undefined') return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let mm
+    let ctx
+    let cancelled = false
     ;(async () => {
       const { gsap } = await import('gsap')
       const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+      if (cancelled) return
       gsap.registerPlugin(ScrollTrigger)
-      const ctx = gsap.context(() => {
+      ctx = gsap.context(() => {
         mm = gsap.matchMedia()
         mm.add('(min-width: 768px)', () => {
           gsap.fromTo('.demo-phone',
@@ -109,13 +112,15 @@ export default function BotDemo() {
           })
         })
       })
-      return () => ctx.revert()
     })()
-    return () => mm?.revert()
+    return () => {
+      cancelled = true
+      mm?.revert()
+      ctx?.revert()
+    }
   }, [])
 
   const showFile = phase >= 1
-  const showMenu = phase >= 1
   const showProcessing = phase >= 2 && phase <= 5
   const showNotes = phase >= 6
 

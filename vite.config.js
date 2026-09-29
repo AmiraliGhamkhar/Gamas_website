@@ -37,7 +37,9 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     cors: true,
-    hmr: { host: 'localhost' },
+    // No forced HMR host: pinning it to localhost broke HMR whenever the dev
+    // server was reached through a proxy/LAN address (the browser has no
+    // localhost). Vite falls back to window.location automatically.
     allowedHosts: true
   },
   preview: {

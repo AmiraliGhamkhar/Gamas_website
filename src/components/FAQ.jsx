@@ -58,11 +58,14 @@ export default function FAQ() {
     if (typeof window === 'undefined') return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let mm
+    let ctx
+    let cancelled = false
     ;(async () => {
       const { gsap } = await import('gsap')
       const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+      if (cancelled) return
       gsap.registerPlugin(ScrollTrigger)
-      const ctx = gsap.context(() => {
+      ctx = gsap.context(() => {
         mm = gsap.matchMedia()
         mm.add('(min-width: 768px)', () => {
           gsap.fromTo('.faq-item', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: 'power2.out', scrollTrigger: { trigger: ref.current, start: 'top 82%' } })
@@ -73,9 +76,12 @@ export default function FAQ() {
           })
         })
       }, ref)
-      return () => ctx.revert()
     })()
-    return () => mm?.revert()
+    return () => {
+      cancelled = true
+      mm?.revert()
+      ctx?.revert()
+    }
   }, [])
 
   const jsonLd = {
@@ -87,6 +93,9 @@ export default function FAQ() {
       acceptedAnswer: { '@type': 'Answer', text: f.a },
     })),
   }
+  // Escape "<" so no answer text can ever close the <script> tag early
+  // (JSON.stringify does not escape "</script>").
+  const jsonLdHtml = JSON.stringify(jsonLd).replace(/</g, '\\u003c')
 
   return (
     <section ref={ref} id="faq" className="relative py-16 sm:py-20">
@@ -111,7 +120,7 @@ export default function FAQ() {
       </div>
 
       {/* FAQPage JSON-LD — prerendered */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml }} />
     </section>
   )
 }

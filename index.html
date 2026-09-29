@@ -11,7 +11,10 @@
     <!-- Critical fonts + hero LCP image preload -->
     <link rel="preload" href="/fonts/vazirmatn-v16-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/lalezar-v16-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" as="image" href="/images/hero-phone.webp" type="image/webp" imagesrcset="/images/hero-phone.webp 380w" fetchpriority="high" />
+    <!-- Preload MUST match what <picture> actually picks: the first <source> is AVIF.
+         Preloading webp while browsers select avif caused a double download and left
+         the LCP resource unpreloaded. Browsers without AVIF support skip this (type). -->
+    <link rel="preload" as="image" href="/images/hero-phone.avif" type="image/avif" imagesrcset="/images/hero-phone.avif 380w" fetchpriority="high" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <meta property="og:type" content="website" />
