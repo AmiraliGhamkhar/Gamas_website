@@ -38,11 +38,14 @@ export default function HowItWorks() {
     if (typeof window === 'undefined') return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let mm
+    let ctx
+    let cancelled = false
     ;(async () => {
       const { gsap } = await import('gsap')
       const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+      if (cancelled) return
       gsap.registerPlugin(ScrollTrigger)
-      const ctx = gsap.context(() => {
+      ctx = gsap.context(() => {
         mm = gsap.matchMedia()
 
         mm.add('(min-width: 768px)', () => {
@@ -82,9 +85,12 @@ export default function HowItWorks() {
           })
         })
       }, ref)
-      return () => ctx.revert()
     })()
-    return () => mm?.revert()
+    return () => {
+      cancelled = true
+      mm?.revert()
+      ctx?.revert()
+    }
   }, [])
 
   return (

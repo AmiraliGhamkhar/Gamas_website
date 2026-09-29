@@ -11,10 +11,12 @@ export default function Story() {
 
     let mm
     let ctx
+    let cancelled = false
 
     ;(async () => {
       const { gsap } = await import('gsap')
       const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+      if (cancelled) return
       gsap.registerPlugin(ScrollTrigger)
 
       ctx = gsap.context(() => {
@@ -96,6 +98,7 @@ export default function Story() {
     })()
 
     return () => {
+      cancelled = true
       mm?.revert()
       ctx?.revert()
     }
@@ -127,9 +130,13 @@ export default function Story() {
         <div className="mt-12 lg:mt-16 grid lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-10 items-start">
           {/* Pinned side */}
           <div ref={pinnedRef} className="lg:sticky lg:top-24">
-            <div className="relative min-h-[420px] sm:min-h-[460px] lg:min-h-[480px]">
+            {/* Cards are in normal flow below lg so BOTH are readable on
+                mobile/tablet (the crossfade only exists ≥1024px). Absolute
+                stacking + opacity-0 here used to hide the solution card
+                entirely on small screens. */}
+            <div className="relative lg:min-h-[480px]">
               {/* Problem card — visible first */}
-              <div className="problem-card absolute inset-0 glass rounded-[1.6rem] p-6 sm:p-7 flex flex-col will-change-transform">
+              <div className="problem-card lg:absolute lg:inset-0 glass rounded-[1.6rem] p-6 sm:p-7 flex flex-col will-change-transform">
                 <div className="flex items-center gap-3">
                   <span className="problem-badge inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-xs">✕</span>
                   <span className="problem-badge text-xs font-medium text-white/60">قبل — ساعت‌ها اتلاف</span>
@@ -160,10 +167,10 @@ export default function Story() {
               </div>
 
               {/* Solution card — fades in on scroll (desktop pinned) */}
-              <div className="solution-card absolute inset-0 glass-strong rounded-[1.6rem] p-6 sm:p-7 flex flex-col opacity-0 will-change-transform lg:opacity-0">
+              <div className="solution-card story-reveal lg:absolute lg:inset-0 glass-strong rounded-[1.6rem] p-6 sm:p-7 flex flex-col will-change-transform lg:opacity-0">
                 <div className="flex items-center gap-3">
-                  <span className="solution-badge inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-xs opacity-0 lg:opacity-0">✓</span>
-                  <span className="solution-badge text-xs font-medium text-emerald-300/90 opacity-0 lg:opacity-0">بعد — بفرست، تحویل بگیر</span>
+                  <span className="solution-badge inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-xs lg:opacity-0">✓</span>
+                  <span className="solution-badge text-xs font-medium text-emerald-300/90 lg:opacity-0">بعد — بفرست، تحویل بگیر</span>
                   <span className="ms-auto text-[11px] text-white/30">چند دقیقه</span>
                 </div>
                 <h3 className="mt-5 font-display text-[1.35rem] leading-6">فایل را بفرست، جزوه را بگیر</h3>

@@ -6,11 +6,14 @@ export default function Privacy() {
     if (typeof window === 'undefined') return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let mm
+    let ctx
+    let cancelled = false
     ;(async () => {
       const { gsap } = await import('gsap')
       const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+      if (cancelled) return
       gsap.registerPlugin(ScrollTrigger)
-      const ctx = gsap.context(() => {
+      ctx = gsap.context(() => {
         mm = gsap.matchMedia()
         mm.add('(min-width: 768px)', () => {
           gsap.fromTo('.privacy-card', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.07, ease: 'power2.out', scrollTrigger: { trigger: ref.current, start: 'top 78%' } })
@@ -21,9 +24,12 @@ export default function Privacy() {
           })
         })
       }, ref)
-      return () => ctx.revert()
     })()
-    return () => mm?.revert()
+    return () => {
+      cancelled = true
+      mm?.revert()
+      ctx?.revert()
+    }
   }, [])
 
   return (
