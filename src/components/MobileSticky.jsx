@@ -3,7 +3,7 @@ import { trackCTA } from '../lib/track'
 
 export default function MobileSticky() {
   return (
-    <div className="floating-sticky-bar fixed bottom-0 inset-inline-0 z-30 bg-tile-dark/85 backdrop-blur-[16px] supports-[backdrop-filter]:bg-tile-dark/70 p-3 md:hidden safe-pb">
+    <div className="floating-sticky-bar fixed bottom-0 inset-inline-0 z-30 p-3 md:hidden safe-pb">
       <a
         href={tgLink('mobile_sticky')}
         target="_blank"

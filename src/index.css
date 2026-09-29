@@ -43,28 +43,30 @@
   unicode-range: U+0600-06FF, U+0750-077F, U+200C-200E, U+FB50-FDFF, U+FE70-FEFC;
 }
 
+/* Paper & Indigo palette — warm paper surfaces, deep indigo-charcoal dark tile,
+   one confident indigo accent. All pairs verified WCAG AA (most AAA). */
 :root {
   color-scheme: light;
-  --canvas: #ffffff;
-  --parchment: #f5f0e8;
-  --tile-dark: #202124;
+  --canvas: #fdfdfb;
+  --parchment: #f4f1ea;
+  --tile-dark: #1e1b2e;
   --surface: #ffffff;
-  --surface-muted: #f0f1f2;
-  --surface-dark: #2c2d30;
-  --surface-parchment: #fffdfa;
+  --surface-muted: #f1efe9;
+  --surface-dark: #2a263f;
+  --surface-parchment: #fbf9f4;
   --on-primary: #ffffff;
-  --scroll-thumb: #85878b;
-  --ink: #202124;
-  --ink-muted: #51545a;
-  --ink-subtle: #5b5e63;
-  --on-dark: #f7f7f5;
-  --on-dark-muted: #d5d5d2;
-  --on-dark-subtle: #c0c0bc;
-  --primary: #0066cc;
-  --primary-on-dark: #2997ff;
+  --scroll-thumb: #b9b5cc;
+  --ink: #232135;
+  --ink-muted: #565871;
+  --ink-subtle: #6a6c85;
+  --on-dark: #f5f3fb;
+  --on-dark-muted: #c9c6dd;
+  --on-dark-subtle: #9c99b8;
+  --primary: #4f46e5;
+  --primary-on-dark: #a5b4fc;
   --primary-focus: var(--primary);
-  --border: #d7d8da;
-  --border-dark: #55565a;
+  --border: #e3e1dc;
+  --border-dark: #3a3654;
   --radius-0: 0;
   --radius-8: 8px;
   --radius-11: 11px;
@@ -341,6 +343,7 @@ button:disabled,
 .product-tile-dark .text-muted { color: var(--on-dark-muted) !important; }
 .bg-primary { background-color: var(--primary) !important; background-image: none !important; }
 .text-primary-emphasis { color: var(--primary) !important; }
+.border-primary-emphasis { border-color: color-mix(in srgb, var(--primary) 45%, transparent) !important; }
 
 .global-nav {
   border-block-end: 1px solid var(--border);
@@ -356,6 +359,7 @@ button:disabled,
 .product-tile .bg-primary { color: var(--on-primary) !important; }
 .product-tile .bg-primary [class*="text-white"] { color: var(--on-primary) !important; }
 .product-tile-dark .text-primary-emphasis { color: var(--primary-on-dark) !important; }
+.product-tile-dark .border-primary-emphasis { border-color: color-mix(in srgb, var(--primary-on-dark) 45%, transparent) !important; }
 #mobile-nav,
 .sub-nav-frosted {
   border-color: var(--border) !important;
@@ -462,6 +466,62 @@ html[dir="ltr"] .group:hover .inline-nudge { translate: 0.125rem 0; }
 }
 .product-tile-dark input::placeholder { color: var(--on-dark-muted); }
 
+@media (hover: hover) {
+  /* Micro-interactions: quiet lift + accent border on cards, button tint, link underlines.
+     transform/translate + color only — no shadows, no gradients. */
+  .hover-lift {
+    transition: translate 160ms ease, border-color 160ms ease;
+  }
+  .hover-lift:hover {
+    translate: 0 -2px;
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  }
+  .product-tile-dark .hover-lift:hover {
+    border-color: color-mix(in srgb, var(--primary-on-dark) 35%, var(--border-dark));
+  }
+  .button-primary {
+    transition: translate 160ms ease, background-color 160ms ease;
+  }
+  .button-primary:hover {
+    background-color: color-mix(in srgb, var(--primary) 86%, #000000) !important;
+  }
+  .button-secondary-pill {
+    transition: translate 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  }
+  .button-secondary-pill:hover {
+    border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+    background-color: var(--surface-muted);
+  }
+  .product-tile-dark .button-secondary-pill:hover {
+    border-color: color-mix(in srgb, var(--primary-on-dark) 40%, var(--border-dark));
+    background-color: var(--surface-dark);
+  }
+  .link-underline {
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 160ms ease, color 160ms ease;
+  }
+  .link-underline:hover {
+    text-decoration-color: currentColor;
+  }
+  .faq-row:hover {
+    background-color: color-mix(in srgb, var(--primary) 4%, var(--surface-parchment));
+  }
+  .product-tile-dark .faq-row:hover {
+    background-color: var(--surface-dark);
+  }
+}
+
+/* Copy-to-clipboard handle feedback. */
+.copy-handle {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.copy-handle.is-copied {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 /* Reduced motion: preserve content and use no parallax or looping animation. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -470,6 +530,7 @@ html[dir="ltr"] .group:hover .inline-nudge { translate: 0.125rem 0; }
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+  .hover-lift:hover { translate: none; }
   .hero-reveal { opacity: 1 !important; transform: none !important; animation: none !important; }
   .problem-card,
   .solution-card { position: static !important; opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
