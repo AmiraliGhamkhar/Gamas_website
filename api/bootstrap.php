@@ -240,21 +240,21 @@ function gamas_ensure_dir(string $dir): bool
     if ($dir === '') {
         return false;
     }
-    if (!is_dir($dir)) {
+    if (!@is_dir($dir)) {
         $old = @umask(0077);
         $made = @mkdir($dir, 0700, true);
         @umask($old);
-        if (!$made && !is_dir($dir)) {
+        if (!$made && !@is_dir($dir)) {
             return false;
         }
     }
-    if (!is_dir($dir)) {
+    if (!@is_dir($dir)) {
         return false;
     }
     // Existing data directories may have been created by an older release
     // with broader permissions. They hold personal data and secrets.
     @chmod($dir, 0700);
-    return is_writable($dir);
+    return @is_writable($dir);
 }
 
 /** Absolute, real path of this site's Apache DocumentRoot. */
@@ -262,8 +262,8 @@ function gamas_doc_root(): string
 {
     $dr = isset($_SERVER['DOCUMENT_ROOT']) ? (string)$_SERVER['DOCUMENT_ROOT'] : '';
     if ($dr !== '') {
-        $real = realpath($dr);
-        if ($real !== false && is_dir($real)) {
+        $real = @realpath($dr);
+        if ($real !== false && @is_dir($real)) {
             return rtrim($real, '/');
         }
     }
@@ -282,9 +282,9 @@ function gamas_path_is_public(string $path): bool
         $publicRoots[] = $publicHtmlRoot;
     }
 
-    $realPath = realpath($path);
+    $realPath = @realpath($path);
     if ($realPath === false) {
-        $realParent = realpath(dirname($path));
+        $realParent = @realpath(dirname($path));
         $realPath = $realParent !== false
             ? rtrim($realParent, '/') . '/' . basename($path)
             : $path;
@@ -292,7 +292,7 @@ function gamas_path_is_public(string $path): bool
     $normalizedPath = rtrim(str_replace('\\', '/', $realPath), '/');
 
     foreach ($publicRoots as $root) {
-        $realRoot = realpath($root);
+        $realRoot = @realpath($root);
         $normalizedRoot = rtrim(str_replace('\\', '/', $realRoot !== false ? $realRoot : $root), '/');
         if ($normalizedRoot === '') {
             $normalizedRoot = '/';
@@ -359,6 +359,15 @@ function gamas_data_dir(): string
     // The in-root location is used only as a protected last resort.
     $fallback = dirname(__DIR__) . '/data';
     if (gamas_ensure_dir($fallback)) {
+        $ht = $fallback . '/.htaccess';
+        if (!@is_file($ht)) {
+            @file_put_contents(
+                $ht,
+                "<IfModule mod_authz_core.c>\n  Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n  Order allow,deny\n  Deny from all\n</IfModule>\n<IfModule mod_autoindex.c>\n  Options -Indexes\n</IfModule>\n",
+                LOCK_EX
+            );
+            @chmod($ht, 0644);
+        }
         $resolved = $fallback;
         return $resolved;
     }
@@ -457,40 +466,51 @@ function gamas_db(): ?PDO
             // ignore
         }
 
-        $db->exec('CREATE TABLE IF NOT EXISTS leads (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            email      TEXT NOT NULL UNIQUE,
-            source     TEXT,
-            ip         TEXT NOT NULL,
-            user_agent TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )');
-        $db->exec('CREATE INDEX IF NOT EXISTS idx_leads_ip_created ON leads(ip, created_at)');
-
-        $db->exec('CREATE TABLE IF NOT EXISTS clicks (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            section    TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )');
-        $db->exec('DROP INDEX IF EXISTS idx_clicks_section');
-        $db->exec('CREATE INDEX IF NOT EXISTS idx_clicks_created ON clicks(created_at)');
-
-        // Earlier versions stored IP and user-agent with CTA events. Clear
-        // those fields once, then keep only section + time going forward.
         $schemaVersion = (int)$db->query('PRAGMA user_version')->fetchColumn();
-        if ($schemaVersion < 1) {
+        if ($schemaVersion < 2) {
+            $db->exec('CREATE TABLE IF NOT EXISTS leads (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                email      TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                source     TEXT,
+                ip         TEXT NOT NULL,
+                user_agent TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )');
+            $db->exec('CREATE INDEX IF NOT EXISTS idx_leads_ip_created ON leads(ip, created_at)');
+
+            $db->exec('CREATE TABLE IF NOT EXISTS clicks (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                section    TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )');
+            $db->exec('DROP INDEX IF EXISTS idx_clicks_section');
+
+            // Earlier versions stored IP and user-agent with CTA events.
+            // Rebuild clicks if legacy columns exist so no NOT NULL constraint
+            // or personal-data column remains on disk.
             $columns = array_column($db->query('PRAGMA table_info(clicks)')->fetchAll(), 'name');
-            $privateColumns = [];
-            if (in_array('ip', $columns, true)) {
-                $privateColumns[] = 'ip = NULL';
+            if (in_array('ip', $columns, true) || in_array('user_agent', $columns, true)) {
+                $db->beginTransaction();
+                try {
+                    $db->exec('CREATE TABLE clicks_v2 (
+                        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                        section    TEXT NOT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )');
+                    $db->exec('INSERT INTO clicks_v2 (id, section, created_at) SELECT id, section, created_at FROM clicks');
+                    $db->exec('DROP TABLE clicks');
+                    $db->exec('ALTER TABLE clicks_v2 RENAME TO clicks');
+                    $db->commit();
+                } catch (Throwable $e) {
+                    if ($db->inTransaction()) {
+                        $db->rollBack();
+                    }
+                    throw $e;
+                }
             }
-            if (in_array('user_agent', $columns, true)) {
-                $privateColumns[] = 'user_agent = NULL';
-            }
-            if ($privateColumns !== []) {
-                $db->exec('UPDATE clicks SET ' . implode(', ', $privateColumns));
-            }
-            $db->exec('PRAGMA user_version=1');
+
+            $db->exec('CREATE INDEX IF NOT EXISTS idx_clicks_created ON clicks(created_at)');
+            $db->exec('PRAGMA user_version=2');
         }
 
         // Do not rely on the hosting account's default umask for database
@@ -545,6 +565,19 @@ function gamas_append_record(string $name, array $record): bool
             $stats = fstat($fp);
             if (is_array($stats) && (int)($stats['size'] ?? 0) + strlen($line) + 1 > 1048576) {
                 ftruncate($fp, 0);
+            }
+        }
+        if ($safeName === 'leads' && isset($record['email'])) {
+            $needle = strtolower((string)$record['email']);
+            rewind($fp);
+            while (($existingLine = fgets($fp)) !== false) {
+                $decoded = json_decode($existingLine, true);
+                if (is_array($decoded) && isset($decoded['email']) && strtolower((string)$decoded['email']) === $needle) {
+                    flock($fp, LOCK_UN);
+                    fclose($fp);
+                    @chmod($file, 0600);
+                    return true;
+                }
             }
         }
         fseek($fp, 0, SEEK_END);
@@ -685,12 +718,17 @@ function gamas_allowed_hosts(): array
         $out = [];
         foreach (explode(',', $env) as $h) {
             $h = strtolower(trim($h));
+            if (strpos($h, '://') !== false) {
+                $h = gamas_host_of_url($h);
+            } else {
+                $h = strtolower(preg_replace('/:\d+$/', '', $h) ?? $h);
+            }
             if ($h !== '') {
                 $out[] = $h;
             }
         }
         if ($out !== []) {
-            return $out;
+            return array_values(array_unique($out));
         }
     }
 
@@ -791,18 +829,24 @@ function gamas_is_https(): bool
         return true;
     }
     $fwd = gamas_header('X-Forwarded-Proto');
-    return $fwd !== null && strtolower($fwd) === 'https';
+    if ($fwd !== null) {
+        $firstProto = strtolower(trim(explode(',', $fwd)[0]));
+        if ($firstProto === 'https') {
+            return true;
+        }
+    }
+    return false;
 }
 
-/** Current CSRF cookie value, creating it if absent. */
+/** Current CSRF cookie value, creating or refreshing its expiry. */
 function gamas_csrf_cookie(): string
 {
     $existing = isset($_COOKIE[GAMAS_CSRF_COOKIE]) ? (string)$_COOKIE[GAMAS_CSRF_COOKIE] : '';
     if (preg_match('/^[A-Za-z0-9_-]{16,64}$/', $existing) === 1) {
-        return $existing;
+        $value = $existing;
+    } else {
+        $value = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
     }
-
-    $value = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
     $ttl = time() + GAMAS_CSRF_TTL;
 
     if (PHP_VERSION_ID >= 70300) {
@@ -898,19 +942,18 @@ function gamas_input(int $maxBytes = 8192): array
     }
 
     $raw = @file_get_contents('php://input', false, null, 0, $maxBytes + 1);
-    if (!is_string($raw) || $raw === '') {
-        return [];
-    }
-    if (strlen($raw) > $maxBytes) {
-        gamas_json(['error' => 'payload_too_large'], 413);
+    if (is_string($raw) && $raw !== '') {
+        if (strlen($raw) > $maxBytes) {
+            gamas_json(['error' => 'payload_too_large'], 413);
+        }
+
+        $decoded = json_decode($raw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
     }
 
-    $decoded = json_decode($raw, true);
-    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-        return $decoded;
-    }
-
-    // fall back to form-encoded
+    // fall back to form-encoded / multipart $_POST
     $out = [];
     foreach ($_POST as $k => $v) {
         $out[(string)$k] = $v;
@@ -955,14 +998,11 @@ function gamas_normalise_email(string $email): string
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return '';
     }
-    // Case-fold the domain; keep the local part as typed (it may be
-    // case-sensitive per RFC 5321, even if no real provider does that).
+    // Lowercase the entire address so User@example.com and user@example.com
+    // map to the same normalized waitlist record.
     $at = strrpos($email, '@');
     if ($at === false) {
         return '';
     }
-    $local = substr($email, 0, $at);
-    $domain = substr($email, $at + 1);
-    $domain = function_exists('mb_strtolower') ? mb_strtolower($domain, 'UTF-8') : strtolower($domain);
-    return $local . '@' . $domain;
+    return function_exists('mb_strtolower') ? mb_strtolower($email, 'UTF-8') : strtolower($email);
 }

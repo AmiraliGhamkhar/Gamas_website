@@ -312,7 +312,7 @@ Then delete the test row:
 # SQLite
 sqlite3 ~/gamas_data/gamas.sqlite "DELETE FROM leads WHERE email='test@example.com';"
 # or, with the flat-file store
-grep -v 'test@example.com' ~/gamas_data/leads.ndjson > /tmp/l && mv /tmp/l ~/gamas_data/leads.ndjson
+grep -v 'test@example.com' ~/gamas_data/leads.ndjson > /tmp/l && mv /tmp/l ~/gamas_data/leads.ndjson && chmod 600 ~/gamas_data/leads.ndjson
 ```
 
 ---
@@ -332,15 +332,16 @@ canonical host, replace **rule 3a** with:
 Leave **rule 3b** (the `X-Forwarded-Proto` / `%{HTTPS}` conditions) untouched —
 it only deals with the scheme, and removing those conditions re-introduces the
 Cloudflare Flexible redirect loop described in the file's comments.
-Then update the `https://gamas.bot` origin in `index.html` (canonical, Open Graph,
-Twitter, and JSON-LD URLs) to `https://www.gamas.bot`, and rebuild with:
+Then rebuild with:
 
 ```bash
 VITE_SITE_URL=https://www.gamas.bot npm run build
 ```
 
-`postbuild` generates `robots.txt` and `sitemap.xml` from `VITE_SITE_URL`; do
-not edit those generated files by hand.
+`vite.config.js` and `postbuild` rewrite the canonical, Open Graph, Twitter, and
+JSON-LD URLs in `dist/index.html` as well as `dist/robots.txt` and
+`dist/sitemap.xml` from `VITE_SITE_URL`; do not edit those generated files by
+hand.
 
 ---
 

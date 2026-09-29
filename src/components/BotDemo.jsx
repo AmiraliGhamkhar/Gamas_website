@@ -46,14 +46,20 @@ export default function BotDemo() {
   const [phase, setPhase] = useState(0) // 0 idle, 1.. stages+ messages, then loop
   const [progress, setProgress] = useState(0)
   const [auto, setAuto] = useState(true)
+  const [userStarted, setUserStarted] = useState(false)
   const intervalRef = useRef(null)
 
   // Auto replay loop
   useEffect(() => {
     if (!auto) return
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setPhase(6) // jump to end, no animation
+    if (
+      !userStarted &&
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      setPhase(6) // jump to end, no animation unless explicitly started by user
       setProgress(100)
+      setAuto(false)
       return
     }
 
@@ -74,7 +80,7 @@ export default function BotDemo() {
     tick()
     intervalRef.current = setInterval(tick, 1800)
     return () => clearInterval(intervalRef.current)
-  }, [auto])
+  }, [auto, userStarted])
 
   // GSAP reveal for section
   useEffect(() => {
@@ -173,7 +179,14 @@ export default function BotDemo() {
               </a>
               <button
                 type="button"
-                onClick={() => { setAuto((v) => !v); if (!auto) setPhase(0); }}
+                onClick={() => {
+                  if (!auto) {
+                    setUserStarted(true)
+                    setPhase(0)
+                    setProgress(0)
+                  }
+                  setAuto((v) => !v)
+                }}
                 className="inline-flex items-center gap-2 rounded-pill glass px-6 py-3 text-sm hover:bg-white/[0.08] transition"
               >
                 {auto ? '⏸ توقف انیمیشن' : '▶ پخش دوباره'}

@@ -9,7 +9,7 @@
  * Minimum PHP: 7.4.  Requires only pdo_sqlite (falls back to flat files).
  *
  * Layers, in order:
- *   same-origin  →  method  →  honeypot  →  rate limit  →  CSRF
+ *   same-origin  →  method  →  rate limit  →  honeypot  →  CSRF
  *   →  validation  →  storage
  *
  * Every response is JSON (UTF-8), carries a correct status code, and never
@@ -47,12 +47,32 @@ if ($method === 'GET') {
 // ---------------------------------------------------------------------------
 // 3. Everything else must be POST (OPTIONS → 204 for preflight)
 // ---------------------------------------------------------------------------
-gamas_require_method(['POST']);
+gamas_require_method(['GET', 'POST']);
+
+// ---------------------------------------------------------------------------
+// 4. Rate limiting — file based, per IP (short window first so a burst
+//    rejected by the 1-minute limiter does not burn the 1-hour quota, and
+//    before input/honeypot so bots cannot flood logs without limit)
+// ---------------------------------------------------------------------------
+if (!gamas_rate_limit('lead_minute', 3, 60)) {
+    gamas_json(
+        ['error' => 'rate_limited', 'message' => 'کمی صبر کنید و دوباره تلاش کنید.'],
+        429,
+        ['Retry-After' => '60']
+    );
+}
+if (!gamas_rate_limit('lead_hour', 5, 3600)) {
+    gamas_json(
+        ['error' => 'rate_limited', 'message' => 'تعداد درخواست‌ها زیاد است. لطفاً یک ساعت بعد تلاش کنید.'],
+        429,
+        ['Retry-After' => '3600']
+    );
+}
 
 $input = gamas_input();
 
 // ---------------------------------------------------------------------------
-// 4. Honeypot — a field real users cannot see or reach.
+// 5. Honeypot — a field real users cannot see or reach.
 //    Bots get a 200 "success" so they never learn they were caught.
 // ---------------------------------------------------------------------------
 $honeypot = gamas_field($input, 'website', 128);
@@ -65,24 +85,6 @@ if ($honeypot === '') {
 if (trim($honeypot) !== '') {
     gamas_log('honeypot tripped');
     gamas_json(['ok' => true, 'message' => 'درخواست دسترسی ثبت شد؛ در حال حاضر ایمیل پیگیری خودکار ارسال نمی‌شود.']);
-}
-
-// ---------------------------------------------------------------------------
-// 5. Rate limiting — file based, per IP
-// ---------------------------------------------------------------------------
-if (!gamas_rate_limit('lead_hour', 5, 3600)) {
-    gamas_json(
-        ['error' => 'rate_limited', 'message' => 'تعداد درخواست‌ها زیاد است. لطفاً یک ساعت بعد تلاش کنید.'],
-        429,
-        ['Retry-After' => '3600']
-    );
-}
-if (!gamas_rate_limit('lead_minute', 3, 60)) {
-    gamas_json(
-        ['error' => 'rate_limited', 'message' => 'کمی صبر کنید و دوباره تلاش کنید.'],
-        429,
-        ['Retry-After' => '60']
-    );
 }
 
 // ---------------------------------------------------------------------------
@@ -148,10 +150,10 @@ try {
             gamas_log('lead stored (source=' . $source . ')');
             gamas_json(['ok' => true, 'message' => 'درخواست دسترسی ثبت شد؛ در حال حاضر ایمیل پیگیری خودکار ارسال نمی‌شود.']);
         } catch (PDOException $e) {
-            // UNIQUE violation → already registered. Say so without leaking
-            // anything about who is or is not in the list.
-            if ((string)$e->getCode() === '23000') {
-                gamas_json(['ok' => true, 'message' => 'این ایمیل قبلاً ثبت شده است.']);
+            // UNIQUE violation → already registered. Return the same message
+            // so callers cannot enumerate which emails are in the waitlist.
+            if ((string)$e->getCode() === '23000' || stripos($e->getMessage(), 'UNIQUE constraint failed') !== false) {
+                gamas_json(['ok' => true, 'message' => 'درخواست دسترسی ثبت شد؛ در حال حاضر ایمیل پیگیری خودکار ارسال نمی‌شود.']);
             }
             // Any other SQLite failure (disk full, corrupt DB, permissions)
             // falls through to the flat-file store rather than losing the

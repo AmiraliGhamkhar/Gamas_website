@@ -20,7 +20,7 @@ export default function Footer() {
             <p className="mt-3 max-w-[42ch] text-xs leading-6 text-white/45">
               دستیار تلگرامی فارسیِ جزوه‌ساز — ویس، ویدیو و پاورپوینت را به جزوه‌ی ساختاریافته تبدیل می‌کند. منبع بات: GitHub.
             </p>
-            <p className="mt-3 text-[11px] leading-5 text-white/25">
+            <p className="mt-3 text-[11px] leading-5 text-white/25" suppressHydrationWarning>
               © {persianYear} گاماس.
             </p>
           </div>

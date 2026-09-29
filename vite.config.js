@@ -23,9 +23,29 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(base)) {
   throw new Error(`Invalid VITE_BASE "${base}". Use / or a path such as /gamas/`)
 }
 
+const rawSiteUrl = (process.env.VITE_SITE_URL || 'https://gamas.bot').replace(/\/+$/, '')
+let siteOrigin = 'https://gamas.bot'
+try {
+  const parsedSite = new URL(rawSiteUrl)
+  if (!['https:', 'http:'].includes(parsedSite.protocol) || parsedSite.pathname !== '/' || parsedSite.search || parsedSite.hash) {
+    throw new Error('VITE_SITE_URL must be an origin only, such as https://gamas.bot')
+  }
+  siteOrigin = parsedSite.origin
+} catch (error) {
+  throw new Error(error.message || `Invalid VITE_SITE_URL "${rawSiteUrl}"`, { cause: error })
+}
+
 export default defineConfig({
   base,
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'gamas-site-origin',
+      transformIndexHtml(html) {
+        return html.replace(/https:\/\/gamas\.bot/g, siteOrigin)
+      }
+    }
+  ],
   ssgOptions: {
     script: 'async',
     formatting: 'minify',

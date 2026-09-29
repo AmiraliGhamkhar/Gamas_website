@@ -13,7 +13,10 @@ export default function Preloader() {
       return
     }
 
-    const seen = sessionStorage.getItem('gamas_preloader_seen')
+    let seen = null
+    try {
+      seen = sessionStorage.getItem('gamas_preloader_seen')
+    } catch {}
     if (seen) {
       setPhase('hidden')
       return

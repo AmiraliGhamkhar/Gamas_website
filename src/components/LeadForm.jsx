@@ -77,6 +77,10 @@ export default function LeadForm({ source = 'access' }) {
         setStatus('error')
         setMsg(data.message || 'تعداد درخواست زیاد است. یک ساعت بعد تلاش کنید.')
       } else {
+        if (res.status === 403) {
+          setCsrf('')
+          fetchToken().catch(() => {})
+        }
         setStatus('error')
         setMsg(data.message || 'خطایی رخ داد. دوباره تلاش کنید.')
       }
