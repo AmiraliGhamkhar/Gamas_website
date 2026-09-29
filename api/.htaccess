@@ -19,8 +19,8 @@
   </IfModule>
 </FilesMatch>
 
-# Never serve raw config, logs, or data files that land next to the endpoints.
-<FilesMatch "(?i)\.(?:ini|log|bak|old|orig|save|swp|sql|sqlite3?(?:-(?:wal|shm|journal))?|db(?:-journal)?|json|ndjson|jsonl|md|yml|yaml|dist|example)$">
+# Never serve dotfiles, raw config, logs, or data files that land next to the endpoints.
+<FilesMatch "(?i)(?:^\.|\.(?:ini|log(?:\.[0-9]+)?|bak|old|orig|save|swp|sql|sqlite3?(?:-(?:wal|shm|journal))?|db(?:-(?:wal|shm|journal))?|json|ndjson|jsonl|md|yml|yaml|dist|example)$)">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
@@ -35,13 +35,18 @@
 </IfModule>
 
 <IfModule mod_headers.c>
+  Header unset X-Powered-By
   Header always unset X-Powered-By
+  Header unset X-Content-Type-Options
   Header always set X-Content-Type-Options "nosniff"
+  Header unset Referrer-Policy
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header unset X-Frame-Options
   Header always set X-Frame-Options "DENY"
 
   # API responses must never be cached — /api/lead.php?v=csrf hands out tokens
   <FilesMatch "(?i)\.php$">
+    Header unset Cache-Control
     Header always set Cache-Control "no-store, no-cache, must-revalidate, private"
   </FilesMatch>
 </IfModule>

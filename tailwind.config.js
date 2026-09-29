@@ -42,6 +42,17 @@ export default {
       maxWidth: {
         content: '1280px'
       },
+      opacity: {
+        6: '0.06',
+        7: '0.07',
+        8: '0.08',
+        12: '0.12',
+        18: '0.18',
+        66: '0.66'
+      },
+      transitionDuration: {
+        400: '400ms'
+      },
       keyframes: {
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },

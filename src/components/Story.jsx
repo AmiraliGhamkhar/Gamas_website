@@ -23,17 +23,14 @@ export default function Story() {
       ctx = gsap.context(() => {
         mm = gsap.matchMedia()
 
-        // Desktop: pinned story with problem → solution crossfade
+        // Desktop: sticky story with problem → solution crossfade
         mm.add('(min-width: 1024px)', () => {
           const tl = gsap.timeline({
             scrollTrigger: {
               trigger: sectionRef.current,
-              start: 'top top',
-              end: '+=700',
-              pin: pinnedRef.current,
-              pinSpacing: true,
-              scrub: 0.8,
-              anticipatePin: 1,
+              start: 'top 25%',
+              end: 'bottom 75%',
+              scrub: 0.6,
             }
           })
 
@@ -41,12 +38,13 @@ export default function Story() {
             opacity: 0,
             y: -18,
             scale: 0.98,
+            pointerEvents: 'none',
             duration: 0.35,
             ease: 'power2.inOut'
           }, 0.15)
           .fromTo('.solution-card',
-            { opacity: 0, y: 18, scale: 0.98 },
-            { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'power2.out' },
+            { opacity: 0, y: 18, scale: 0.98, pointerEvents: 'none' },
+            { opacity: 1, y: 0, scale: 1, pointerEvents: 'auto', duration: 0.45, ease: 'power2.out' },
             0.2
           )
           .to('.problem-badge', { opacity: 0, duration: 0.2 }, 0.15)
@@ -129,13 +127,9 @@ export default function Story() {
         </div>
 
         <div className="mt-12 lg:mt-16 grid lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-10 items-start">
-          {/* Pinned side */}
+          {/* Sticky side on desktop, stacked on mobile/tablet */}
           <div ref={pinnedRef} className="lg:sticky lg:top-24">
-            {/* Cards are in normal flow below lg so BOTH are readable on
-                mobile/tablet (the crossfade only exists ≥1024px). Absolute
-                stacking + opacity-0 here used to hide the solution card
-                entirely on small screens. */}
-            <div className="relative lg:min-h-[480px]">
+            <div className="relative space-y-4 lg:space-y-0 lg:min-h-[480px]">
               {/* Problem card — visible first */}
               <div className="problem-card lg:absolute lg:inset-0 glass rounded-[1.6rem] p-6 sm:p-7 flex flex-col will-change-transform">
                 <div className="flex items-center gap-3">
@@ -167,8 +161,8 @@ export default function Story() {
                 </div>
               </div>
 
-              {/* Solution card — fades in on scroll (desktop pinned) */}
-              <div className="solution-card story-reveal lg:absolute lg:inset-0 glass-strong rounded-[1.6rem] p-6 sm:p-7 flex flex-col will-change-transform lg:opacity-0">
+              {/* Solution card — fades in on scroll (desktop sticky) */}
+              <div className="solution-card story-reveal lg:absolute lg:inset-0 glass-strong rounded-[1.6rem] p-6 sm:p-7 flex flex-col will-change-transform lg:opacity-0 lg:pointer-events-none">
                 <div className="flex items-center gap-3">
                   <span className="solution-badge inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-xs lg:opacity-0">✓</span>
                   <span className="solution-badge text-xs font-medium text-emerald-300/90 lg:opacity-0">بعد — بفرست، تحویل بگیر</span>
@@ -197,14 +191,6 @@ export default function Story() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </a>
                 </div>
-              </div>
-            </div>
-
-            {/* Mobile only: show both stacked (since pin disabled) — hidden on lg because pinned shows crossfade */}
-            <div className="lg:hidden mt-6 space-y-4 story-reveal">
-              <div className="glass-strong rounded-2xl p-5 border-emerald-500/20">
-                <p className="text-xs font-medium text-emerald-300">راه‌حل گاماس</p>
-                <p className="mt-2 text-sm leading-6 text-white/70">در موبایل هر دو کارت پشتِ هم نمایش داده می‌شود؛ در دسکتاپ با اسکرول، کارتِ مشکل محو و کارتِ راه‌حل با پین ظاهر می‌شود.</p>
               </div>
             </div>
           </div>

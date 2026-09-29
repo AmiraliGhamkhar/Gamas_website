@@ -115,7 +115,7 @@ const forbidden = [
   /^vite\.config\.(js|ts|mjs)$/,
   /^php\.ini$/i,
   /\.(?:php\d*|phtml|phar)$/i,
-  /\.(?:ndjson|jsonl|sqlite3?(?:-(?:wal|shm|journal))?|db(?:-journal)?|sql|log(?:\.\d+)?)$/i,
+  /\.(?:ndjson|jsonl|sqlite3?(?:-(?:wal|shm|journal))?|db(?:-(?:wal|shm|journal))?|sql|log(?:\.\d+)?)$/i,
   /\.map$/,
 ]
 
@@ -136,10 +136,15 @@ if (offenders.length) {
 }
 
 // ---------------------------------------------------------------------------
-// 3. .htaccess must be there
+// 4. .htaccess must be there (and RewriteBase aligned with VITE_BASE)
 // ---------------------------------------------------------------------------
 const htaccess = path.join(dist, '.htaccess')
 if (fs.existsSync(htaccess)) {
+  if (configuredBase !== '/' && /^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
+    const htContent = fs.readFileSync(htaccess, 'utf8')
+    const updatedHt = htContent.replace(/^(\s*RewriteBase\s+)\/\s*$/m, `$1${configuredBase}`)
+    fs.writeFileSync(htaccess, updatedHt)
+  }
   ok('.htaccess present in dist/')
 } else {
   fail('.htaccess missing from dist/ — public/.htaccess was not copied')

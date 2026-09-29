@@ -27,21 +27,27 @@ const faqs = [
   },
 ]
 
-function FAQItem({ q, a, isOpen, onToggle }) {
+function FAQItem({ index, q, a, isOpen, onToggle }) {
+  const panelId = `faq-panel-${index}`
   return (
     <div className="group rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
+        aria-controls={panelId}
         className="flex w-full items-center justify-between gap-4 px-5 py-4 text-right"
       >
         <span className="text-sm font-medium leading-6 text-white/90">{q}</span>
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 transition will-change-transform ${isOpen ? 'rotate-45 bg-white text-zinc-900' : ''}`}>
+        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 transition will-change-transform ${isOpen ? 'rotate-45 bg-white text-zinc-900' : 'bg-white/5 text-white/60'}`}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
         </span>
       </button>
-      <div className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+      <div
+        id={panelId}
+        aria-hidden={!isOpen}
+        className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+      >
         <div className="overflow-hidden">
           <p className="px-5 pb-5 text-sm leading-7 text-white/60">{a}</p>
         </div>
@@ -113,7 +119,7 @@ export default function FAQ() {
         <div className="mx-auto mt-10 max-w-3xl space-y-3">
           {faqs.map((f, i) => (
             <div key={i} className="faq-item will-change-transform">
-              <FAQItem q={f.q} a={f.a} isOpen={open === i} onToggle={() => setOpen(open === i ? -1 : i)} />
+              <FAQItem index={i} q={f.q} a={f.a} isOpen={open === i} onToggle={() => setOpen(open === i ? -1 : i)} />
             </div>
           ))}
         </div>
