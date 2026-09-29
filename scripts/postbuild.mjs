@@ -54,7 +54,55 @@ if (removed.length) {
 }
 
 // ---------------------------------------------------------------------------
-// 2. Refuse to ship anything sensitive
+// 2. Generate base-aware crawler files (root deploy is VITE_BASE=/).
+//    Public files are copied verbatim by Vite, so rewrite these after copying
+//    when the site is deployed below a cPanel domain root.
+// ---------------------------------------------------------------------------
+const configuredBase = process.env.VITE_BASE || '/'
+const configuredSite = (process.env.VITE_SITE_URL || 'https://gamas.bot').replace(/\/+$/, '')
+let siteOrigin = ''
+try {
+  const parsedSite = new URL(configuredSite)
+  if (!['https:', 'http:'].includes(parsedSite.protocol) || parsedSite.pathname !== '/' || parsedSite.search || parsedSite.hash) {
+    throw new Error('VITE_SITE_URL must be an origin only, such as https://gamas.bot')
+  }
+  siteOrigin = parsedSite.origin
+} catch (error) {
+  fail(error.message || `invalid VITE_SITE_URL "${configuredSite}"`)
+}
+
+if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
+  fail(`invalid VITE_BASE "${configuredBase}" — use / or a path such as /gamas/`)
+} else if (siteOrigin) {
+  const prefix = configuredBase === '/' ? '' : configuredBase.slice(0, -1)
+  const today = new Date().toISOString().slice(0, 10)
+  const robots = [
+    'User-agent: *',
+    `Disallow: ${prefix}/api/`,
+    `Allow: ${prefix}/`,
+    '',
+    `Sitemap: ${siteOrigin}${prefix}/sitemap.xml`,
+    '',
+  ].join('\n')
+  const sitemap = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '  <url>',
+    `    <loc>${siteOrigin}${prefix}/</loc>`,
+    `    <lastmod>${today}</lastmod>`,
+    '    <changefreq>weekly</changefreq>',
+    '    <priority>1.0</priority>',
+    '  </url>',
+    '</urlset>',
+    '',
+  ].join('\n')
+  fs.writeFileSync(path.join(dist, 'robots.txt'), robots)
+  fs.writeFileSync(path.join(dist, 'sitemap.xml'), sitemap)
+  ok(`crawler files generated for base ${configuredBase}`)
+}
+
+// ---------------------------------------------------------------------------
+// 3. Refuse to ship anything sensitive
 // ---------------------------------------------------------------------------
 const forbidden = [
   /^node_modules$/,
@@ -66,6 +114,8 @@ const forbidden = [
   /^package(-lock)?\.json$/,
   /^vite\.config\.(js|ts|mjs)$/,
   /^php\.ini$/i,
+  /\.(?:php\d*|phtml|phar)$/i,
+  /\.(?:ndjson|jsonl|sqlite3?(?:-(?:wal|shm|journal))?|db(?:-journal)?|sql|log(?:\.\d+)?)$/i,
   /\.map$/,
 ]
 

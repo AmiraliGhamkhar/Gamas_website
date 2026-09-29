@@ -20,7 +20,7 @@
 </FilesMatch>
 
 # Never serve raw config, logs, or data files that land next to the endpoints.
-<FilesMatch "(?i)\.(?:ini|log|bak|old|orig|save|swp|sql|sqlite3?|db|json|md|yml|yaml|dist|example)$">
+<FilesMatch "(?i)\.(?:ini|log|bak|old|orig|save|swp|sql|sqlite3?(?:-(?:wal|shm|journal))?|db(?:-journal)?|json|ndjson|jsonl|md|yml|yaml|dist|example)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>

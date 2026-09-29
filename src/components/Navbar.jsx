@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { tgLink } from '../lib/constants'
+import { useEffect, useRef, useState } from 'react'
+import { BOT_HANDLE, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const navLinks = [
@@ -12,6 +12,7 @@ const navLinks = [
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const toggleButtonRef = useRef(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -20,14 +21,32 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // lock scroll when drawer open
+  // Unlock the page when switching back to desktop while the mobile drawer is open.
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
+    const closeOnDesktop = () => {
+      if (window.matchMedia('(min-width: 768px)').matches) setOpen(false)
     }
-    return () => { document.body.style.overflow = '' }
+    window.addEventListener('resize', closeOnDesktop)
+    return () => window.removeEventListener('resize', closeOnDesktop)
+  }, [])
+
+  // Lock background scrolling while the drawer is open and support Escape.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    if (open) document.body.style.overflow = 'hidden'
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        toggleButtonRef.current?.focus()
+      }
+    }
+    if (open) window.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
   }, [open])
 
   return (
@@ -82,6 +101,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
+            ref={toggleButtonRef}
             type="button"
             aria-label={open ? 'بستن منو' : 'باز کردن منو'}
             aria-expanded={open}
@@ -100,19 +120,24 @@ export default function Navbar() {
       </div>
 
       {/* Mobile drawer */}
-      <div
+      <nav
         id="mobile-nav"
+        aria-label="منوی اصلی موبایل"
+        aria-hidden={!open}
         className={`md:hidden overflow-hidden border-t border-white/5 bg-[#0A0A0F]/95 backdrop-blur-[16px] transition-all duration-300 ease-out ${
           open ? 'max-h-[420px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
         }`}
-        aria-hidden={!open}
       >
         <div className="px-4 sm:px-6 py-4 space-y-1">
           {navLinks.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              onClick={() => setOpen(false)}
+              tabIndex={open ? 0 : -1}
+              onClick={() => {
+                setOpen(false)
+                toggleButtonRef.current?.focus({ preventScroll: true })
+              }}
               className="flex items-center justify-between rounded-xl px-4 py-3 text-sm text-white/80 hover:bg-white/[0.06] hover:text-white transition"
             >
               {l.label}
@@ -123,12 +148,17 @@ export default function Navbar() {
           ))}
           <a
             href={tgLink('navbar')}
+            tabIndex={open ? 0 : -1}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => { setOpen(false); trackCTA('navbar'); }}
+            onClick={() => {
+              setOpen(false)
+              toggleButtonRef.current?.focus({ preventScroll: true })
+              trackCTA('navbar')
+            }}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-pill bg-gradient-primary px-5 py-3 text-sm font-medium text-white shadow-glow"
           >
-            شروع در تلگرام — @GamasBot
+            شروع در تلگرام — {BOT_HANDLE}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl">
               <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -137,7 +167,7 @@ export default function Navbar() {
             منوی ربات: ساخت جزوه / راهنما / قالب‌ها / حریم خصوصی
           </p>
         </div>
-      </div>
+      </nav>
     </header>
   )
 }

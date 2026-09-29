@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { BOT_HANDLE, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 export default function Story() {
@@ -175,7 +176,7 @@ export default function Story() {
                 </div>
                 <h3 className="mt-5 font-display text-[1.35rem] leading-6">فایل را بفرست، جزوه را بگیر</h3>
                 <p className="mt-3 text-sm leading-7 text-white/60">
-                  ویس/ویدیو/پاورپوینت را به <span dir="ltr" className="text-white">@GamasBot</span> بفرست — با FFmpeg صدا جدا می‌شود، با STT فارسی رونویسی و با LLM ساختار می‌گیرد.
+                  ویس/ویدیو/پاورپوینت را به <span dir="ltr" className="text-white">{BOT_HANDLE}</span> بفرست — با FFmpeg صدا جدا می‌شود، با STT فارسی رونویسی و با LLM ساختار می‌گیرد.
                 </p>
                 <ul className="mt-6 space-y-3 text-sm">
                   {[
@@ -191,7 +192,7 @@ export default function Story() {
                   ))}
                 </ul>
                 <div className="mt-auto pt-6">
-                  <a href="https://t.me/GamasBot?start=landing_story" target="_blank" rel="noopener noreferrer" onClick={() => trackCTA('story')} className="inline-flex items-center gap-2 rounded-pill bg-gradient-primary px-5 py-2.5 text-xs font-medium text-white shadow-glow">
+                  <a href={tgLink('story')} target="_blank" rel="noopener noreferrer" onClick={() => trackCTA('story')} className="inline-flex items-center gap-2 rounded-pill bg-gradient-primary px-5 py-2.5 text-xs font-medium text-white shadow-glow">
                     امتحان کن — شروع در تلگرام
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </a>
@@ -239,7 +240,7 @@ export default function Story() {
 
             <div className="story-reveal glass rounded-2xl p-5 flex items-center justify-between">
               <span className="text-xs text-white/60">آماده‌ای؟</span>
-              <a href="https://t.me/GamasBot?start=landing_story_cta" target="_blank" rel="noopener noreferrer" onClick={() => trackCTA('story_cta')} className="rounded-pill bg-white text-zinc-900 px-4 py-2 text-xs font-medium hover:bg-white/90 transition">شروع در تلگرام</a>
+              <a href={tgLink('story_cta')} target="_blank" rel="noopener noreferrer" onClick={() => trackCTA('story_cta')} className="rounded-pill bg-white text-zinc-900 px-4 py-2 text-xs font-medium hover:bg-white/90 transition">شروع در تلگرام</a>
             </div>
           </div>
         </div>

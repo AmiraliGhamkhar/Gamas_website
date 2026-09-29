@@ -11,7 +11,7 @@ account that serves `https://gamas.bot` from `public_html/`.
 |---|---|---|
 | Deploy path | **root** of `public_html` (not a subfolder) | `base: '/'` in `vite.config.js` |
 | Canonical host | **non-www** `gamas.bot` | `public/.htaccess` §3 |
-| PHP minimum | **7.4** (recommended 8.1+) | `api/bootstrap.php` version guard |
+| PHP minimum | **7.4** for compatibility (recommended 8.2+) | `api/bootstrap.php` version guard |
 | PHP extensions | `pdo_sqlite` *(optional)*, `mbstring` *(optional)*, `json`, `hash` | see §4 |
 | Node on the server | **not required** | build runs locally or in CI |
 | Email | **not sent** — leads are stored only | see §12 |
@@ -22,6 +22,9 @@ what to change.
 ---
 
 ## 1. Build (on your machine or in CI — **never** on the server)
+
+Build with **Node 20.19+, 22.13+, or 24+** (local machine or CI; Node is not
+needed on the cPanel server):
 
 ```bash
 npm ci
@@ -51,19 +54,18 @@ dist/
 └── sitemap.xml
 ```
 
-**Building for a subfolder instead** (only if the site moves to
-`public_html/gamas/`):
+**Deploying under a subfolder** (for example, `https://gamas.bot/gamas/`):
 
 ```bash
 VITE_BASE=/gamas/ npm run build
 ```
 
-`VITE_BASE` **must** start and end with a slash and must match the public URL
-path exactly. Then also change the two API calls in the frontend — they are
-absolute and would keep pointing at the domain root:
-
-- `src/lib/track.js` → `'/api/track.php'`
-- `src/components/LeadForm.jsx` → `const LEAD_API = '/api/lead.php'`
+`VITE_BASE` must start and end with a slash and match the public URL path
+exactly. Upload the contents of `dist/` to `public_html/gamas/`, upload
+`api/` to `public_html/gamas/api/`, and (if using the in-root fallback)
+upload `data/.htaccess` to `public_html/gamas/data/.htaccess`. Asset, API,
+canonical, robots.txt, and sitemap paths are generated for that base; no source
+edits are needed.
 
 ---
 
@@ -114,10 +116,14 @@ api/.user.ini        → public_html/api/.user.ini
 `bootstrap.php` is shared library code, not an endpoint. It is denied over
 HTTP by `api/.htaccess`; PHP still loads it from disk via `require_once`.
 
-### 2c. Optional fallback data dir → `public_html/data/`
+For the subfolder deployment described in §1, place these files under
+`public_html/gamas/api/` instead.
 
-Only upload `data/.htaccess` here. It is the last-resort storage location
-(see §5); PHP creates the directory itself if it needs to.
+### 2c. Optional fallback data dir
+
+For a root deploy, only upload `data/.htaccess` to `public_html/data/`. For a
+subfolder deploy, use `public_html/gamas/data/`. This is the last-resort
+storage location (see §5); PHP creates the directory itself if it needs to.
 
 ---
 
@@ -150,13 +156,13 @@ Telegram call, so there is no token to protect. The only secret is
 
 ### 4a. PHP version
 
-cPanel ▸ **MultiPHP Manager** ▸ set the domain to **PHP 8.1 or newer**.
+cPanel ▸ **MultiPHP Manager** ▸ set the domain to **PHP 8.2 or newer**.
 
-- **Minimum 7.4.** `api/bootstrap.php` returns a clean JSON 500 below that.
-- The code avoids all 8.x-only syntax (no `match`, no enums, no nullsafe
-  operator, no `str_contains`), so it runs unchanged on 7.4 → 8.4.
-- If you are stuck on 7.4, note that `setcookie()`'s array-options form is
-  not available; `api/bootstrap.php` already has a 7.0–7.2 fallback branch.
+- **Minimum 7.4 is compatibility-only.** `api/bootstrap.php` returns a clean
+  JSON 500 below that; use a maintained PHP release on a public host.
+- The code avoids syntax newer than PHP 7.4, so it runs on PHP 7.4 through
+  current PHP 8.x releases. PHP 7.4 is only a compatibility floor; it no longer
+  receives upstream security fixes.
 
 ### 4b. PHP extensions
 
@@ -166,7 +172,7 @@ cPanel ▸ **Select PHP Version** ▸ tick:
   switches to flat NDJSON files, which work but cannot be queried with SQL.
 - **`mbstring`** — recommended for correct Persian text handling. Everything
   degrades gracefully without it.
-- `json`, `hash`, `pcre`, `session` are core in every modern PHP.
+- `json`, `hash`, and `pcre` are core extensions. Sessions are deliberately not used.
 
 Check what you actually have with:
 
@@ -209,26 +215,36 @@ ACME renewal keeps working.
 
 `api/bootstrap.php` resolves the storage directory in this order:
 
-1. **`GAMAS_DATA_DIR`** environment variable, if set
-   (cPanel ▸ **Environment Variables** or a `SetEnv` in `.htaccess`).
-2. **`<parent of public_html>/gamas_data`** → normally
-   `/home/USER/gamas_data`. **Outside the web root**, unreachable by HTTP.
-   This is the default and it is what you want.
-3. **`public_html/data`** — last resort, used only if 1 and 2 cannot be
-   created. Protected by the `data` rule in `.htaccess` (403 to browsers,
+1. **`GAMAS_DATA_DIR`** environment variable, if set outside all public roots
+   (cPanel ▸ **Environment Variables**). Paths inside the site's `DocumentRoot`
+   or its `public_html` tree are ignored.
+2. **`<account home>/gamas_data`** → normally `/home/USER/gamas_data`. The
+   location is derived from the `public_html` boundary or `HOME` and verified
+   outside the site's web roots, including for an addon domain with a nested
+   DocumentRoot. This is the default and it is what you want.
+3. **The app's `data/` directory** — last resort, used only if 1 and 2 cannot
+   be created. Protected by the `data` rule in `.htaccess` (403 to browsers,
    while PHP still reads and writes it directly).
 
 Contents:
 
 ```
-gamas_data/
-├── gamas.sqlite      leads + clicks (when pdo_sqlite is present)
-├── leads.ndjson      fallback lead log (append-only)
-├── clicks.ndjson     fallback click log (append-only)
-├── csrf.key          0600 — HMAC signing key for CSRF tokens
-├── ratelimit/        per-IP sliding-window buckets
-└── logs/app.log      application log
+gamas_data/              0700 — private directory
+├── gamas.sqlite          0600 — leads + CTA events (when pdo_sqlite is present)
+├── leads.ndjson          0600 — fallback lead log (contains submitted emails)
+├── clicks.ndjson         0600 — fallback CTA log (section + time; capped at 1 MiB)
+├── csrf.key              0600 — HMAC signing key for CSRF tokens
+├── ratelimit/            0700 — per-IP sliding-window buckets
+└── logs/app.log          0600 — application log
 ```
+
+The waitlist keeps the submitted email, form source, IP address, user-agent,
+and timestamp. It is not emailed or shared by this backend, and there is no
+automatic lead-retention period yet: define one and delete/export old leads as
+appropriate. CTA events store only section + time; SQLite removes events older
+than 90 days during occasional traffic, while the no-SQLite fallback is capped
+at 1 MiB. On upgrade, prior CTA IP/user-agent values are cleared from SQLite
+and the legacy fallback click log is reset.
 
 Verify after the first form submission:
 
@@ -271,9 +287,7 @@ TOKEN=$(curl -s -c /tmp/cj -b /tmp/cj -H 'Referer: https://gamas.bot/' \
         https://gamas.bot/api/lead.php | python3 -c 'import sys,json;print(json.load(sys.stdin)["csrf_token"])')
 echo "token: ${TOKEN:0:24}…"
 
-# 8. API: submit a lead (sleep 2s first — sub-2s submissions are silently
-#    dropped by the anti-spam timing check)
-sleep 2
+# 8. API: submit a lead
 curl -s -c /tmp/cj -b /tmp/cj \
   -H 'Content-Type: application/json' -H 'Origin: https://gamas.bot' \
   -H "X-CSRF-Token: $TOKEN" \
@@ -285,7 +299,7 @@ curl -s -H 'Origin: https://evil.example' -H 'Content-Type: application/json' \
   -d '{"email":"x@y.z"}' https://gamas.bot/api/lead.php -w '\nHTTP %{http_code}\n'
 
 # 10. API: non-POST rejected (expect 405)
-curl -s -X PUT https://gamas.bot/api/lead.php -w '\nHTTP %{http_code}\n'
+curl -s -X PUT -H 'Origin: https://gamas.bot' https://gamas.bot/api/lead.php -w '\nHTTP %{http_code}\n'
 
 # 11. Click tracking works
 curl -s -H 'Origin: https://gamas.bot' -H 'Content-Type: application/json' \
@@ -318,12 +332,15 @@ canonical host, replace **rule 3a** with:
 Leave **rule 3b** (the `X-Forwarded-Proto` / `%{HTTPS}` conditions) untouched —
 it only deals with the scheme, and removing those conditions re-introduces the
 Cloudflare Flexible redirect loop described in the file's comments.
-Then update `index.html`:
+Then update the `https://gamas.bot` origin in `index.html` (canonical, Open Graph,
+Twitter, and JSON-LD URLs) to `https://www.gamas.bot`, and rebuild with:
 
-- `<link rel="canonical" href="https://gamas.bot/">` → `https://www.gamas.bot/`
-- `og:url` → `https://www.gamas.bot/`
+```bash
+VITE_SITE_URL=https://www.gamas.bot npm run build
+```
 
-…and `public/robots.txt` + `public/sitemap.xml`, then rebuild.
+`postbuild` generates `robots.txt` and `sitemap.xml` from `VITE_SITE_URL`; do
+not edit those generated files by hand.
 
 ---
 

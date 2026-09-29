@@ -62,28 +62,27 @@ if ($section === '' || preg_match('/^[a-z0-9_-]{1,64}$/', $section) !== 1) {
     gamas_json(['error' => 'invalid_section', 'message' => 'بخش نامعتبر'], 400);
 }
 
-$ua = preg_replace('/[\x00-\x1F\x7F]/', '', substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 512)) ?? '';
-
+// Keep only non-identifying event metadata. The limiter still uses a hashed
+// client IP in private short-lived buckets; analytics never needs raw IP/UA.
 $record = [
     'section' => $section,
-    'ip'      => gamas_client_ip(),
-    'ua'      => $ua,
     'created' => gmdate('c'),
 ];
 
 try {
-    $total = null;
     $pdo = gamas_db();
 
     if ($pdo instanceof PDO) {
         try {
-            $stmt = $pdo->prepare('INSERT INTO clicks (section, ip, user_agent) VALUES (:s, :ip, :ua)');
-            $stmt->execute([':s' => $section, ':ip' => $record['ip'], ':ua' => $ua]);
-
-            $stmt = $pdo->prepare('SELECT COUNT(*) FROM clicks WHERE section = :s');
+            $stmt = $pdo->prepare('INSERT INTO clicks (section) VALUES (:s)');
             $stmt->execute([':s' => $section]);
-            $count = $stmt->fetchColumn();
-            $total = $count === false ? null : (int)$count;
+
+            // Keep the shared-host database bounded without a server cron.
+            // A periodic sweep is enough; click events older than 90 days are
+            // not used by the UI or exposed through a read endpoint.
+            if (mt_rand(1, 100) === 1) {
+                $pdo->exec("DELETE FROM clicks WHERE created_at < datetime('now', '-90 days')");
+            }
         } catch (PDOException $e) {
             // A failed insert here must never surface as an error to the
             // visitor — they clicked a link and should see nothing.
@@ -93,11 +92,8 @@ try {
         gamas_append_record('clicks', $record);
     }
 
-    $out = ['ok' => true, 'section' => $section];
-    if ($total !== null) {
-        $out['total'] = $total;
-    }
-    gamas_json($out);
+    // Do not return aggregate counters: the front end never consumes them.
+    gamas_json(['ok' => true, 'section' => $section]);
 } catch (Throwable $e) {
     gamas_log('track endpoint error: ' . $e->getMessage());
     gamas_json(['error' => 'server_error'], 500);

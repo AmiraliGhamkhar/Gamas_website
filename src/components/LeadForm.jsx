@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import { sitePath } from '../lib/constants'
 
-const LEAD_API = '/api/lead.php'
+const LEAD_API = sitePath('api/lead.php')
 
 export default function LeadForm({ source = 'access' }) {
   const [email, setEmail] = useState('')
@@ -70,7 +71,7 @@ export default function LeadForm({ source = 'access' }) {
       const data = await res.json().catch(() => ({}))
       if (res.ok && (data.ok || data.csrf_token)) {
         setStatus('success')
-        setMsg(data.message || 'ایمیل ثبت شد. به‌زودی خبر می‌دهیم.')
+        setMsg(data.message || 'درخواست دسترسی ثبت شد؛ ایمیل پیگیری خودکار ارسال نمی‌شود.')
         setEmail('')
       } else if (res.status === 429) {
         setStatus('error')
@@ -143,7 +144,7 @@ export default function LeadForm({ source = 'access' }) {
       )}
 
       <p className="text-[11px] leading-4 text-white/30">
-        با ثبت ایمیل، با ارسال صدا/رونوشت به سرویس‌های STT/LLM خارجی موافقت می‌کنید. جزئیات در <a href="#privacy" className="underline hover:text-white/50">حریم خصوصی</a>.
+        با ثبت ایمیل، نشانی ایمیل، محل فرم، IP و مشخصات مرورگر برای مدیریت فهرست دسترسی در فضای خصوصی میزبان ذخیره می‌شود؛ ایمیل خودکار ارسال نمی‌شود. <a href="#privacy" className="underline hover:text-white/50">جزئیات حریم خصوصی</a>.
       </p>
     </form>
   )

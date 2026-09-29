@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { tgLink } from '../lib/constants'
+import { BOT_HANDLE, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 export default function FinalCTA() {
@@ -51,7 +51,7 @@ export default function FinalCTA() {
                 جزوه‌ات را در <span className="text-gradient">چند دقیقه</span> بگیر
               </h2>
               <p className="mt-4 text-sm leading-7 text-white/60">
-                ویس، ویدیو یا پاورپوینت را به <span dir="ltr" className="text-white">@GamasBot</span> بفرست — بدون نصب، با پیام وضعیت زنده و تحویل رونوشت حتی در خطا.
+                ویس، ویدیو یا پاورپوینت را به <span dir="ltr" className="text-white">{BOT_HANDLE}</span> بفرست — بدون نصب، با پیام وضعیت زنده و تحویل رونوشت حتی در خطا.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <a

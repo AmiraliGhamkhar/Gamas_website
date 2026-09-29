@@ -32,13 +32,6 @@ define('GAMAS_BOOTSTRAP', true);
 define('GAMAS_CSRF_COOKIE', 'gamas_csrf');
 define('GAMAS_CSRF_TTL', 43200); // 12 hours
 
-// Anti-spam: reject submissions that arrive less than this many seconds
-// after the token was issued. Bots post in milliseconds. Keep it low —
-// raising it risks silently dropping a real visitor who used autofill.
-// A tripped check returns a FAKE success, so an aggressive value loses
-// leads with no visible symptom. Tune carefully.
-define('GAMAS_MIN_FILL_SECONDS', 1);
-
 // ---------------------------------------------------------------------------
 // 1. Version guard — fail loudly but generically on ancient PHP
 // ---------------------------------------------------------------------------
@@ -175,7 +168,7 @@ function gamas_log(string $message): void
                     flock($fp, LOCK_UN);
                 }
                 fclose($fp);
-                @chmod($file, 0640);
+                @chmod($file, 0600);
             }
         }
     } catch (Throwable $e) {
@@ -248,17 +241,23 @@ function gamas_ensure_dir(string $dir): bool
         return false;
     }
     if (!is_dir($dir)) {
-        $old = @umask(0022);
-        $made = @mkdir($dir, 0755, true);
+        $old = @umask(0077);
+        $made = @mkdir($dir, 0700, true);
         @umask($old);
         if (!$made && !is_dir($dir)) {
             return false;
         }
     }
-    return is_dir($dir) && is_writable($dir);
+    if (!is_dir($dir)) {
+        return false;
+    }
+    // Existing data directories may have been created by an older release
+    // with broader permissions. They hold personal data and secrets.
+    @chmod($dir, 0700);
+    return is_writable($dir);
 }
 
-/** Absolute, real path of the web root (…/public_html). */
+/** Absolute, real path of this site's Apache DocumentRoot. */
 function gamas_doc_root(): string
 {
     $dr = isset($_SERVER['DOCUMENT_ROOT']) ? (string)$_SERVER['DOCUMENT_ROOT'] : '';
@@ -272,14 +271,49 @@ function gamas_doc_root(): string
     return rtrim((string)dirname(__DIR__), '/');
 }
 
+/** True when a path resolves under this site's or its cPanel public_html root. */
+function gamas_path_is_public(string $path): bool
+{
+    $docRoot = gamas_doc_root();
+    $publicRoots = [$docRoot];
+    $normalizedDocRoot = str_replace('\\', '/', $docRoot);
+    if (preg_match('#^(.*?)/public_html(?:/|$)#i', $normalizedDocRoot, $matches) === 1) {
+        $publicHtmlRoot = rtrim($matches[1], '/') . '/public_html';
+        $publicRoots[] = $publicHtmlRoot;
+    }
+
+    $realPath = realpath($path);
+    if ($realPath === false) {
+        $realParent = realpath(dirname($path));
+        $realPath = $realParent !== false
+            ? rtrim($realParent, '/') . '/' . basename($path)
+            : $path;
+    }
+    $normalizedPath = rtrim(str_replace('\\', '/', $realPath), '/');
+
+    foreach ($publicRoots as $root) {
+        $realRoot = realpath($root);
+        $normalizedRoot = rtrim(str_replace('\\', '/', $realRoot !== false ? $realRoot : $root), '/');
+        if ($normalizedRoot === '') {
+            $normalizedRoot = '/';
+        }
+        if ($normalizedPath === $normalizedRoot || ($normalizedRoot === '/'
+            ? strpos($normalizedPath, '/') === 0
+            : strpos($normalizedPath, $normalizedRoot . '/') === 0)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
  * Private data directory, resolved once per request.
  *
  *   1. GAMAS_DATA_DIR env var (set it in cPanel → Environment Variables)
- *   2. dirname(web root)/gamas_data  → /home/USER/gamas_data  (OUTSIDE the
- *      web root, unreachable by HTTP — the preferred location)
- *   3. public_html/data              → last resort; blocked by the .htaccess
- *      rule `RewriteRule (?:^|/)(…|data|…)(?:/|$) - [F]`
+ *   2. The account home’s /gamas_data (derived from public_html or HOME),
+ *      verified outside both the domain root and public_html.
+ *   3. The app’s data/ directory → last resort; blocked by Apache rules and
+ *      data/.htaccess, with restrictive filesystem permissions.
  *
  * Throws if none is usable: better a loud, logged 500 than silently writing
  * visitor data somewhere the web server can serve it.
@@ -291,25 +325,42 @@ function gamas_data_dir(): string
         return $resolved;
     }
 
-    $candidates = [];
+    $privateCandidates = [];
 
     $env = getenv('GAMAS_DATA_DIR');
     if (is_string($env) && $env !== '') {
-        $candidates[] = $env;
+        $privateCandidates[] = $env;
     }
 
-    $candidates[] = dirname(gamas_doc_root()) . '/gamas_data';
-    $candidates[] = dirname(__DIR__) . '/data';
+    $docRoot = gamas_doc_root();
+    $normalizedDocRoot = str_replace('\\', '/', $docRoot);
+    if (preg_match('#^(.*?)/public_html(?:/|$)#i', $normalizedDocRoot, $matches) === 1) {
+        $accountHome = rtrim($matches[1], '/');
+        $privateCandidates[] = ($accountHome === '' ? '' : $accountHome) . '/gamas_data';
+    } else {
+        $home = getenv('HOME');
+        if (is_string($home) && $home !== '') {
+            $privateCandidates[] = rtrim($home, '/') . '/gamas_data';
+        }
+    }
+    $privateCandidates[] = dirname($docRoot) . '/gamas_data';
 
-    foreach ($candidates as $candidate) {
+    foreach (array_unique($privateCandidates) as $candidate) {
         $candidate = rtrim((string)$candidate, '/');
-        if ($candidate === '' || $candidate === '/' || $candidate === '.') {
+        if ($candidate === '' || $candidate === '/' || $candidate === '.' || gamas_path_is_public($candidate)) {
             continue;
         }
         if (gamas_ensure_dir($candidate)) {
             $resolved = $candidate;
             return $resolved;
         }
+    }
+
+    // The in-root location is used only as a protected last resort.
+    $fallback = dirname(__DIR__) . '/data';
+    if (gamas_ensure_dir($fallback)) {
+        $resolved = $fallback;
+        return $resolved;
     }
 
     throw new RuntimeException('No writable private storage directory available.');
@@ -380,7 +431,8 @@ function gamas_db(): ?PDO
     }
 
     try {
-        $db = new PDO('sqlite:' . gamas_data_dir() . '/gamas.sqlite', null, null, [
+        $dbPath = gamas_data_dir() . '/gamas.sqlite';
+        $db = new PDO('sqlite:' . $dbPath, null, null, [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
@@ -418,11 +470,36 @@ function gamas_db(): ?PDO
         $db->exec('CREATE TABLE IF NOT EXISTS clicks (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             section    TEXT NOT NULL,
-            ip         TEXT,
-            user_agent TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )');
-        $db->exec('CREATE INDEX IF NOT EXISTS idx_clicks_section ON clicks(section)');
+        $db->exec('DROP INDEX IF EXISTS idx_clicks_section');
+        $db->exec('CREATE INDEX IF NOT EXISTS idx_clicks_created ON clicks(created_at)');
+
+        // Earlier versions stored IP and user-agent with CTA events. Clear
+        // those fields once, then keep only section + time going forward.
+        $schemaVersion = (int)$db->query('PRAGMA user_version')->fetchColumn();
+        if ($schemaVersion < 1) {
+            $columns = array_column($db->query('PRAGMA table_info(clicks)')->fetchAll(), 'name');
+            $privateColumns = [];
+            if (in_array('ip', $columns, true)) {
+                $privateColumns[] = 'ip = NULL';
+            }
+            if (in_array('user_agent', $columns, true)) {
+                $privateColumns[] = 'user_agent = NULL';
+            }
+            if ($privateColumns !== []) {
+                $db->exec('UPDATE clicks SET ' . implode(', ', $privateColumns));
+            }
+            $db->exec('PRAGMA user_version=1');
+        }
+
+        // Do not rely on the hosting account's default umask for database
+        // files, which contain waitlist emails and anti-abuse metadata.
+        foreach ([$dbPath, $dbPath . '-wal', $dbPath . '-shm'] as $privateFile) {
+            if (is_file($privateFile)) {
+                @chmod($privateFile, 0600);
+            }
+        }
 
         $pdo = $db;
     } catch (Throwable $e) {
@@ -437,7 +514,8 @@ function gamas_db(): ?PDO
 function gamas_append_record(string $name, array $record): bool
 {
     try {
-        $file = gamas_data_dir() . '/' . preg_replace('/[^a-z0-9_-]/i', '', $name) . '.ndjson';
+        $safeName = preg_replace('/[^a-z0-9_-]/i', '', $name);
+        $file = gamas_data_dir() . '/' . $safeName . '.ndjson';
     } catch (Throwable $e) {
         return false;
     }
@@ -447,18 +525,35 @@ function gamas_append_record(string $name, array $record): bool
         return false;
     }
 
-    $fp = @fopen($file, 'ab');
+    $fp = @fopen($file, 'c+b');
     if ($fp === false) {
         return false;
     }
     $ok = false;
     if (flock($fp, LOCK_EX)) {
+        // The click log is best-effort analytics, not an audit archive. Clear
+        // legacy IP/UA-bearing rows once, then cap fallback storage so hosts
+        // without SQLite cannot fill their quota.
+        if ($safeName === 'clicks') {
+            $migrationMarker = dirname($file) . '/.clicks-v2';
+            if (!is_file($migrationMarker) && ftruncate($fp, 0)) {
+                fflush($fp);
+                if (@file_put_contents($migrationMarker, '1', LOCK_EX) !== false) {
+                    @chmod($migrationMarker, 0600);
+                }
+            }
+            $stats = fstat($fp);
+            if (is_array($stats) && (int)($stats['size'] ?? 0) + strlen($line) + 1 > 1048576) {
+                ftruncate($fp, 0);
+            }
+        }
+        fseek($fp, 0, SEEK_END);
         $ok = fwrite($fp, $line . "\n") !== false;
         fflush($fp);
         flock($fp, LOCK_UN);
     }
     fclose($fp);
-    @chmod($file, 0640);
+    @chmod($file, 0600);
     return $ok;
 }
 
@@ -526,7 +621,7 @@ function gamas_rate_limit(string $namespace, int $limit, int $window): bool
         $allowed = true;
     }
     fclose($fp);
-    @chmod($file, 0640);
+    @chmod($file, 0600);
 
     // ~1% of requests sweep up stale buckets
     if (mt_rand(1, 100) === 1) {
@@ -753,27 +848,25 @@ function gamas_csrf_issue(): string
     return $nonce . '.' . $expiry . '.' . $sig;
 }
 
-/** @return array{ok:bool,age:int} */
-function gamas_csrf_verify(?string $token): array
+function gamas_csrf_verify(?string $token): bool
 {
     $cookie = isset($_COOKIE[GAMAS_CSRF_COOKIE]) ? (string)$_COOKIE[GAMAS_CSRF_COOKIE] : '';
     if ($token === null || $token === '' || $cookie === '') {
-        return ['ok' => false, 'age' => -1];
+        return false;
     }
 
     $parts = explode('.', $token);
     if (count($parts) !== 3) {
-        return ['ok' => false, 'age' => -1];
+        return false;
     }
     [$nonce, $expiry, $sig] = $parts;
 
     if (!ctype_digit($expiry)) {
-        return ['ok' => false, 'age' => -1];
+        return false;
     }
     $expiry = (int)$expiry;
-    $now = time();
-    if ($expiry < $now) {
-        return ['ok' => false, 'age' => -1];
+    if ($expiry < time()) {
+        return false;
     }
 
     $expected = rtrim(strtr(base64_encode(hash_hmac(
@@ -783,12 +876,7 @@ function gamas_csrf_verify(?string $token): array
         true
     )), '+/', '-_'), '=');
 
-    if (!hash_equals($expected, $sig)) {
-        return ['ok' => false, 'age' => -1];
-    }
-
-    // age of the token = how long ago it was minted (anti-spam timing signal)
-    return ['ok' => true, 'age' => GAMAS_CSRF_TTL - ($expiry - $now)];
+    return hash_equals($expected, $sig);
 }
 
 // ---------------------------------------------------------------------------
