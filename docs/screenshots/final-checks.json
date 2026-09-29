@@ -1,0 +1,26 @@
+{
+  "chipCount": 6,
+  "eyebrowsAboveHeadings": 0,
+  "palette": {
+    "canvas": "#fdfdfb",
+    "primary": "#4f46e5",
+    "tileDark": "#1e1b2e"
+  },
+  "buttonBg": "rgb(79, 70, 229)",
+  "darkTileBg": "rgb(30, 27, 46)",
+  "parchmentBg": "rgb(244, 241, 234)",
+  "hasHoverLift": false,
+  "hasBtnHover": false,
+  "hasLinkUnderline": false,
+  "hoverLiftUsage": 21,
+  "linkUnderlineUsage": 12,
+  "copyHandleUsage": 2,
+  "body": {
+    "size": "17px",
+    "lineHeight": "30.6px",
+    "family": "Vazirmatn"
+  },
+  "hoverTranslate": "0px -2px",
+  "copyHandleClicked": "کپی شد ✓",
+  "consoleErrors": []
+}

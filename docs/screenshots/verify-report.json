@@ -1,0 +1,175 @@
+{
+  "base": "http://localhost:5173/",
+  "viewports": [
+    {
+      "viewport": "320x640",
+      "overflowX": 0,
+      "dir": "rtl",
+      "lang": "fa",
+      "font": "Vazirmatn, system-ui, -apple-system, \"Segoe UI\", Tahoma, sans-serif",
+      "fontsLoaded": "loaded",
+      "h1Count": 1,
+      "skipLink": true,
+      "landmarks": {
+        "header": true,
+        "main": true,
+        "footer": true,
+        "nav": true
+      },
+      "brokenImages": [],
+      "imageCount": 1,
+      "scrollHeight": 10223,
+      "consoleErrors": []
+    },
+    {
+      "viewport": "375x667",
+      "overflowX": -8,
+      "dir": "rtl",
+      "lang": "fa",
+      "font": "Vazirmatn, system-ui, -apple-system, \"Segoe UI\", Tahoma, sans-serif",
+      "fontsLoaded": "loaded",
+      "h1Count": 1,
+      "skipLink": true,
+      "landmarks": {
+        "header": true,
+        "main": true,
+        "footer": true,
+        "nav": true
+      },
+      "brokenImages": [],
+      "imageCount": 1,
+      "scrollHeight": 10018,
+      "consoleErrors": []
+    },
+    {
+      "viewport": "414x896",
+      "overflowX": -8,
+      "dir": "rtl",
+      "lang": "fa",
+      "font": "Vazirmatn, system-ui, -apple-system, \"Segoe UI\", Tahoma, sans-serif",
+      "fontsLoaded": "loaded",
+      "h1Count": 1,
+      "skipLink": true,
+      "landmarks": {
+        "header": true,
+        "main": true,
+        "footer": true,
+        "nav": true
+      },
+      "brokenImages": [],
+      "imageCount": 1,
+      "scrollHeight": 9862,
+      "consoleErrors": []
+    },
+    {
+      "viewport": "768x1024",
+      "overflowX": -8,
+      "dir": "rtl",
+      "lang": "fa",
+      "font": "Vazirmatn, system-ui, -apple-system, \"Segoe UI\", Tahoma, sans-serif",
+      "fontsLoaded": "loaded",
+      "h1Count": 1,
+      "skipLink": true,
+      "landmarks": {
+        "header": true,
+        "main": true,
+        "footer": true,
+        "nav": true
+      },
+      "brokenImages": [],
+      "imageCount": 1,
+      "scrollHeight": 8489,
+      "consoleErrors": []
+    },
+    {
+      "viewport": "834x1112",
+      "overflowX": -8,
+      "dir": "rtl",
+      "lang": "fa",
+      "font": "Vazirmatn, system-ui, -apple-system, \"Segoe UI\", Tahoma, sans-serif",
+      "fontsLoaded": "loaded",
+      "h1Count": 1,
+      "skipLink": true,
+      "landmarks": {
+        "header": true,
+        "main": true,
+        "footer": true,
+        "nav": true
+      },
+      "brokenImages": [],
+      "imageCount": 1,
+      "scrollHeight": 8611,
+      "consoleErrors": []
+    },
+    {
+      "viewport": "1024x768",
+      "overflowX": -8,
+      "dir": "rtl",
+      "lang": "fa",
+      "font": "Vazirmatn, system-ui, -apple-system, \"Segoe UI\", Tahoma, sans-serif",
+      "fontsLoaded": "loaded",
+      "h1Count": 1,
+      "skipLink": true,
+      "landmarks": {
+        "header": true,
+        "main": true,
+        "footer": true,
+        "nav": true
+      },
+      "brokenImages": [],
+      "imageCount": 1,
+      "scrollHeight": 8487,
+      "consoleErrors": []
+    },
+    {
+      "viewport": "1280x800",
+      "overflowX": -8,
+      "dir": "rtl",
+      "lang": "fa",
+      "font": "Vazirmatn, system-ui, -apple-system, \"Segoe UI\", Tahoma, sans-serif",
+      "fontsLoaded": "loaded",
+      "h1Count": 1,
+      "skipLink": true,
+      "landmarks": {
+        "header": true,
+        "main": true,
+        "footer": true,
+        "nav": true
+      },
+      "brokenImages": [],
+      "imageCount": 1,
+      "scrollHeight": 7887,
+      "consoleErrors": []
+    },
+    {
+      "viewport": "1440x900",
+      "overflowX": -8,
+      "dir": "rtl",
+      "lang": "fa",
+      "font": "Vazirmatn, system-ui, -apple-system, \"Segoe UI\", Tahoma, sans-serif",
+      "fontsLoaded": "loaded",
+      "h1Count": 1,
+      "skipLink": true,
+      "landmarks": {
+        "header": true,
+        "main": true,
+        "footer": true,
+        "nav": true
+      },
+      "brokenImages": [],
+      "imageCount": 1,
+      "scrollHeight": 7887,
+      "consoleErrors": []
+    }
+  ],
+  "reducedMotion": {
+    "gsapTransformedElements": 0,
+    "errors": []
+  },
+  "bidi": {
+    "width": 380,
+    "height": 61.1875,
+    "bdiCount": 20,
+    "ltrSpans": 20
+  }
+}
