@@ -34,14 +34,13 @@ export default function LeadForm({ source = 'access' }) {
     const trimmed = email.trim()
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setStatus('error')
-      setMsg('ایمیل نامعتبر است.')
+      setMsg('نشانی ایمیل را به‌درستی وارد کنید.')
       return
     }
     setStatus('loading')
     setMsg('')
 
-    // The token is issued on mount; if that request failed (cold cache,
-    // transient 429, blocked cookie) fetch a fresh one instead of failing.
+    // The token is issued on mount; onSubmit retries if that request failed.
     let token = csrf
     if (!token) {
       try {
@@ -52,7 +51,7 @@ export default function LeadForm({ source = 'access' }) {
     }
     if (!token) {
       setStatus('error')
-      setMsg('اتصال امن برقرار نشد. صفحه را رفرش کنید.')
+      setMsg('اتصال امن برقرار نشد؛ صفحه را تازه‌سازی کنید.')
       return
     }
 
@@ -62,7 +61,7 @@ export default function LeadForm({ source = 'access' }) {
         credentials: 'same-origin',
         cache: 'no-store',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
           'Accept': 'application/json',
           'X-CSRF-Token': token,
         },
@@ -71,29 +70,29 @@ export default function LeadForm({ source = 'access' }) {
       const data = await res.json().catch(() => ({}))
       if (res.ok && (data.ok || data.csrf_token)) {
         setStatus('success')
-        setMsg(data.message || 'درخواست دسترسی ثبت شد؛ ایمیل پیگیری خودکار ارسال نمی‌شود.')
+        setMsg('درخواست شما ثبت شد؛ ایمیل پیگیری خودکار ارسال نمی‌شود.')
         setEmail('')
       } else if (res.status === 429) {
         setStatus('error')
-        setMsg(data.message || 'تعداد درخواست زیاد است. یک ساعت بعد تلاش کنید.')
+        setMsg('تعداد درخواست‌ها زیاد است؛ کمی بعد دوباره تلاش کنید.')
       } else {
         if (res.status === 403) {
           setCsrf('')
           fetchToken().catch(() => {})
         }
         setStatus('error')
-        setMsg(data.message || 'خطایی رخ داد. دوباره تلاش کنید.')
+        setMsg('ثبت درخواست انجام نشد؛ دوباره تلاش کنید.')
       }
     } catch {
       setStatus('error')
-      setMsg('خطای شبکه. اتصال را بررسی کنید.')
+      setMsg('ارتباط با سرور برقرار نشد؛ اتصال خود را بررسی کنید.')
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-5 space-y-3" noValidate>
+    <form onSubmit={onSubmit} className="mt-5 space-y-3" noValidate aria-busy={status === 'loading'}>
       {/* Honeypot — hidden for humans, trap for bots */}
-      <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+      <div className="honeypot" aria-hidden="true">
         <label htmlFor={`website-${source}`}>وب‌سایت</label>
         <input
           id={`website-${source}`}
@@ -106,49 +105,48 @@ export default function LeadForm({ source = 'access' }) {
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <label htmlFor={`email-${source}`} className="sr-only">ایمیل</label>
-        <input
-          id={`email-${source}`}
-          type="email"
-          inputMode="email"
-          dir="ltr"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          disabled={status === 'loading' || status === 'success'}
-          className="flex-1 rounded-pill border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/20 disabled:opacity-60"
-        />
-        <button
-          type="submit"
-          disabled={status === 'loading' || status === 'success'}
-          className="inline-flex items-center justify-center gap-2 rounded-pill bg-gradient-primary px-6 py-3 text-sm font-medium text-white shadow-glow hover:opacity-95 disabled:opacity-50 transition will-change-transform"
-        >
-          {status === 'loading' ? 'در حال ارسال…' : status === 'success' ? '✓ ثبت شد' : 'ثبت ایمیل'}
-        </button>
+      <div className="flex flex-col gap-2">
+        <label htmlFor={`email-${source}`} className="text-sm font-semibold">ایمیل برای ثبت درخواست</label>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            id={`email-${source}`}
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            dir="ltr"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={status === 'loading' || status === 'success'}
+            aria-invalid={status === 'error'}
+            aria-describedby={`email-message-${source}`}
+            className="min-w-0 flex-1 rounded-pill border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-subtle disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={status === 'loading' || status === 'success'}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-pill bg-primary px-6 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50 transition button-primary"
+          >
+            {status === 'loading' ? 'در حال ارسال…' : status === 'success' ? 'ثبت شد' : 'ثبت ایمیل'}
+          </button>
+        </div>
       </div>
 
-      {/* CSRF hidden */}
+      {/* Keep the existing CSRF field contract. */}
       <input type="hidden" name="csrf_token" value={csrf} />
 
-      {msg && (
-        <p
-          role={status === 'error' ? 'alert' : 'status'}
-          className={`rounded-xl px-3 py-2 text-xs leading-5 ${
-            status === 'success'
-              ? 'bg-emerald-500/10 border border-emerald-500/15 text-emerald-200'
-              : status === 'error'
-                ? 'bg-red-500/10 border border-red-500/15 text-red-200'
-                : 'bg-white/5 border border-white/10 text-white/60'
-          }`}
-        >
-          {msg}
-        </p>
-      )}
+      <p
+        id={`email-message-${source}`}
+        role={status === 'error' ? 'alert' : 'status'}
+        aria-live={status === 'error' ? 'assertive' : 'polite'}
+        className={`rounded-xl border border-subtle bg-surface-muted px-3 py-2 text-xs leading-5 text-muted ${msg ? '' : 'sr-only'}`}
+      >
+        {msg}
+      </p>
 
-      <p className="text-[11px] leading-4 text-white/30">
-        با ثبت ایمیل، نشانی ایمیل، محل فرم، IP و مشخصات مرورگر برای مدیریت فهرست دسترسی در فضای خصوصی میزبان ذخیره می‌شود؛ ایمیل خودکار ارسال نمی‌شود. <a href="#privacy" className="underline hover:text-white/50">جزئیات حریم خصوصی</a>.
+      <p className="text-[12px] leading-5 text-white/30">
+        با ثبت ایمیل، نشانی ایمیل، بخش فرم، IP و مشخصات مرورگر برای مدیریت فهرست دسترسی در فضای خصوصی میزبان ذخیره می‌شود؛ ایمیل خودکار ارسال نمی‌شود. <a href="#privacy" className="underline">جزئیات حریم خصوصی</a>.
       </p>
     </form>
   )

@@ -3,13 +3,13 @@ import { trackCTA } from '../lib/track'
 
 export default function MobileSticky() {
   return (
-    <div className="fixed bottom-0 inset-x-0 z-30 border-t border-white/10 bg-[#0A0A0F]/85 backdrop-blur-[16px] supports-[backdrop-filter]:bg-[#0A0A0F]/70 p-3 sm:hidden safe-pb">
+    <div className="floating-sticky-bar fixed bottom-0 inset-inline-0 z-30 bg-tile-dark/85 backdrop-blur-[16px] supports-[backdrop-filter]:bg-tile-dark/70 p-3 md:hidden safe-pb">
       <a
         href={tgLink('mobile_sticky')}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackCTA('mobile_sticky')}
-        className="flex w-full items-center justify-center gap-2 rounded-pill bg-gradient-primary py-3 text-[14px] font-medium text-white shadow-glow active:opacity-90 transition"
+        className="button-primary flex w-full items-center justify-center gap-2 rounded-pill bg-primary py-3 text-[14px] font-semibold text-white active:opacity-90 transition"
       >
         شروع در تلگرام
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl">

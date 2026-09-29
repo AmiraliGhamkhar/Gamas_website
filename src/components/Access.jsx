@@ -18,10 +18,10 @@ export default function Access() {
       gsap.registerPlugin(ScrollTrigger)
       ctx = gsap.context(() => {
         mm = gsap.matchMedia()
-        mm.add('(min-width: 768px)', () => {
+        mm.add('(min-width: 834px)', () => {
           gsap.fromTo('.access-card', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: 'power2.out', scrollTrigger: { trigger: ref.current, start: 'top 78%' } })
         })
-        mm.add('(max-width: 767px)', () => {
+        mm.add('(max-width: 833px)', () => {
           gsap.utils.toArray('.access-card').forEach(el => {
             gsap.fromTo(el, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, scrollTrigger: { trigger: el, start: 'top 92%' } })
           })
@@ -36,33 +36,29 @@ export default function Access() {
   }, [])
 
   return (
-    <section ref={ref} id="access" className="relative py-16 sm:py-20">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 start-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-gradient-to-r from-primary/7 via-violet-500/5 to-accent/7 blur-[90px]" />
-      </div>
-
+    <section ref={ref} id="access" className="product-tile product-tile-dark relative py-16 sm:py-20">
       <div className="relative mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 glass rounded-pill px-3 py-1.5 text-xs text-white/70">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          <span className="inline-flex items-center gap-2 surface-card rounded-pill px-3 py-1.5 text-xs text-white/70 chip">
+            <span className="h-1.5 w-1.5 rounded-full bg-surface-muted" />
             دسترسی و قیمت — جزئیات در حال تعیین
           </span>
-          <h2 className="mt-4 font-display text-[1.9rem] sm:text-[2.45rem] leading-[1.05] tracking-tight">
-            دسترسی <span className="text-gradient">فعلاً با تایید ادمین</span>
+          <h2 className="mt-4 font-display text-[1.9rem] sm:text-[2.45rem] leading-[1.05] ">
+            دسترسی <span className="text-primary-emphasis">فعلاً با تأیید ادمین</span>
           </h2>
           <p className="mt-4 text-sm leading-7 text-white/60">
             قیمت و ساختار پلن‌ها هنوز نهایی نشده‌اند. در حال حاضر دسترسی فقط پس از هماهنگی و تأیید ادمین امکان‌پذیر است.
           </p>
         </div>
 
-        <div className="mt-10 grid md:grid-cols-3 gap-4">
+        <div className="mt-10 grid sm:grid-cols-2 md:grid-cols-3 gap-4">
           {/* Current status */}
-          <div className="access-card relative overflow-hidden glass-strong rounded-[1.4rem] p-6 will-change-transform border-emerald-500/15">
-            <div className="absolute top-4 end-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/20 px-2.5 py-1 text-[10px] text-emerald-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="access-card store-utility-card relative overflow-hidden surface-card rounded-18 p-6 will-change-transform border-subtle">
+            <div className="absolute top-4 end-4 inline-flex items-center gap-1.5 rounded-full bg-surface-muted border border-subtle px-2.5 py-1 text-[10px] text-muted">
+              <span className="h-1.5 w-1.5 rounded-full bg-surface-muted animate-pulse" />
               وضعیت فعلی
             </div>
-            <h3 className="font-display text-[15px]">دسترسی با تایید ادمین</h3>
+            <h3 className="font-display text-[15px]">دسترسی با تأیید ادمین</h3>
             <p className="mt-2 text-sm leading-6 text-white/60">
               در حال حاضر ثبت‌نام عمومی باز نیست. برای فعال‌سازی با ادمین در تلگرام در ارتباط باشید.
             </p>
@@ -70,15 +66,15 @@ export default function Access() {
               <span className="h-1 w-1 rounded-full bg-white/30" />
               بدون نیاز به کارت بانکی
             </div>
-            <a href={tgLink('access')} target="_blank" rel="noopener noreferrer" onClick={() => trackCTA('access')} className="mt-4 flex w-full items-center justify-center gap-2 rounded-pill bg-white text-zinc-900 px-4 py-2.5 text-sm font-medium hover:bg-white/90 transition">
-              درخواست دسترسی — {BOT_HANDLE}
+            <a href={tgLink('access')} target="_blank" rel="noopener noreferrer" onClick={() => trackCTA('access')} className="button-secondary-pill mt-4 flex w-full items-center justify-center gap-2 rounded-pill bg-white text-zinc-900 px-4 py-2.5 text-sm font-semibold hover:bg-white/90 transition">
+              درخواست دسترسی — <bdi dir="ltr">{BOT_HANDLE}</bdi>
             </a>
             <div className="mt-4 h-px bg-white/5" />
-            <p className="mt-4 text-xs font-medium text-white/60">یا ایمیل را برای ثبت درخواست دسترسی وارد کنید:</p>
+            <p className="mt-4 text-xs font-semibold text-white/60">یا ایمیل را برای ثبت درخواست دسترسی وارد کنید:</p>
             <LeadForm source="access" />
           </div>
 
-          <div className="access-card relative overflow-hidden glass rounded-[1.4rem] p-6 will-change-transform">
+          <div className="access-card store-utility-card relative overflow-hidden surface-card rounded-18 p-6 will-change-transform">
             <div className="absolute top-4 end-4 inline-flex rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-[10px] text-white/45">
               در حال بررسی
             </div>
@@ -91,7 +87,7 @@ export default function Access() {
             </div>
           </div>
 
-          <div className="access-card relative overflow-hidden glass rounded-[1.4rem] p-6 will-change-transform">
+          <div className="access-card store-utility-card relative overflow-hidden surface-card rounded-18 p-6 will-change-transform">
             <div className="absolute top-4 end-4 inline-flex rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-[10px] text-white/45">
               اعلام نشده
             </div>

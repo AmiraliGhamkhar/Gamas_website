@@ -10,14 +10,14 @@ export function trackCTA(section) {
     // Use keepalive for unload, but fall back to fetch when the browser refuses
     // to queue the beacon (sendBeacon returns false in that case).
     if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-      const blob = new Blob([body], { type: 'application/json' })
+      const blob = new Blob([body], { type: 'application/json; charset=utf-8' })
       try {
         if (navigator.sendBeacon(sitePath('api/track.php'), blob)) return
       } catch {}
     }
     fetch(sitePath('api/track.php'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body,
       credentials: 'same-origin',
       keepalive: true,
