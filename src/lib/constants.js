@@ -12,12 +12,9 @@ export function tgLink(section = 'hero') {
   return `${BOT_URL_BASE}?start=landing_${section}`
 }
 
-// Design tokens for JS (GSAP etc.)
-export const tokens = {
-  bg: '#0A0A0F',
-  primary: '#6366F1',
-  violet: '#8B5CF6',
-  accent: '#06B6D4'
+/** Format visible numbers in Persian without changing values used by APIs or logic. */
+export function toFa(value) {
+  return new Intl.NumberFormat('fa-IR').format(value)
 }
 
 // Limits & honesty
