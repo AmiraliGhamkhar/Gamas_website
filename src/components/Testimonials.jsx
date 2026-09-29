@@ -1,81 +1,28 @@
-import { useEffect, useRef } from 'react'
-
-const placeholders = [
-  { name: 'TODO — دانشجوی مهندسی', role: 'TODO placeholder', text: 'TODO placeholder — متن نظر کاربر در نسخه‌ی بعدی اضافه می‌شود. این کارت صرفاً برای نمایش چیدمان است و نظر واقعی نیست.' },
-  { name: 'TODO — دانشجوی پزشکی', role: 'TODO placeholder', text: 'TODO placeholder — متن نظر کاربر در نسخه‌ی بعدی اضافه می‌شود. هیچ نقل‌قول واقعی فعلاً نمایش داده نمی‌شود.' },
-  { name: 'TODO — دانشجوی ارشد', role: 'TODO placeholder', text: 'TODO placeholder — متن نظر کاربر در نسخه‌ی بعدی اضافه می‌شود. از نمایش نظر ساختگی خودداری شده است.' },
-]
-
 export default function Testimonials() {
-  const ref = useRef(null)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    let mm
-    let ctx
-    let cancelled = false
-    ;(async () => {
-      const { gsap } = await import('gsap')
-      const { ScrollTrigger } = await import('gsap/ScrollTrigger')
-      if (cancelled) return
-      gsap.registerPlugin(ScrollTrigger)
-      ctx = gsap.context(() => {
-        mm = gsap.matchMedia()
-        mm.add('(min-width: 768px)', () => {
-          gsap.fromTo('.testi-card', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: 'power2.out', scrollTrigger: { trigger: ref.current, start: 'top 80%' } })
-        })
-        mm.add('(max-width: 767px)', () => {
-          gsap.utils.toArray('.testi-card').forEach(el => {
-            gsap.fromTo(el, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, scrollTrigger: { trigger: el, start: 'top 92%' } })
-          })
-        })
-      }, ref)
-    })()
-    return () => {
-      cancelled = true
-      mm?.revert()
-      ctx?.revert()
-    }
-  }, [])
-
   return (
-    <section ref={ref} id="testimonials" className="relative py-16 sm:py-20">
+    <section id="testimonials" className="relative py-16 sm:py-20">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 glass rounded-pill px-3 py-1.5 text-xs text-white/70">
             <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
-            نظرات — <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-amber-300 text-[10px]">TODO placeholder</span>
+            بازخورد کاربران
           </span>
           <h2 className="mt-4 font-display text-[1.9rem] sm:text-[2.3rem] leading-[1.05] tracking-tight">
-            نظر کاربران <span className="text-white/30">— به‌زودی</span>
+            تجربه واقعی، بدون نظر ساختگی
           </h2>
           <p className="mt-3 text-sm leading-7 text-white/50">
-            این بخش فعلاً TODO است. برای صداقت، هیچ نظر ساختگی نمایش داده نمی‌شود. پس از جمع‌آوری بازخورد واقعی، اینجا به‌روزرسانی خواهد شد.
+            هنوز بازخوردی برای انتشار نداریم. اگر کاربران تجربه‌شان را با اجازه انتشار در اختیارمان بگذارند، این بخش با نظرهای واقعی به‌روزرسانی می‌شود.
           </p>
         </div>
 
-        <div className="mt-10 grid md:grid-cols-3 gap-4">
-          {placeholders.map((p, i) => (
-            <div key={i} className="testi-card relative glass rounded-[1.4rem] p-6 will-change-transform">
-              <div className="absolute top-4 end-4 rounded-full bg-amber-500/15 border border-amber-500/20 px-2 py-1 text-[10px] text-amber-300">
-                TODO
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="h-10 w-10 rounded-full bg-white/8 border border-white/10 flex items-center justify-center text-xs text-white/40">TODO</span>
-                <div>
-                  <p className="text-sm font-medium text-white/70">{p.name}</p>
-                  <p className="text-xs text-white/30">{p.role}</p>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-1" aria-hidden="true">
-                {Array.from({ length: 5 }).map((_, j) => (
-                  <span key={j} className="h-3 w-3 rounded-full bg-white/8 border border-white/10" />
-                ))}
-              </div>
-              <p className="mt-4 text-sm leading-6 text-white/35">{p.text}</p>
-              <p className="mt-4 text-[11px] text-white/20">این یک placeholder است — نظر واقعی نیست</p>
-            </div>
-          ))}
+        <div className="mt-10 mx-auto max-w-2xl rounded-[1.4rem] border border-white/5 bg-white/[0.02] px-6 py-8 text-center">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/50" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M7 8.5h10M7 12h6m-8 7 2.5-3H17a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v9a3 3 0 0 0 1 2.3V19Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <p className="mt-4 text-sm font-medium text-white/75">هنوز نظری برای نمایش وجود ندارد</p>
+          <p className="mt-2 text-xs leading-6 text-white/40">برای حفظ شفافیت، امتیاز یا نقل‌قولی تا زمان دریافت بازخورد واقعی نمایش داده نمی‌شود.</p>
         </div>
       </div>
     </section>

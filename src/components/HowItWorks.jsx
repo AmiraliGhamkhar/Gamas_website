@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
+import { BOT_HANDLE } from '../lib/constants'
 
 const steps = [
   {
     n: '۰۱',
     title: 'ارسال',
-    desc: 'فایل را به @GamasBot بفرست — ویس تلگرام، MP3/M4A/WAV/OGG/FLAC…، ویدیو MP4/MKV/MOV/AVI و ویدیونوت، یا پاورپوینت PPTX/PPSX/POTX و PPT/ODP قدیمی.',
+    desc: `فایل را به ${BOT_HANDLE} بفرست — ویس تلگرام، MP3/M4A/WAV/OGG/FLAC…، ویدیو MP4/MKV/MOV/AVI و ویدیونوت، یا پاورپوینت PPTX/PPSX/POTX و PPT/ODP قدیمی.`,
     note: 'حداکثر ۲ گیگابایت',
     icon: '↑'
   },

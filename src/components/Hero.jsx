@@ -1,4 +1,4 @@
-import { tgLink } from '../lib/constants'
+import { BOT_HANDLE, sitePath, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 export default function Hero() {
@@ -47,7 +47,7 @@ export default function Hero() {
                 className="group inline-flex items-center justify-center gap-2.5 rounded-pill bg-gradient-primary px-7 py-3.5 text-[15px] font-medium text-white shadow-glow hover:opacity-[0.96] active:opacity-90 transition will-change-transform"
               >
                 <span>شروع در تلگرام</span>
-                <span className="hidden sm:inline text-white/85 text-xs font-normal">— @GamasBot</span>
+                <span className="hidden sm:inline text-white/85 text-xs font-normal">— {BOT_HANDLE}</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl shrink-0 transition group-hover:translate-x-0.5">
                   <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -99,10 +99,10 @@ export default function Hero() {
                 </div>
 
                 <picture>
-                  <source srcSet="/images/hero-phone.avif" type="image/avif" />
-                  <source srcSet="/images/hero-phone.webp" type="image/webp" />
+                  <source srcSet={sitePath('images/hero-phone.avif')} type="image/avif" />
+                  <source srcSet={sitePath('images/hero-phone.webp')} type="image/webp" />
                   <img
-                    src="/images/hero-phone.jpg"
+                    src={sitePath('images/hero-phone.jpg')}
                     width="380"
                     height="780"
                     alt="پیش‌نمایش چت تلگرامی گاماس — ارسال فایل و دریافت جزوه با نوار پیشرفت"

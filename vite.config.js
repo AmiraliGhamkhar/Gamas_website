@@ -14,11 +14,14 @@ import react from '@vitejs/plugin-react'
  * otherwise /assets/*, /fonts/* and /images/* 404 on a case-sensitive Linux
  * server even though everything worked on Windows/macOS.
  *
- * Note: /api/*.php is called with absolute paths from src/lib/track.js and
- * src/components/LeadForm.jsx. At root that is correct; for a subfolder
- * deploy, change those to relative ('api/lead.php') or import.meta.env.BASE_URL.
+ * Frontend asset/API paths are generated from import.meta.env.BASE_URL. The
+ * postbuild step also rewrites robots.txt and sitemap.xml for this base. For a
+ * subfolder deploy, put both dist/ and api/ under the same public_html folder.
  */
 const base = process.env.VITE_BASE || '/'
+if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(base)) {
+  throw new Error(`Invalid VITE_BASE "${base}". Use / or a path such as /gamas/`)
+}
 
 export default defineConfig({
   base,
@@ -36,17 +39,15 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    cors: true,
-    // No forced HMR host: pinning it to localhost broke HMR whenever the dev
-    // server was reached through a proxy/LAN address (the browser has no
-    // localhost). Vite falls back to window.location automatically.
-    allowedHosts: true
+    // No forced HMR host: pinning it to localhost breaks HMR through proxies.
+    // Vite follows window.location and allows the Arena preview subdomain,
+    // without turning off DNS-rebinding protection for arbitrary Host headers.
+    allowedHosts: ['.e2b.app']
   },
   preview: {
     host: '0.0.0.0',
     port: 4173,
-    cors: true,
-    allowedHosts: true
+    allowedHosts: ['.e2b.app']
   },
   build: {
     cssCodeSplit: true,

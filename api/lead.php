@@ -10,7 +10,7 @@
  *
  * Layers, in order:
  *   same-origin  →  method  →  honeypot  →  rate limit  →  CSRF
- *   →  timing check  →  validation  →  storage
+ *   →  validation  →  storage
  *
  * Every response is JSON (UTF-8), carries a correct status code, and never
  * contains a filesystem path or stack trace.
@@ -64,7 +64,7 @@ if ($honeypot === '') {
 }
 if (trim($honeypot) !== '') {
     gamas_log('honeypot tripped');
-    gamas_json(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.']);
+    gamas_json(['ok' => true, 'message' => 'درخواست دسترسی ثبت شد؛ در حال حاضر ایمیل پیگیری خودکار ارسال نمی‌شود.']);
 }
 
 // ---------------------------------------------------------------------------
@@ -96,8 +96,8 @@ if ($token === null || $token === '') {
     $token = gamas_field($input, 'csrf_token', 255);
 }
 
-$csrf = gamas_csrf_verify($token);
-if (!$csrf['ok']) {
+$csrfValid = gamas_csrf_verify($token);
+if (!$csrfValid) {
     gamas_log('csrf rejected');
     gamas_json(
         ['error' => 'csrf_invalid', 'message' => 'توکن امنیتی نامعتبر است. صفحه را رفرش کنید.'],
@@ -106,20 +106,7 @@ if (!$csrf['ok']) {
 }
 
 // ---------------------------------------------------------------------------
-// 7. Timing check — a form submitted in under GAMAS_MIN_FILL_SECONDS was
-//    not filled in by a human. Pretend success so the bot learns nothing.
-//
-//    Deliberately lenient (1s): this returns a FAKE success, so a false
-//    positive silently loses a real lead. The honeypot, CSRF, rate limit
-//    and origin checks are the primary anti-spam layers; this is a backstop.
-// ---------------------------------------------------------------------------
-if ($csrf['age'] >= 0 && $csrf['age'] < GAMAS_MIN_FILL_SECONDS) {
-    gamas_log('timing check tripped (age ' . $csrf['age'] . 's)');
-    gamas_json(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.']);
-}
-
-// ---------------------------------------------------------------------------
-// 8. Validate the email
+// 7. Validate the email
 // ---------------------------------------------------------------------------
 $email = gamas_normalise_email(gamas_field($input, 'email', 254));
 if ($email === '') {
@@ -134,7 +121,7 @@ if ($source === '') {
 $ua = preg_replace('/[\x00-\x1F\x7F]/', '', substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 512)) ?? '';
 
 // ---------------------------------------------------------------------------
-// 9. Persist — SQLite when available, NDJSON otherwise
+// 8. Persist — SQLite when available, NDJSON otherwise
 // ---------------------------------------------------------------------------
 $record = [
     'email'   => $email,
@@ -159,7 +146,7 @@ try {
                 ':ua' => $ua,
             ]);
             gamas_log('lead stored (source=' . $source . ')');
-            gamas_json(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.']);
+            gamas_json(['ok' => true, 'message' => 'درخواست دسترسی ثبت شد؛ در حال حاضر ایمیل پیگیری خودکار ارسال نمی‌شود.']);
         } catch (PDOException $e) {
             // UNIQUE violation → already registered. Say so without leaking
             // anything about who is or is not in the list.
@@ -176,7 +163,7 @@ try {
     // Flat-file fallback (no pdo_sqlite, or the DB refused to open)
     if (gamas_append_record('leads', $record)) {
         gamas_log('lead stored to ndjson (source=' . $source . ')');
-        gamas_json(['ok' => true, 'message' => 'ایمیل با موفقیت ثبت شد. به‌زودی خبر می‌دهیم.']);
+        gamas_json(['ok' => true, 'message' => 'درخواست دسترسی ثبت شد؛ در حال حاضر ایمیل پیگیری خودکار ارسال نمی‌شود.']);
     }
 
     gamas_log('lead storage unavailable');

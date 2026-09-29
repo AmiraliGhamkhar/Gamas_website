@@ -96,6 +96,10 @@ export default function Privacy() {
                 <span className="mt-1.5 h-1 w-1 rounded-full bg-white/40 shrink-0" />
                 <span className="text-white/60">قبل از استقرار تولید: سیاست نگهداری ارائه‌دهندگان، رضایت، مقررات و محل داده را مرور کنید.</span>
               </li>
+              <li className="flex gap-2">
+                <span className="mt-1.5 h-1 w-1 rounded-full bg-white/40 shrink-0" />
+                <span className="text-white/60">در فرم همین وب‌سایت، ایمیل، بخش فرم، IP و مشخصات مرورگر برای مدیریت فهرست دسترسی ذخیره می‌شود؛ ایمیل خودکار ارسال نمی‌شود. کلیک‌های CTA فقط با نام بخش و زمان ثبت می‌شوند (۹۰ روز در SQLite یا حداکثر ۱ مگابایت در حالت فایل).</span>
+              </li>
             </ul>
             <div className="mt-5 grid grid-cols-2 gap-2 text-xs">
               <div className="rounded-xl bg-white/[0.03] border border-white/5 px-3 py-2.5">

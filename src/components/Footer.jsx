@@ -1,7 +1,12 @@
-import { tgLink } from '../lib/constants'
+import { BOT_HANDLE, tgLink, sitePath } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 export default function Footer() {
+  const persianYear = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+    year: 'numeric',
+    timeZone: 'Asia/Tehran',
+  }).format(new Date())
+
   return (
     <footer className="border-t border-white/5 py-10 pb-24 sm:pb-10">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
@@ -16,7 +21,7 @@ export default function Footer() {
               دستیار تلگرامی فارسیِ جزوه‌ساز — ویس، ویدیو و پاورپوینت را به جزوه‌ی ساختاریافته تبدیل می‌کند. منبع بات: GitHub.
             </p>
             <p className="mt-3 text-[11px] leading-5 text-white/25">
-              © ۱۴۰۴ گاماس — هیچ کپی از README انجام نشده (ریپو لایسنس ندارد).
+              © {persianYear} گاماس.
             </p>
           </div>
 
@@ -34,7 +39,7 @@ export default function Footer() {
               <ul className="mt-3 space-y-2 text-white/45">
                 <li><a href="#privacy" className="hover:text-white transition">حریم خصوصی و محدودیت‌ها</a></li>
                 <li><a href="https://github.com/AmiraliGhamkhar/Gamas_bot" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">سورس بات</a></li>
-                <li><a href="/sitemap.xml" className="hover:text-white transition">Sitemap</a></li>
+                <li><a href={sitePath('sitemap.xml')} className="hover:text-white transition">Sitemap</a></li>
               </ul>
             </div>
             <div className="col-span-2 sm:col-span-1">
@@ -44,8 +49,8 @@ export default function Footer() {
                   شروع در تلگرام
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </a>
-                <a href="https://t.me/GamasBot?start=landing_footer" target="_blank" rel="noopener noreferrer" className="text-center text-[11px] text-white/30" dir="ltr">
-                  @GamasBot
+                <a href={tgLink('footer')} target="_blank" rel="noopener noreferrer" className="text-center text-[11px] text-white/30" dir="ltr">
+                  {BOT_HANDLE}
                 </a>
               </div>
             </div>

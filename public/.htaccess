@@ -81,7 +81,7 @@
 
   # 4c. Config, backup, database, log and archive files
   RewriteRule (?:^|/)(?:composer\.(?:json|lock)|package\.json|package-lock\.json|php\.ini|\.user\.ini|phpunit\.xml(?:\.dist)?|error_log[0-9]*|\.htpasswd) - [F,L,NC]
-  RewriteRule \.(?:bak|old|orig|save|backup|swp|swo|~|sql|sqlite|sqlite3|db|ini|conf|cnf|config|sh|log|yml|yaml|dist|example|map|md|tar|tgz|zip|rar|7z|gz)$ - [F,L,NC]
+  RewriteRule \.(?:bak|old|orig|save|backup|swp|swo|~|ndjson|jsonl|sql|sqlite3?(?:-(?:wal|shm|journal))?|db(?:-journal)?|ini|conf|cnf|config|sh|log|yml|yaml|dist|example|map|md|tar|tgz|zip|rar|7z|gz)$ - [F,L,NC]
 
   # 4d. vite-react-ssg build manifests (also stripped by scripts/postbuild.mjs)
   RewriteRule (?:^|/)static-loader-data-manifest-[a-z0-9]+\.json$ - [F,L,NC]
@@ -107,7 +107,8 @@
   #    PHP endpoints are never rewritten, so missing assets still 404 and the
   #    PHP API is untouched.
   # ---------------------------------------------------------------------------
-  RewriteCond %{REQUEST_URI} !^/api/ [NC]
+  # Keep the API subtree native whether this app is deployed at / or /gamas/.
+  RewriteRule ^api(?:/|$) - [L,NC]
   RewriteCond %{REQUEST_URI} !\.php$ [NC]
   # Any other dotted path is a file request (assets, fonts, images, favicon…).
   # Missing ones must 404 — DEPLOY.md §6 step 6 verifies exactly that — instead

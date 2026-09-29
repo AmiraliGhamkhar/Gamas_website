@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { tgLink } from '../lib/constants'
+import { BOT_HANDLE, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const stages = [
@@ -17,7 +17,7 @@ function PhoneFrame({ children }) {
           <span className="flex items-center gap-2 text-[11px] text-white/70">
             <span className="h-6 w-6 rounded-full bg-gradient-primary flex items-center justify-center text-[10px]">گ</span>
             گاماس
-            <span className="hidden sm:inline text-white/30">• @GamasBot</span>
+            <span className="hidden sm:inline text-white/30">• {BOT_HANDLE}</span>
           </span>
           <span className="h-1 w-8 rounded-full bg-white/15" />
           <span className="text-[10px] text-white/30">۱۲:۴۲</span>

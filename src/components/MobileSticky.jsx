@@ -11,7 +11,7 @@ export default function MobileSticky() {
         onClick={() => trackCTA('mobile_sticky')}
         className="flex w-full items-center justify-center gap-2 rounded-pill bg-gradient-primary py-3 text-[14px] font-medium text-white shadow-glow active:opacity-90 transition"
       >
-        شروع در تلگرام — رایگان امتحان کن
+        شروع در تلگرام
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl">
           <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
