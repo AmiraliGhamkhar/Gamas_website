@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
+import IsolatedText from './IsolatedText'
 
 const faqs = [
   {
     q: 'چه فرمت‌هایی پشتیبانی می‌شود؟',
-    a: 'صوتی: ویس تلگرام و MP3/M4A/WAV/OGG/FLAC/WMA/AMR و هر فرمت قابل پشتیبانی FFmpeg. ویدیویی: MP4/MKV/MOV/AVI و ویدیونوت → صدای اول استخراج می‌شود. پاورپوینت: PPTX/PPSX/POTX native؛ PPT/PPS/POT/ODP/OTP قدیمی فقط با LibreOffice قابل تبدیل است. PDF، تصویر و ZIP مردود هستند.',
+    a: 'صوتی: ویس تلگرام و MP3/M4A/WAV/OGG/FLAC/WMA/AMR و هر فرمت قابل پشتیبانی FFmpeg. ویدیویی: MP4/MKV/MOV/AVI و ویدیونوت ← صدای اول استخراج می‌شود. پاورپوینت: PPTX/PPSX/POTX native؛ PPT/PPS/POT/ODP/OTP قدیمی فقط با LibreOffice قابل تبدیل است. PDF، تصویر و ZIP مردود هستند.',
   },
   {
     q: 'حداکثر حجم فایل چقدر است؟',
@@ -30,15 +31,15 @@ const faqs = [
 function FAQItem({ index, q, a, isOpen, onToggle }) {
   const panelId = `faq-panel-${index}`
   return (
-    <div className="group rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition">
+    <div className="faq-item store-utility-card group rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={panelId}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-right"
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-start"
       >
-        <span className="text-sm font-medium leading-6 text-white/90">{q}</span>
+        <span className="text-sm font-semibold leading-6 text-white/90">{q}</span>
         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 transition will-change-transform ${isOpen ? 'rotate-45 bg-white text-zinc-900' : 'bg-white/5 text-white/60'}`}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
         </span>
@@ -49,7 +50,7 @@ function FAQItem({ index, q, a, isOpen, onToggle }) {
         className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <p className="px-5 pb-5 text-sm leading-7 text-white/60">{a}</p>
+          <p className="px-5 pb-5 text-sm leading-7 text-white/60"><IsolatedText>{a}</IsolatedText></p>
         </div>
       </div>
     </div>
@@ -73,10 +74,10 @@ export default function FAQ() {
       gsap.registerPlugin(ScrollTrigger)
       ctx = gsap.context(() => {
         mm = gsap.matchMedia()
-        mm.add('(min-width: 768px)', () => {
+        mm.add('(min-width: 834px)', () => {
           gsap.fromTo('.faq-item', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: 'power2.out', scrollTrigger: { trigger: ref.current, start: 'top 82%' } })
         })
-        mm.add('(max-width: 767px)', () => {
+        mm.add('(max-width: 833px)', () => {
           gsap.utils.toArray('.faq-item').forEach(el => {
             gsap.fromTo(el, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.45, scrollTrigger: { trigger: el, start: 'top 94%' } })
           })
@@ -104,15 +105,15 @@ export default function FAQ() {
   const jsonLdHtml = JSON.stringify(jsonLd).replace(/</g, '\\u003c')
 
   return (
-    <section ref={ref} id="faq" className="relative py-16 sm:py-20">
+    <section ref={ref} id="faq" className="product-tile product-tile-light relative py-16 sm:py-20">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 glass rounded-pill px-3 py-1.5 text-xs text-white/70">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            سوالات متداول
+          <span className="inline-flex items-center gap-2 surface-card rounded-pill px-3 py-1.5 text-xs text-white/70 chip">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            پرسش‌های متداول
           </span>
-          <h2 className="mt-4 font-display text-[1.9rem] sm:text-[2.45rem] leading-[1.05] tracking-tight">
-            سوالی داری؟ <span className="text-gradient">اینجا جوابشه</span>
+          <h2 className="mt-4 font-display text-[1.9rem] sm:text-[2.45rem] leading-[1.05] ">
+            پرسشی داری؟ <span className="text-primary-emphasis">اینجا جوابشه</span>
           </h2>
         </div>
 

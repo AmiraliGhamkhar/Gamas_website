@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import Preloader from './components/Preloader'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Story from './components/Story'
@@ -16,16 +15,28 @@ import MobileSticky from './components/MobileSticky'
 
 export default function App() {
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.documentElement.classList.add('reduced-motion')
-    }
+    let cancelled = false
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    document.fonts?.ready.then(async () => {
+      if (cancelled || reducedMotion) return
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import('gsap'),
+        import('gsap/ScrollTrigger'),
+      ])
+      if (cancelled) return
+      gsap.registerPlugin(ScrollTrigger)
+      ScrollTrigger.refresh()
+    })
+
+    return () => { cancelled = true }
   }, [])
 
   return (
-    <div className="min-h-dvh flex flex-col bg-bg">
-      <Preloader />
+    <div className="min-h-dvh flex flex-col">
+      <a className="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
       <Navbar />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Hero />
         <Story />
         <Bento />
