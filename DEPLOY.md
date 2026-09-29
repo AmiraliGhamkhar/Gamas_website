@@ -216,8 +216,9 @@ ACME renewal keeps working.
 `api/bootstrap.php` resolves the storage directory in this order:
 
 1. **`GAMAS_DATA_DIR`** environment variable, if set outside all public roots
-   (cPanel ▸ **Environment Variables**). Paths inside the site's `DocumentRoot`
-   or its `public_html` tree are ignored.
+   (via cPanel Environment Variables or `SetEnv GAMAS_DATA_DIR /home/USER/gamas_data`
+   in `.htaccess`). Paths inside the site's `DocumentRoot`, app root, or
+   `public_html` tree are ignored.
 2. **`<account home>/gamas_data`** → normally `/home/USER/gamas_data`. The
    location is derived from the `public_html` boundary or `HOME` and verified
    outside the site's web roots, including for an addon domain with a nested

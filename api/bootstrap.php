@@ -201,6 +201,27 @@ function gamas_header(string $name): ?string
 }
 
 /**
+ * Read an environment variable across CGI/FPM/LSAPI and Apache SetEnv.
+ * Never reads HTTP_* request headers, so clients cannot spoof env vars.
+ */
+function gamas_env(string $name): string
+{
+    if ($name === '' || stripos($name, 'HTTP_') === 0) {
+        return '';
+    }
+    $val = getenv($name);
+    if (is_string($val) && $val !== '') {
+        return $val;
+    }
+    foreach ([$_ENV[$name] ?? null, $_SERVER[$name] ?? null, $_SERVER['REDIRECT_' . $name] ?? null] as $candidate) {
+        if (is_scalar($candidate) && (string)$candidate !== '') {
+            return (string)$candidate;
+        }
+    }
+    return '';
+}
+
+/**
  * Client IP. REMOTE_ADDR only by default.
  *
  * Set GAMAS_TRUST_CF_IP=1 ONLY if the site really sits behind Cloudflare —
@@ -211,7 +232,7 @@ function gamas_client_ip(): string
 {
     $ip = isset($_SERVER['REMOTE_ADDR']) ? trim((string)$_SERVER['REMOTE_ADDR']) : '';
 
-    $trustCf = strtolower((string)(getenv('GAMAS_TRUST_CF_IP') ?: '0'));
+    $trustCf = strtolower(gamas_env('GAMAS_TRUST_CF_IP') ?: '0');
     if ($trustCf === '1' || $trustCf === 'true' || $trustCf === 'yes') {
         $cf = gamas_header('CF-Connecting-IP');
         if ($cf !== null && filter_var($cf, FILTER_VALIDATE_IP)) {
@@ -275,7 +296,7 @@ function gamas_doc_root(): string
 function gamas_path_is_public(string $path): bool
 {
     $docRoot = gamas_doc_root();
-    $publicRoots = [$docRoot];
+    $publicRoots = [$docRoot, rtrim((string)dirname(__DIR__), '/')];
     $normalizedDocRoot = str_replace('\\', '/', $docRoot);
     if (preg_match('#^(.*?)/public_html(?:/|$)#i', $normalizedDocRoot, $matches) === 1) {
         $publicHtmlRoot = rtrim($matches[1], '/') . '/public_html';
@@ -327,8 +348,8 @@ function gamas_data_dir(): string
 
     $privateCandidates = [];
 
-    $env = getenv('GAMAS_DATA_DIR');
-    if (is_string($env) && $env !== '') {
+    $env = gamas_env('GAMAS_DATA_DIR');
+    if ($env !== '') {
         $privateCandidates[] = $env;
     }
 
@@ -338,8 +359,8 @@ function gamas_data_dir(): string
         $accountHome = rtrim($matches[1], '/');
         $privateCandidates[] = ($accountHome === '' ? '' : $accountHome) . '/gamas_data';
     } else {
-        $home = getenv('HOME');
-        if (is_string($home) && $home !== '') {
+        $home = gamas_env('HOME');
+        if ($home !== '') {
             $privateCandidates[] = rtrim($home, '/') . '/gamas_data';
         }
     }
@@ -515,7 +536,7 @@ function gamas_db(): ?PDO
 
         // Do not rely on the hosting account's default umask for database
         // files, which contain waitlist emails and anti-abuse metadata.
-        foreach ([$dbPath, $dbPath . '-wal', $dbPath . '-shm'] as $privateFile) {
+        foreach ([$dbPath, $dbPath . '-wal', $dbPath . '-shm', $dbPath . '-journal'] as $privateFile) {
             if (is_file($privateFile)) {
                 @chmod($privateFile, 0600);
             }
@@ -713,8 +734,8 @@ function gamas_host_of_url(string $url): string
  */
 function gamas_allowed_hosts(): array
 {
-    $env = getenv('GAMAS_ALLOWED_HOSTS');
-    if (is_string($env) && trim($env) !== '') {
+    $env = gamas_env('GAMAS_ALLOWED_HOSTS');
+    if (trim($env) !== '') {
         $out = [];
         foreach (explode(',', $env) as $h) {
             $h = strtolower(trim($h));
@@ -825,7 +846,13 @@ function gamas_require_method(array $allowed, bool $isOptions = true): void
 
 function gamas_is_https(): bool
 {
-    if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
+    if (!empty($_SERVER['HTTPS']) && !in_array(strtolower((string)$_SERVER['HTTPS']), ['off', '0'], true)) {
+        return true;
+    }
+    if (isset($_SERVER['REQUEST_SCHEME']) && strtolower((string)$_SERVER['REQUEST_SCHEME']) === 'https') {
+        return true;
+    }
+    if (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) {
         return true;
     }
     $fwd = gamas_header('X-Forwarded-Proto');
