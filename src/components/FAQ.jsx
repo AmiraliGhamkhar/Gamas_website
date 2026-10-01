@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Icon from './Icon'
 import IsolatedText from './IsolatedText'
 
 const faqs = [
@@ -7,60 +8,51 @@ const faqs = [
     a: 'ویس تلگرام، MP3، M4A، WAV، OGG، ویدیو و پاورپوینت. PDF، تصویر و ZIP را نمی‌گیرد.',
   },
   {
-    q: 'حداکثر حجم چقدر است؟',
-    a: '۲ گیگابایت.',
+    q: 'حداکثر حجم فایل چقدر است؟',
+    a: 'تا ۲ گیگابایت.',
   },
   {
     q: 'فایل‌هایم کجا می‌مانند؟',
     a: 'برای پردازش به سرویس‌های لازم می‌روند. فایل موقت حذف می‌شود؛ رونوشت و جزوه ممکن است در دیتابیس بمانند.',
   },
   {
-    q: 'دقت چقدر است؟',
-    a: 'به کیفیت ضبط و نویز بستگی دارد.',
+    q: 'دقت جزوه به چه چیزی بستگی دارد؟',
+    a: 'به کیفیت ضبط، وضوح گفتار و میزان نویز بستگی دارد. اگر ساخت جزوه خطا بخورد، رونوشت خام فرستاده می‌شود.',
   },
   {
-    q: 'هزینه چقدر است؟',
-    a: 'هنوز نهایی نشده. دسترسی فعلاً با تأیید است.',
+    q: 'هزینه‌ی استفاده چقدر است؟',
+    a: 'قیمت هنوز نهایی نشده؛ دسترسی فعلاً با تأیید است.',
   },
   {
-    q: 'اگر خطا بخورد چه؟',
-    a: 'اگر ساخت جزوه خطا بخورد، رونوشت خام فرستاده می‌شود.',
+    q: 'چه‌طور شروع کنم؟',
+    a: 'روی دکمه‌ی شروع در تلگرام بزن، ربات را باز کن و فایل کلاس را برایش بفرست.',
   },
 ]
 
 function FAQItem({ index, q, a, isOpen, onToggle }) {
   const panelId = `faq-panel-${index}`
   return (
-    <div className="faq-row border-b border-subtle">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        aria-controls={panelId}
-        className="flex w-full items-center justify-between gap-4 py-5 text-start"
-      >
-        <span className="text-[15px] font-semibold leading-7">{q}</span>
-        <span
-          className={`faq-marker flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition ${
-            isOpen ? 'rotate-45 border-ink bg-ink text-white' : 'border-subtle text-ink-muted'
-          }`}
-          aria-hidden="true"
+    <article className={`faq-item ${isOpen ? 'is-open' : ''}`}>
+      <h3>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          className="faq-question"
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
-        </span>
-      </button>
+          <span>{q}</span>
+          <span className="faq-marker" aria-hidden="true">{isOpen ? '−' : '+'}</span>
+        </button>
+      </h3>
       <div
         id={panelId}
         aria-hidden={!isOpen}
-        className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+        className={`faq-answer ${isOpen ? 'is-open' : ''}`}
       >
-        <div className="overflow-hidden">
-          <p className="max-w-[62ch] pb-6 text-sm text-muted"><IsolatedText>{a}</IsolatedText></p>
-        </div>
+        <p><IsolatedText>{a}</IsolatedText></p>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -76,17 +68,18 @@ export default function FAQ() {
       acceptedAnswer: { '@type': 'Answer', text: f.a },
     })),
   }
-  // Escape "<" so no answer text can ever close the <script> tag early.
   const jsonLdHtml = JSON.stringify(jsonLd).replace(/</g, '\\u003c')
 
   return (
-    <section id="faq" className="product-tile product-tile-parchment">
-      <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl">
-          <h2>سؤال‌های رایج</h2>
+    <section id="faq" className="product-tile product-tile-parchment faq-section">
+      <div className="container faq-layout">
+        <div className="faq-intro">
+          <p className="section-eyebrow"><Icon name="sparkles" size={17} /> پاسخ‌های کوتاه و روشن</p>
+          <h2 className="section-title">سؤال داری؟</h2>
+          <p className="section-description">چند جواب درباره‌ی فایل‌ها، خروجی و دسترسی.</p>
         </div>
 
-        <div className="mt-12 max-w-3xl border-t border-subtle">
+        <div className="faq-list">
           {faqs.map((f, i) => (
             <FAQItem
               key={f.q}

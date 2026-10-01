@@ -24,7 +24,6 @@ export default function LeadForm({ source = 'access' }) {
   }, [])
 
   useEffect(() => {
-    // Fetch CSRF token on mount; onSubmit retries if that request failed.
     fetchToken().catch(() => {})
   }, [fetchToken])
 
@@ -40,7 +39,6 @@ export default function LeadForm({ source = 'access' }) {
     setStatus('loading')
     setMsg('')
 
-    // The token is issued on mount; onSubmit retries if that request failed.
     let token = csrf
     if (!token) {
       try {
@@ -62,7 +60,7 @@ export default function LeadForm({ source = 'access' }) {
         cache: 'no-store',
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'X-CSRF-Token': token,
         },
         body: JSON.stringify({ email: trimmed, csrf_token: token, website: honeypot, source }),
@@ -90,8 +88,7 @@ export default function LeadForm({ source = 'access' }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3" noValidate aria-busy={status === 'loading'}>
-      {/* Honeypot — hidden for humans, trap for bots */}
+    <form onSubmit={onSubmit} className="lead-form" noValidate aria-busy={status === 'loading'}>
       <div className="honeypot" aria-hidden="true">
         <label htmlFor={`website-${source}`}>وب‌سایت</label>
         <input
@@ -105,9 +102,9 @@ export default function LeadForm({ source = 'access' }) {
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor={`email-${source}`} className="text-sm font-semibold">ایمیل برای درخواست دسترسی</label>
-        <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="lead-field">
+        <label htmlFor={`email-${source}`}>ایمیل برای درخواست دسترسی</label>
+        <div className="lead-field-row">
           <input
             id={`email-${source}`}
             type="email"
@@ -121,33 +118,27 @@ export default function LeadForm({ source = 'access' }) {
             disabled={status === 'loading' || status === 'success'}
             aria-invalid={status === 'error'}
             aria-describedby={`email-message-${source}`}
-            className="min-w-0 flex-1 rounded-11 border border-dark bg-surface-dark px-4 py-3 text-sm text-on-dark placeholder:text-on-dark-subtle disabled:opacity-60"
           />
-          <button
-            type="submit"
-            disabled={status === 'loading' || status === 'success'}
-            className="button-primary inline-flex items-center justify-center px-6 py-3 text-sm"
-          >
+          <button type="submit" disabled={status === 'loading' || status === 'success'} className="button-primary lead-submit">
             {status === 'loading' ? 'در حال ثبت…' : status === 'success' ? 'ثبت شد' : 'ثبت ایمیل'}
           </button>
         </div>
       </div>
 
-      {/* Keep the existing CSRF field contract. */}
       <input type="hidden" name="csrf_token" value={csrf} />
 
       <p
         id={`email-message-${source}`}
         role={status === 'error' ? 'alert' : 'status'}
         aria-live={status === 'error' ? 'assertive' : 'polite'}
-        className={`min-h-[1.6em] text-xs leading-6 text-on-dark-subtle ${msg ? '' : 'sr-only'}`}
+        className={`lead-status ${msg ? '' : 'sr-only'}`}
       >
         {msg}
       </p>
 
-      <p className="text-xs leading-6 text-on-dark-subtle">
+      <p className="lead-privacy-note">
         ایمیل فقط برای مدیریت فهرست دسترسی ذخیره می‌شود؛ ایمیل خودکار ارسال نمی‌شود.{' '}
-        <a href="#privacy" className="inline-link link-underline">جزئیات</a>
+        <a href="#privacy" className="inline-link">جزئیات</a>
       </p>
     </form>
   )

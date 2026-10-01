@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Icon from './Icon'
 import IsolatedText from './IsolatedText'
 import { BOT_HANDLE, tgLink, toFa } from '../lib/constants'
 import { trackCTA } from '../lib/track'
@@ -11,43 +12,53 @@ const stages = [
 ]
 
 const END_PHASE = 6
+const waveformBars = [30, 55, 38, 82, 45, 65, 34, 78, 48, 92, 36, 64, 43, 75, 32, 55, 40, 68]
 
-function PhoneFrame({ children }) {
-  return (
-    <div className="demo-frame overflow-hidden rounded-18 border border-dark bg-surface-dark">
-      <div className="flex items-center justify-between border-b border-dark px-4 py-2.5 text-xs text-on-dark-subtle">
-        <span className="text-on-dark">گاماس</span>
-        <bdi dir="ltr" className="hidden sm:inline">{BOT_HANDLE}</bdi>
-      </div>
-      <div className="flex min-h-[480px] flex-col p-3 sm:p-4">{children}</div>
-    </div>
-  )
-}
-
-function ChatBubble({ from, children }) {
+function ChatBubble({ from, children, className = '' }) {
   const isUser = from === 'user'
   return (
-    <div className={`flex ${isUser ? 'chat-row-user' : 'chat-row-bot'}`}>
-      <div className={`demo-bubble max-w-[82%] rounded-2xl px-3.5 py-2.5 text-xs leading-6 ${isUser ? 'demo-bubble-user' : 'demo-bubble-bot'}`}>
+    <div className={`chat-row ${isUser ? 'chat-row-user' : 'chat-row-bot'}`}>
+      <div className={`chat-bubble ${isUser ? 'chat-bubble-user' : 'chat-bubble-bot'} ${className}`}>
         {children}
       </div>
     </div>
   )
 }
 
+function PhoneFrame({ children }) {
+  return (
+    <div className="demo-phone-shell">
+      <div className="demo-phone-camera" aria-hidden="true" />
+      <div className="demo-phone-screen">
+        <div className="demo-chat-topbar">
+          <span className="demo-back-arrow" aria-hidden="true">‹</span>
+          <span className="demo-bot-avatar"><Icon name="sparkles" size={19} /></span>
+          <span className="demo-chat-title">
+            <strong>گاماس</strong>
+            <small><bdi dir="ltr">{BOT_HANDLE}</bdi></small>
+          </span>
+          <span className="demo-menu-dots" aria-hidden="true">•••</span>
+        </div>
+        <div className="demo-chat-content">{children}</div>
+        <div className="demo-input-bar" aria-hidden="true">
+          <span>پیام خود را بنویسید…</span>
+          <span className="demo-input-mic"><Icon name="microphone" size={17} /></span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function BotDemo() {
-  const [phase, setPhase] = useState(0)
+  const [phase, setPhase] = useState(1)
   const [progress, setProgress] = useState(0)
   const [auto, setAuto] = useState(true)
-  const [userStarted, setUserStarted] = useState(false)
   const intervalRef = useRef(null)
 
   useEffect(() => {
     if (!auto) return undefined
 
-    // With reduced motion we show the finished state instead of animating.
     if (
-      !userStarted &&
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
     ) {
@@ -61,106 +72,141 @@ export default function BotDemo() {
     const tick = () => {
       step = (step + 1) % (END_PHASE + 1)
       setPhase(step)
-      if (step >= 2 && step <= 5) setProgress(stages[step - 2].pct)
+      if (step >= 2 && step <= 5) setProgress(stages[Math.min(step - 2, stages.length - 1)].pct)
       else if (step === END_PHASE) setProgress(100)
       else setProgress(0)
     }
 
     tick()
-    intervalRef.current = setInterval(tick, 1900)
+    intervalRef.current = setInterval(tick, 1850)
     return () => clearInterval(intervalRef.current)
-  }, [auto, userStarted])
+  }, [auto])
 
   const showFile = phase >= 1
   const showProcessing = phase >= 2 && phase <= 5
   const showNotes = phase === END_PHASE
+  const activeStage = stages[Math.min(Math.max(phase - 2, 0), stages.length - 1)]
+
+  const replay = () => {
+    if (!auto) {
+      setPhase(0)
+      setProgress(0)
+    }
+    setAuto((value) => !value)
+  }
 
   return (
-    <section id="demo" className="product-tile product-tile-dark">
-      <div className="mx-auto grid max-w-content items-center gap-12 px-4 sm:px-6 md:grid-cols-[0.9fr_1.1fr] md:gap-10 lg:gap-16 lg:px-8">
-        <div>
-          <h2>همه‌چیز در یک پیام.</h2>
-          <p className="mt-5 max-w-[34ch] text-on-dark-muted">فایل را می‌فرستی؛ وضعیت و نتیجه را در تلگرام می‌بینی.</p>
+    <section id="demo" className="product-tile product-tile-dark demo-section">
+      <div className="demo-backdrop-glow demo-backdrop-glow-one" aria-hidden="true" />
+      <div className="demo-backdrop-glow demo-backdrop-glow-two" aria-hidden="true" />
+      <div className="container demo-layout">
+        <div className="demo-copy">
+          <p className="section-eyebrow section-eyebrow-light"><span className="live-dot" /> پیش‌نمایش تعاملی</p>
+          <h2 className="section-title">یک پیام. سه قدم. جزوه‌ی آماده.</h2>
+          <p className="section-description">
+            فایل کلاس را در تلگرام می‌فرستی؛ گاماس وضعیت پردازش را نشان می‌دهد و وقتی آماده شد، جزوه را همان‌جا تحویل می‌گیری.
+          </p>
 
-          <div className="mt-9 flex flex-wrap gap-3">
+          <div className="demo-flow-list" aria-label="مراحل کار">
+            <span><b>۱</b> ارسال فایل</span>
+            <span><b>۲</b> پردازش هوشمند</span>
+            <span><b>۳</b> دریافت جزوه</span>
+          </div>
+
+          <div className="demo-actions">
             <a
               href={tgLink('demo')}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackCTA('demo')}
-              className="button-primary inline-flex items-center px-6 py-3 text-sm"
+              className="button-primary demo-primary-cta"
             >
-              شروع در تلگرام
+              <Icon name="telegram" size={20} />
+              امتحان در تلگرام
+              <Icon name="arrow-left" size={18} className="cta-arrow" />
             </a>
             <button
               type="button"
-              onClick={() => {
-                if (!auto) {
-                  setUserStarted(true)
-                  setPhase(0)
-                  setProgress(0)
-                }
-                setAuto((value) => !value)
-              }}
-              className="button-secondary-pill inline-flex items-center px-6 py-3 text-sm"
+              onClick={replay}
+              aria-pressed={!auto}
+              className="button-secondary-pill demo-replay-button"
             >
-              {auto ? 'توقف' : 'نمایش دوباره'}
+              <span className={`replay-symbol ${auto ? 'is-playing' : ''}`} aria-hidden="true">{auto ? 'Ⅱ' : '↻'}</span>
+              {auto ? 'توقف نمایش' : 'نمایش دوباره'}
             </button>
           </div>
         </div>
 
-        <figure className="mx-auto w-full max-w-[340px]">
+        <figure className="demo-preview">
+          <div className="demo-preview-orbit demo-preview-orbit-one" aria-hidden="true" />
+          <div className="demo-preview-orbit demo-preview-orbit-two" aria-hidden="true" />
           <PhoneFrame>
-            <div className="flex flex-1 flex-col gap-3" aria-live="polite">
-              <ChatBubble from="bot">فایل کلاس را بفرست.</ChatBubble>
+            <div className="demo-day-tag">امروز</div>
+            <div className="demo-chat-messages" aria-live="polite" aria-atomic="false">
+              <ChatBubble from="bot" className="demo-greeting">
+                <span>سلام! 👋</span>
+                <small>فایل کلاس را بفرست تا جزوه‌ی مرتبش را بسازم.</small>
+              </ChatBubble>
 
               {showFile && (
-                <ChatBubble from="user">
-                  <IsolatedText>lecture_03.mp3</IsolatedText>
+                <ChatBubble from="user" className="demo-file-bubble">
+                  <span className="file-type-icon"><Icon name="audio" size={20} /></span>
+                  <span className="file-info">
+                    <strong><IsolatedText>جلسه_زیست_۱۱.mp3</IsolatedText></strong>
+                    <small>۲۴٫۶ مگابایت · صوت</small>
+                  </span>
+                  <span className="file-waveform" aria-hidden="true">
+                    {waveformBars.map((height, index) => <i key={`${height}-${index}`} style={{ '--bar-height': `${height}%` }} />)}
+                  </span>
                 </ChatBubble>
               )}
 
               {showProcessing && (
-                <div className="chat-row-bot flex">
-                  <div className="demo-bubble demo-bubble-bot max-w-[86%] rounded-2xl px-3.5 py-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span>{stages[phase - 2]?.label || 'در حال پردازش…'}</span>
-                      <span className="persian-digits text-zinc-500">{toFa(progress)}٪</span>
-                    </div>
-                    <div
-                      className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-200"
-                      role="progressbar"
-                      aria-label="پیشرفت ساخت جزوه"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={progress}
-                    >
-                      <div
-                        className="h-full bg-primary transition-all duration-700 ease-out will-change-[width]"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
+                <ChatBubble from="bot" className="demo-progress-bubble">
+                  <div className="demo-progress-heading">
+                    <span className="progress-orb"><Icon name="sparkles" size={15} /></span>
+                    <span>{activeStage.label}</span>
+                    <bdi dir="ltr" className="progress-percent">{toFa(progress)}٪</bdi>
                   </div>
-                </div>
+                  <div
+                    className="demo-progress-track"
+                    role="progressbar"
+                    aria-label="پیشرفت ساخت جزوه"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={progress}
+                  >
+                    <span className="demo-progress-fill" style={{ width: `${progress}%` }} />
+                  </div>
+                  <small className="demo-progress-caption">داریم نکته‌ها را از دل کلاس بیرون می‌کشیم…</small>
+                </ChatBubble>
               )}
 
               {showNotes && (
                 <>
-                  <ChatBubble from="bot">
-                    <span className="font-semibold">جزوه — بخش اول</span>
-                    <span className="mt-1 block text-zinc-600">مقدمه، سرفصل‌ها و نکته‌های کلیدی.</span>
+                  <ChatBubble from="bot" className="demo-success-note">
+                    <div className="note-topline">
+                      <span className="note-success-icon"><Icon name="check" size={15} /></span>
+                      <strong>جزوه‌ات آماده شد!</strong>
+                    </div>
+                    <div className="note-paper">
+                      <span className="note-paper-label"><Icon name="notes" size={14} /> خلاصه‌ی جلسه</span>
+                      <strong>زیست‌شناسی · فصل یازدهم</strong>
+                      <span className="note-line note-line-long" />
+                      <span className="note-line note-line-medium" />
+                      <span className="note-bullet"><i /> نکته‌های کلیدی و تعاریف</span>
+                      <span className="note-bullet"><i /> پرسش‌های مرور سریع</span>
+                    </div>
+                    <small className="demo-note-timestamp">همین حالا</small>
                   </ChatBubble>
-                  <ChatBubble from="bot">
-                    <span className="font-semibold">جزوه — بخش دوم</span>
-                    <span className="mt-1 block text-zinc-600">جمع‌بندی و پرسش‌های مرور.</span>
+                  <ChatBubble from="bot" className="demo-next-message">
+                    نسخه‌ی کامل جزوه و رونوشت فارسی را از همین‌جا ببین.
                   </ChatBubble>
                 </>
               )}
             </div>
           </PhoneFrame>
-          <figcaption className="mt-4 text-center text-xs text-on-dark-subtle">
-            نمونه‌ی نمایشی از گفت‌وگو
-          </figcaption>
+          <figcaption className="demo-caption"><Icon name="sparkles" size={15} /> نمونه‌ی نمایشی از گفت‌وگوی گاماس</figcaption>
         </figure>
       </div>
     </section>

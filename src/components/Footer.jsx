@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react'
+import Icon from './Icon'
 import { BOT_HANDLE, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const footerLinks = [
   { href: '#how', label: 'چطور کار می‌کند' },
-  { href: '#features', label: 'فرمت‌ها' },
+  { href: '#features', label: 'قابلیت‌ها' },
   { href: '#faq', label: 'پرسش‌های رایج' },
   { href: '#privacy', label: 'حریم خصوصی' },
 ]
@@ -30,62 +31,46 @@ export default function Footer() {
 
   return (
     <footer className="footer product-tile product-tile-light">
-      <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col justify-between gap-12 lg:flex-row">
-          <div>
-            <a href="#" className="flex min-h-11 items-center gap-2.5" aria-label="گاماس — صفحه اصلی">
-              <span className="flex h-8 w-8 items-center justify-center rounded-11 bg-ink font-display text-sm leading-none text-canvas">گ</span>
-              <span className="text-[17px] font-semibold">گاماس</span>
-            </a>
-            <p className="mt-4 max-w-[34ch] text-sm text-muted">
-              فایل کلاس را می‌فرستی؛ جزوه را در تلگرام می‌گیری.
-            </p>
-            <p className="mt-4 text-xs text-ink-subtle" suppressHydrationWarning>
-              © {persianYear} گاماس
-            </p>
-          </div>
-
-          <nav aria-label="پیوندهای فوتر" className="grid gap-10 sm:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold">لینک‌ها</p>
-              <ul className="mt-4 flex flex-col items-start gap-1 text-sm text-muted">
-                {footerLinks.map((link) => (
-                  <li key={link.href}>
-                    <a href={link.href} className="inline-link link-underline">{link.label}</a>
-                  </li>
-                ))}
-                <li>
-                  <a href="https://github.com/AmiraliGhamkhar/Gamas_bot" target="_blank" rel="noopener noreferrer" className="inline-link link-underline">
-                    سورس ربات
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold">شروع</p>
-              <div className="mt-4 flex flex-col items-start gap-3">
-                <a
-                  href={tgLink('footer')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackCTA('footer')}
-                  className="button-primary items-center px-5 py-2.5 text-sm"
-                >
-                  شروع در تلگرام
-                </a>
-                <button
-                  type="button"
-                  onClick={copyHandle}
-                  className={`copy-handle text-xs ${copied ? 'is-copied' : 'text-ink-subtle'}`}
-                  aria-label={copied ? 'کپی شد' : 'کپی آیدی تلگرام'}
-                >
-                  <bdi dir="ltr">{copied ? 'کپی شد ✓' : BOT_HANDLE}</bdi>
-                </button>
-              </div>
-            </div>
-          </nav>
+      <div className="container footer-layout">
+        <div className="footer-brand-block">
+          <a href="#top" className="brand-link" aria-label="گاماس — صفحه‌ی اصلی">
+            <span className="brand-mark">گ</span>
+            <span className="brand-name">گاماس</span>
+          </a>
+          <p>از صدای کلاس، جزوه‌ای که می‌شود خواند.</p>
+          <span className="footer-copyright" suppressHydrationWarning>© {persianYear} گاماس</span>
         </div>
+
+        <nav aria-label="پیوندهای فوتر" className="footer-nav">
+          <div>
+            <h2>بیشتر بدان</h2>
+            <ul>
+              {footerLinks.map((link) => <li key={link.href}><a href={link.href}>{link.label}</a></li>)}
+              <li><a href="https://github.com/AmiraliGhamkhar/Gamas_bot" target="_blank" rel="noopener noreferrer">سورس ربات</a></li>
+            </ul>
+          </div>
+          <div className="footer-start">
+            <h2>شروع کن</h2>
+            <a
+              href={tgLink('footer')}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackCTA('footer')}
+              className="button-primary footer-cta"
+            >
+              <Icon name="telegram" size={17} />
+              رفتن به تلگرام
+            </a>
+            <button
+              type="button"
+              onClick={copyHandle}
+              className={`copy-handle ${copied ? 'is-copied' : ''}`}
+              aria-label={copied ? 'کپی شد' : 'کپی آیدی تلگرام'}
+            >
+              <bdi dir="ltr">{copied ? 'کپی شد ✓' : BOT_HANDLE}</bdi>
+            </button>
+          </div>
+        </nav>
       </div>
     </footer>
   )

@@ -1,34 +1,41 @@
+import Icon from './Icon'
 import { tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 import LeadForm from './LeadForm'
 
 export default function FinalCTA() {
   return (
-    <section id="final-cta" className="product-tile product-tile-dark">
-      <div className="mx-auto grid max-w-content gap-12 px-4 sm:px-6 md:grid-cols-[1fr_1fr] md:gap-10 lg:gap-16 lg:px-8">
-        <div>
-          <h2>شروع کن.</h2>
-          <p className="mt-5 max-w-[32ch] text-on-dark-muted">
-            فایل را بفرست. جزوه را در چت بگیر.
-          </p>
+    <section id="final-cta" className="product-tile product-tile-dark cta-section">
+      <div className="cta-glow cta-glow-one" aria-hidden="true" />
+      <div className="cta-glow cta-glow-two" aria-hidden="true" />
+      <div className="container cta-layout">
+        <div className="cta-copy">
+          <p className="section-eyebrow section-eyebrow-light"><Icon name="sparkles" size={17} /> آماده‌ای؟</p>
+          <h2 className="cta-title">جلسه‌ی بعدی را<br /><span>با خیال راحت گوش کن.</span></h2>
+          <p className="cta-description">فایل را بفرست؛ گاماس نکته‌ها را جمع می‌کند تا تو روی یادگیری تمرکز کنی.</p>
           <a
             href={tgLink('final_cta')}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackCTA('final_cta')}
-            className="button-primary mt-9 inline-flex items-center px-7 py-3.5 text-[15px]"
+            className="button-primary cta-main-button"
           >
+            <Icon name="telegram" size={21} />
             شروع در تلگرام
+            <Icon name="arrow-left" size={19} className="cta-arrow" />
           </a>
+          <div className="cta-micro-proof"><Icon name="check" size={16} /> بدون نصب اپ جدید <span>·</span> نتیجه در همان چت</div>
         </div>
 
-        <div id="access" className="surface-card p-6 sm:p-8">
-          <h3>درخواست دسترسی</h3>
-          <p className="mt-3 text-sm text-on-dark-muted">دسترسی فعلاً با تأیید است؛ قیمت هنوز نهایی نشده.</p>
-
-          <div className="mt-7 border-t border-dark pt-6">
-            <LeadForm source="access" />
+        <div id="access" className="access-card">
+          <div className="access-card-head">
+            <span className="access-card-icon"><Icon name="notes" size={22} /></span>
+            <div>
+              <h3>درخواست دسترسی</h3>
+              <p>فعلاً با تأیید؛ قیمت هنوز نهایی نشده.</p>
+            </div>
           </div>
+          <div className="access-card-form"><LeadForm source="access" /></div>
         </div>
       </div>
     </section>

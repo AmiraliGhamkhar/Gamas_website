@@ -1,53 +1,78 @@
-import { BOT_HANDLE } from '../lib/constants'
+import Icon from './Icon'
 import IsolatedText from './IsolatedText'
+import { sitePath, BOT_HANDLE } from '../lib/constants'
 
 const steps = [
   {
     n: '۰۱',
-    title: 'بفرست',
-    desc: `فایل را به ${BOT_HANDLE} بفرست.`,
+    icon: 'telegram',
+    title: 'فایل را بفرست',
+    desc: `ویس، ویدیو یا پاورپوینت را برای ${BOT_HANDLE} بفرست.`,
   },
   {
     n: '۰۲',
-    title: 'پردازش می‌شود',
-    desc: 'صدا رونویسی می‌شود؛ متن و اسلایدها کنار هم می‌آیند.',
+    icon: 'audio',
+    title: 'گاماس مرتبش می‌کند',
+    desc: 'گفتار رونویسی می‌شود؛ متن و محتوای اسلایدها کنار هم می‌آیند.',
   },
   {
     n: '۰۳',
-    title: 'تحویل بگیر',
-    desc: 'جزوه و رونوشت در چت می‌آیند.',
+    icon: 'notes',
+    title: 'جزوه را تحویل بگیر',
+    desc: 'خلاصه‌ی ساختاریافته و رونوشت فارسی در چت منتظرت هستند.',
   },
 ]
 
 export default function HowItWorks() {
   return (
-    <section id="how" className="product-tile product-tile-light">
-      <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl">
-          <h2>سه قدم ساده.</h2>
-          <p className="mt-5 text-muted">فقط در تلگرام.</p>
+    <section id="how" className="product-tile product-tile-light how-section">
+      <div className="container">
+        <div className="section-heading how-heading">
+          <p className="section-eyebrow"><Icon name="sparkles" size={17} /> شروع ساده است</p>
+          <h2 className="section-title">از فایل تا جزوه، در سه قدم.</h2>
+          <p className="section-description">همه‌چیز همان‌جایی می‌ماند که فایل را فرستادی: داخل تلگرام.</p>
         </div>
 
-        <ol className="mt-14 grid gap-x-12 gap-y-10 md:grid-cols-3">
-          {steps.map((step) => (
-            <li key={step.n} className="border-t border-subtle pt-6">
-              <span className="persian-digits text-xs text-ink-subtle">{step.n}</span>
-              <h3 className="mt-3">{step.title}</h3>
-              <p className="mt-2 text-sm text-muted">
-                {step.desc.split(BOT_HANDLE).map((part, index) => (
-                  <span key={`${step.n}-${index}`}>
-                    {index > 0 && <bdi dir="ltr">{BOT_HANDLE}</bdi>}
-                    <IsolatedText>{part}</IsolatedText>
-                  </span>
-                ))}
-              </p>
-            </li>
-          ))}
-        </ol>
+        <div className="how-layout">
+          <ol className="steps-list">
+            {steps.map((step) => (
+              <li key={step.n} className="step-card">
+                <span className="step-number">{step.n}</span>
+                <span className="step-icon"><Icon name={step.icon} size={22} /></span>
+                <div className="step-content">
+                  <h3>{step.title}</h3>
+                  <p>
+                    {step.desc.split(BOT_HANDLE).map((part, index) => (
+                      <span key={`${step.n}-${index}`}>
+                        {index > 0 && <bdi dir="ltr">{BOT_HANDLE}</bdi>}
+                        <IsolatedText>{part}</IsolatedText>
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
 
-        <p className="mt-12 text-xs text-ink-subtle">
-          فایل‌ها برای ساخت جزوه به سرویس‌های لازم می‌روند —{' '}
-          <a href="#privacy" className="inline-link link-underline">جزئیات حریم خصوصی</a>
+          <figure className="waveform-visual">
+            <img
+              src={sitePath('images/illustration-waveform.webp')}
+              width="1280"
+              height="960"
+              loading="lazy"
+              decoding="async"
+              alt="موج صوتی فیروزه‌ای که در یک تصویر مفهومی به صفحه‌های جزوه‌ی مرتب تبدیل می‌شود"
+            />
+            <figcaption className="waveform-visual-caption">
+              <span className="waveform-caption-icon"><Icon name="audio" size={18} /></span>
+              صدا به نکته‌های قابل مرور تبدیل می‌شود
+            </figcaption>
+          </figure>
+        </div>
+
+        <p className="how-privacy-note">
+          فایل‌ها برای ساخت جزوه به سرویس‌های لازم فرستاده می‌شوند؛{' '}
+          <a href="#privacy" className="text-link">جزئیات حریم خصوصی <Icon name="arrow-left" size={16} /></a>
         </p>
       </div>
     </section>
