@@ -39,12 +39,15 @@ const result = await page.evaluate(() => {
   const parchmentTile = document.querySelector('.product-tile-parchment')
   out.parchmentBg = getComputedStyle(parchmentTile).backgroundColor
 
-  // Micro-interactions present in stylesheet
-  const rules = [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules] } catch { return [] } })
-  out.hasHoverLift = rules.some((r) => r.selectorText && r.selectorText.includes('.hover-lift:hover'))
+  // Micro-interactions present in stylesheet (hover rules live in a media block).
+  // Note: CSSStyleRule exposes an empty cssRules list for CSS nesting, so a
+  // non-empty length check is what distinguishes a container rule from a leaf.
+  const flat = (list) => list.flatMap((r) => (r.cssRules && r.cssRules.length ? flat([...r.cssRules]) : [r]))
+  const rules = [...document.styleSheets].flatMap((s) => { try { return flat([...s.cssRules]) } catch { return [] } })
   out.hasBtnHover = rules.some((r) => r.selectorText && r.selectorText === '.button-primary:hover')
   out.hasLinkUnderline = rules.some((r) => r.selectorText && r.selectorText === '.link-underline:hover')
-  out.hoverLiftUsage = document.querySelectorAll('.hover-lift').length
+  out.hoverSelectors = rules.map((r) => r.selectorText).filter((s) => s && s.includes(':hover')).slice(0, 12)
+  out.cardCount = document.querySelectorAll('.surface-card').length
   out.linkUnderlineUsage = document.querySelectorAll('.link-underline').length
   out.copyHandleUsage = document.querySelectorAll('.copy-handle').length
 
@@ -54,12 +57,13 @@ const result = await page.evaluate(() => {
   return out
 })
 
-// Hover a bento card and confirm the lift transition applies
-await page.hover('.hover-lift')
+// Hover the primary button and confirm the hover tint applies
+const primary = page.locator('.button-primary').first()
+await primary.hover()
 await page.waitForTimeout(250)
-result.hoverTranslate = await page.evaluate(() => {
-  const el = document.querySelector('.hover-lift')
-  return getComputedStyle(el).translate
+result.primaryHoverBg = await page.evaluate(() => {
+  const el = document.querySelector('.button-primary')
+  return getComputedStyle(el).backgroundColor
 })
 
 // Copy-handle click micro-interaction (footer handle)

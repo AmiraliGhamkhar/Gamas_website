@@ -1,26 +1,40 @@
 {
-  "chipCount": 6,
+  "chipCount": 0,
   "eyebrowsAboveHeadings": 0,
   "palette": {
-    "canvas": "#fdfdfb",
-    "primary": "#4f46e5",
-    "tileDark": "#1e1b2e"
+    "canvas": "#faf9f6",
+    "primary": "#1b76a9",
+    "tileDark": "#171613"
   },
-  "buttonBg": "rgb(79, 70, 229)",
-  "darkTileBg": "rgb(30, 27, 46)",
-  "parchmentBg": "rgb(244, 241, 234)",
-  "hasHoverLift": false,
-  "hasBtnHover": false,
-  "hasLinkUnderline": false,
-  "hoverLiftUsage": 21,
+  "buttonBg": "rgb(27, 118, 169)",
+  "darkTileBg": "rgb(23, 22, 19)",
+  "parchmentBg": "rgb(243, 240, 234)",
+  "hasBtnHover": true,
+  "hasLinkUnderline": true,
+  "hoverSelectors": [
+    "html[dir=\"rtl\"] .group:hover .inline-nudge",
+    "html[dir=\"ltr\"] .group:hover .inline-nudge",
+    ".button-primary:hover",
+    ".button-secondary-pill:hover",
+    ".product-tile-dark .button-secondary-pill:hover",
+    ".link-underline:hover",
+    ".faq-row:hover",
+    ".product-tile-dark .faq-row:hover",
+    ".faq-row:hover .faq-marker",
+    "a:hover, button:hover",
+    ".disclosure > summary:hover .disclosure-marker"
+  ],
+  "cardCount": 1,
   "linkUnderlineUsage": 12,
-  "copyHandleUsage": 2,
+  "copyHandleUsage": 1,
   "body": {
     "size": "17px",
-    "lineHeight": "30.6px",
+    "lineHeight": "31.45px",
     "family": "Vazirmatn"
   },
-  "hoverTranslate": "0px -2px",
+  "primaryHoverBg": "color(srgb 0.0931765 0.407216 0.583216)",
   "copyHandleClicked": "کپی شد ✓",
-  "consoleErrors": []
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
 }

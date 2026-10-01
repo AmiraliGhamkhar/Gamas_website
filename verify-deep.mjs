@@ -54,7 +54,7 @@ const browser = await chromium.launch()
     b.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
     // :active only applies with real pointer; check CSS rule exists instead
     const rules = [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules] } catch { return [] } })
-    const hasActiveScale = rules.some((r) => r.selectorText && /a:active|button:active/.test(r.selectorText) && /scale\(0\.95\)/.test(r.cssText))
+    const hasActiveScale = rules.some((r) => r.selectorText && /a:active|button:active/.test(r.selectorText) && /scale\(0\.\d+\)/.test(r.cssText))
     return { hasActiveScaleRule: hasActiveScale }
   })
   await page.close()

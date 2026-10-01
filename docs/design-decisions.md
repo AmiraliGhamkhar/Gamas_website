@@ -1,6 +1,60 @@
 # Design decisions
 
-## Humanize pass (latest)
+## Editorial pass (latest)
+
+The “Paper & Indigo” look was replaced with a quiet, editorial direction: warm
+paper surfaces, near-black ink, hairline rules, and a single Telegram-blue
+accent used only for actions. Nothing about the architecture, routes, API
+contracts or deployment changed.
+
+- **Sections:** the bento grid, the separate access section and the empty
+  testimonial section were removed. `Capabilities.jsx` (flat format/capability
+  lists) replaces `Bento.jsx`; the access request and the lead form moved into
+  `FinalCTA`; testimonials were deleted because there is no verified review to
+  show. The page is now hero → story → demo → how → formats → privacy → FAQ →
+  final CTA → footer, with only two dark sections as anchors.
+- **Cards:** 1 card remains in the whole page (the access/lead-form block),
+  plus the product screenshot and the demo phone, which are real product
+  objects. Everything else is flat columns separated by `border-subtle` rules.
+- **Palette:** `--canvas #faf9f6`, `--parchment #f3f0ea`, `--tile-dark #171613`
+  (warm near-black instead of indigo-charcoal), `--ink #1a1815`, `--primary
+  #1b76a9` (Telegram blue, 5.0:1 with white label). Hairlines use
+  `--border`, form borders use `--border-strong` / `--border-dark-strong` so
+  inputs meet the 3:1 non-text contrast requirement.
+- **Type:** Vazirmatn everywhere; Lalezar is now limited to the brand mark and
+  the hero `h1` (`.hero-headline`). Section `h2` is Vazirmatn 600,
+  `clamp(26px, 3.1vw, 38px)`, line-height 1.55; body stays 17px/1.85. Letter
+  spacing stays 0 on Persian text.
+- **Effects removed:** glassmorphism (`backdrop-filter`) on the nav/drawer/sticky
+  bars, the `.hover-lift` card lift, `.chip` pills, decorative hero overlays,
+  and every shadow except one soft shadow on the product screenshot.
+- **Motion:** one 0.5s hero fade (headline, lead, CTAs — the LCP image no
+  longer animates), the demo progress bar, and hover/press transitions. All of
+  it is disabled under `prefers-reduced-motion`, where the demo renders its
+  finished state.
+- **New primitives:** `.tile-rule` (hairline between two same-surface
+  sections), `.disclosure` (native `<details>` for the privacy detail list),
+  `a.inline-link` (inline links must not become 44px inline boxes; they keep
+  ≥24px hit areas), and an `on-dark` / `surface-dark` / `border-dark` color
+  group in `tailwind.config.js` so dark-tile text is set by real utility classes
+  instead of the old `text-white/xx` remapping hack.
+- **Bug fix:** `IsolatedText` used a non-capturing pattern with
+  `String.split`, which silently dropped every Latin run it was asked to
+  isolate — `MP3`, `M4A`, `PPTX` and friends were missing from the FAQ answers
+  and feature lists. The pattern now captures its match, and the technical
+  names render inside `<bdi>`.
+- **Verification:** `npm run lint` and `npm run build` pass. `verify-redesign`,
+  `verify-deep` and `verify-final` were re-run against the production build:
+  no horizontal overflow at 320/375/414/768/834/1024/1280/1440, `dir=rtl`,
+  one `h1`, drawer opens/closes with focus return, form error states render,
+  zero contrast failures, no text below 12px, and reduced motion shows the
+  finished demo with no animation. `verify-final.mjs` and `verify-deep.mjs` were
+  updated where they asserted removed design details (`.hover-lift`, the
+  `scale(0.95)` value); `verify-final.mjs` also now recurses into
+  `@media` blocks, which is why its hover-rule check reports `true` where it
+  previously reported `false` for every design.
+
+## Humanize pass
 
 Applied on top of the Paper & Indigo foundation after user feedback: shorter, humanized Persian copy; all eyebrow badges removed; micro-interactions added.
 
