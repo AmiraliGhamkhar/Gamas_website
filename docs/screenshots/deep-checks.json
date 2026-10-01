@@ -2,95 +2,83 @@
   "tiles": [
     {
       "id": "section",
-      "bg": "rgb(255, 255, 255)",
-      "paddingBlock": "80px",
+      "bg": "rgb(250, 249, 246)",
+      "paddingBlock": "88px",
       "radius": "0px"
     },
     {
       "id": "story",
-      "bg": "rgb(32, 33, 36)",
-      "paddingBlock": "112px",
-      "radius": "0px"
-    },
-    {
-      "id": "features",
-      "bg": "rgb(245, 240, 232)",
-      "paddingBlock": "80px",
+      "bg": "rgb(250, 249, 246)",
+      "paddingBlock": "88px",
       "radius": "0px"
     },
     {
       "id": "demo",
-      "bg": "rgb(32, 33, 36)",
-      "paddingBlock": "80px",
+      "bg": "rgb(23, 22, 19)",
+      "paddingBlock": "88px",
       "radius": "0px"
     },
     {
       "id": "how",
-      "bg": "rgb(255, 255, 255)",
-      "paddingBlock": "96px",
+      "bg": "rgb(250, 249, 246)",
+      "paddingBlock": "88px",
       "radius": "0px"
     },
     {
-      "id": "access",
-      "bg": "rgb(32, 33, 36)",
-      "paddingBlock": "80px",
-      "radius": "0px"
-    },
-    {
-      "id": "testimonials",
-      "bg": "rgb(245, 240, 232)",
-      "paddingBlock": "80px",
+      "id": "features",
+      "bg": "rgb(243, 240, 234)",
+      "paddingBlock": "88px",
       "radius": "0px"
     },
     {
       "id": "privacy",
-      "bg": "rgb(32, 33, 36)",
-      "paddingBlock": "80px",
+      "bg": "rgb(250, 249, 246)",
+      "paddingBlock": "88px",
       "radius": "0px"
     },
     {
       "id": "faq",
-      "bg": "rgb(255, 255, 255)",
-      "paddingBlock": "80px",
+      "bg": "rgb(243, 240, 234)",
+      "paddingBlock": "88px",
       "radius": "0px"
     },
     {
       "id": "final-cta",
-      "bg": "rgb(32, 33, 36)",
-      "paddingBlock": "96px",
+      "bg": "rgb(23, 22, 19)",
+      "paddingBlock": "88px",
       "radius": "0px"
     },
     {
       "id": "footer",
-      "bg": "rgb(255, 255, 255)",
-      "paddingBlock": "80px",
+      "bg": "rgb(250, 249, 246)",
+      "paddingBlock": "88px",
       "radius": "0px"
     }
   ],
   "heroFont": {
     "family": "Lalezar, Vazirmatn, system-ui, sans-serif",
-    "size": "56px",
-    "lineHeight": "77.28px",
+    "size": "58px",
+    "lineHeight": "78.88px",
     "weight": "400",
     "letterSpacing": "normal"
   },
   "bodyType": {
     "size": "17px",
-    "lineHeight": "30.6px"
+    "lineHeight": "31.45px"
   },
   "vazirmatnLoaded": true,
   "lalezarLoaded": true,
   "buttonSpec": {
     "radius": "999px",
     "minH": "44px",
-    "bg": "rgb(0, 102, 204)",
+    "bg": "rgb(27, 118, 169)",
     "shadow": "none"
   },
   "focusRing": {
     "tag": "A",
     "text": "گگاماسGamas Bot",
-    "outline": "rgb(0, 102, 204) solid 2px",
-    "outlineColor": "rgb(0, 102, 204)"
+    "outline": "rgb(27, 118, 169) solid 2px",
+    "outlineColor": "rgb(27, 118, 169)"
   },
   "pressScale": {
     "hasActiveScaleRule": true

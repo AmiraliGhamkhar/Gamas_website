@@ -16,9 +16,17 @@ export default {
         'tile-dark': 'var(--tile-dark)',
         surface: 'var(--surface)',
         'surface-muted': 'var(--surface-muted)',
+        'surface-dark': 'var(--surface-dark)',
         subtle: 'var(--border)',
+        dark: 'var(--border-dark)',
         ink: 'var(--ink)',
         muted: 'var(--ink-muted)',
+        'ink-subtle': 'var(--ink-subtle)',
+        'on-dark': {
+          DEFAULT: 'var(--on-dark)',
+          muted: 'var(--on-dark-muted)',
+          subtle: 'var(--on-dark-subtle)',
+        },
         primary: {
           DEFAULT: 'var(--primary)',
           focus: 'var(--primary-focus)',

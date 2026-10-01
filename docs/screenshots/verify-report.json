@@ -1,5 +1,5 @@
 {
-  "base": "http://localhost:5173/",
+  "base": "http://127.0.0.1:4173/",
   "viewports": [
     {
       "viewport": "320x640",
@@ -18,8 +18,10 @@
       },
       "brokenImages": [],
       "imageCount": 1,
-      "scrollHeight": 10223,
-      "consoleErrors": []
+      "scrollHeight": 7381,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "viewport": "375x667",
@@ -38,8 +40,10 @@
       },
       "brokenImages": [],
       "imageCount": 1,
-      "scrollHeight": 10018,
-      "consoleErrors": []
+      "scrollHeight": 7315,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "viewport": "414x896",
@@ -58,8 +62,10 @@
       },
       "brokenImages": [],
       "imageCount": 1,
-      "scrollHeight": 9862,
-      "consoleErrors": []
+      "scrollHeight": 7183,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "viewport": "768x1024",
@@ -78,8 +84,10 @@
       },
       "brokenImages": [],
       "imageCount": 1,
-      "scrollHeight": 8489,
-      "consoleErrors": []
+      "scrollHeight": 6673,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "viewport": "834x1112",
@@ -98,8 +106,10 @@
       },
       "brokenImages": [],
       "imageCount": 1,
-      "scrollHeight": 8611,
-      "consoleErrors": []
+      "scrollHeight": 6687,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "viewport": "1024x768",
@@ -118,8 +128,10 @@
       },
       "brokenImages": [],
       "imageCount": 1,
-      "scrollHeight": 8487,
-      "consoleErrors": []
+      "scrollHeight": 6777,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "viewport": "1280x800",
@@ -138,8 +150,10 @@
       },
       "brokenImages": [],
       "imageCount": 1,
-      "scrollHeight": 7887,
-      "consoleErrors": []
+      "scrollHeight": 5861,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "viewport": "1440x900",
@@ -158,8 +172,10 @@
       },
       "brokenImages": [],
       "imageCount": 1,
-      "scrollHeight": 7887,
-      "consoleErrors": []
+      "scrollHeight": 5861,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     }
   ],
   "reducedMotion": {
@@ -168,8 +184,8 @@
   },
   "bidi": {
     "width": 380,
-    "height": 61.1875,
-    "bdiCount": 20,
-    "ltrSpans": 20
+    "height": 62.875,
+    "bdiCount": 35,
+    "ltrSpans": 35
   }
 }

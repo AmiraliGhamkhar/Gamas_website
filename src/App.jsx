@@ -1,11 +1,9 @@
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Story from './components/Story'
-import Bento from './components/Bento'
 import BotDemo from './components/BotDemo'
 import HowItWorks from './components/HowItWorks'
-import Access from './components/Access'
-import Testimonials from './components/Testimonials'
+import Capabilities from './components/Capabilities'
 import Privacy from './components/Privacy'
 import FAQ from './components/FAQ'
 import FinalCTA from './components/FinalCTA'
@@ -20,11 +18,9 @@ export default function App() {
       <main id="main-content" className="flex-1">
         <Hero />
         <Story />
-        <Bento />
         <BotDemo />
         <HowItWorks />
-        <Access />
-        <Testimonials />
+        <Capabilities />
         <Privacy />
         <FAQ />
         <FinalCTA />

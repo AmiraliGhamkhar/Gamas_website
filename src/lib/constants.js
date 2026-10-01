@@ -16,9 +16,3 @@ export function tgLink(section = 'hero') {
 export function toFa(value) {
   return new Intl.NumberFormat('fa-IR').format(value)
 }
-
-// Limits & honesty
-export const LIMITS = {
-  maxFileGB: 2,
-  rejected: 'PDF / تصویر / ZIP پشتیبانی نمی‌شود'
-}

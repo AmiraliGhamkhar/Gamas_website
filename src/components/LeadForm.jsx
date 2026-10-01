@@ -90,7 +90,7 @@ export default function LeadForm({ source = 'access' }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-5 space-y-3" noValidate aria-busy={status === 'loading'}>
+    <form onSubmit={onSubmit} className="space-y-3" noValidate aria-busy={status === 'loading'}>
       {/* Honeypot — hidden for humans, trap for bots */}
       <div className="honeypot" aria-hidden="true">
         <label htmlFor={`website-${source}`}>وب‌سایت</label>
@@ -106,7 +106,7 @@ export default function LeadForm({ source = 'access' }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor={`email-${source}`} className="text-sm font-semibold">ایمیل برای ثبت درخواست</label>
+        <label htmlFor={`email-${source}`} className="text-sm font-semibold">ایمیل برای درخواست دسترسی</label>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             id={`email-${source}`}
@@ -121,12 +121,12 @@ export default function LeadForm({ source = 'access' }) {
             disabled={status === 'loading' || status === 'success'}
             aria-invalid={status === 'error'}
             aria-describedby={`email-message-${source}`}
-            className="min-w-0 flex-1 rounded-pill border border-subtle bg-surface-dark px-4 py-3 text-sm text-white placeholder:text-on-dark-subtle focus:outline-none focus:border-primary-on-dark disabled:opacity-60"
+            className="min-w-0 flex-1 rounded-11 border border-dark bg-surface-dark px-4 py-3 text-sm text-on-dark placeholder:text-on-dark-subtle focus:outline-none disabled:opacity-60"
           />
           <button
             type="submit"
             disabled={status === 'loading' || status === 'success'}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-pill bg-primary px-6 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50 transition button-primary"
+            className="button-primary inline-flex items-center justify-center px-6 py-3 text-sm"
           >
             {status === 'loading' ? 'در حال ارسال…' : status === 'success' ? 'ثبت شد' : 'ثبت ایمیل'}
           </button>
@@ -140,13 +140,14 @@ export default function LeadForm({ source = 'access' }) {
         id={`email-message-${source}`}
         role={status === 'error' ? 'alert' : 'status'}
         aria-live={status === 'error' ? 'assertive' : 'polite'}
-        className={`rounded-xl border border-subtle bg-surface-dark px-3 py-2 text-xs leading-5 text-on-dark-muted ${msg ? '' : 'sr-only'}`}
+        className={`min-h-[1.6em] text-xs leading-6 text-on-dark-subtle ${msg ? '' : 'sr-only'}`}
       >
         {msg}
       </p>
 
-      <p className="text-[12px] leading-5 text-on-dark-subtle">
-        فقط برای مدیریت فهرست دسترسی ذخیره می‌شود؛ ایمیلی ارسال نمی‌شود. <a href="#privacy" className="link-underline">جزئیات</a>.
+      <p className="text-xs leading-6 text-on-dark-subtle">
+        فقط برای مدیریت فهرست دسترسی ذخیره می‌شود؛ ایمیلی ارسال نمی‌شود.{' '}
+        <a href="#privacy" className="inline-link link-underline">جزئیات</a>
       </p>
     </form>
   )
