@@ -68,14 +68,13 @@ export default function Navbar() {
     <header className="global-nav sticky top-0 z-40">
       <div className="mx-auto flex h-16 w-full max-w-content items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <a href="#" className="flex min-h-11 items-center gap-2.5" aria-label="گاماس — صفحه اصلی">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink font-display text-sm leading-none text-canvas">گ</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-11 bg-ink font-display text-sm leading-none text-canvas">گ</span>
           <span className="text-[17px] font-semibold">گاماس</span>
-          <bdi dir="ltr" lang="en" className="hidden text-xs text-ink-subtle sm:inline">Gamas Bot</bdi>
         </a>
 
         <nav aria-label="ناوبری اصلی" className="hidden items-center gap-1 text-sm md:flex">
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="link-underline flex min-h-11 items-center rounded-pill px-3">
+            <a key={link.href} href={link.href} className="link-underline flex min-h-11 items-center px-3">
               {link.label}
             </a>
           ))}
@@ -87,12 +86,9 @@ export default function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackCTA('navbar')}
-            className="button-primary hidden items-center gap-2 px-5 text-sm sm:inline-flex"
+            className="button-primary hidden items-center px-5 text-sm sm:inline-flex"
           >
             شروع در تلگرام
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl shrink-0">
-              <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
           </a>
           <button
             ref={toggleButtonRef}
@@ -127,12 +123,9 @@ export default function Navbar() {
               href={link.href}
               tabIndex={open ? 0 : -1}
               onClick={closeDrawer}
-              className="flex min-h-11 items-center justify-between rounded-11 px-4 py-3 text-sm"
+              className="flex min-h-11 items-center justify-between px-4 py-3 text-sm"
             >
               {link.label}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl opacity-60">
-                <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
             </a>
           ))}
           <a
@@ -144,12 +137,9 @@ export default function Navbar() {
               closeDrawer()
               trackCTA('navbar')
             }}
-            className="button-primary mt-3 w-full items-center justify-center gap-2 px-5 py-3 text-sm"
+            className="button-primary mt-3 w-full items-center justify-center px-5 py-3 text-sm"
           >
             شروع در تلگرام
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl">
-              <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
           </a>
         </div>
       </nav>

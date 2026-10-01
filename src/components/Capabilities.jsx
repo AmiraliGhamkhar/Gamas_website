@@ -1,16 +1,16 @@
 import IsolatedText from './IsolatedText'
 
 const formats = [
-  { label: 'ویس', value: 'ویس تلگرام · MP3 · M4A · WAV · OGG' },
+  { label: 'صدا', value: 'ویس تلگرام · MP3 · M4A · WAV · OGG' },
   { label: 'ویدیو', value: 'MP4 · MKV · MOV · AVI' },
-  { label: 'پاورپوینت', value: 'PPTX · PPSX · POTX · PPT و ODP قدیمی' },
+  { label: 'پاورپوینت', value: 'PPTX · PPSX · POTX · PPT · ODP' },
 ]
 
 const output = [
-  'هر اسلاید با متن و صدای خودش',
-  'یک پیام وضعیت، بدون اسپم',
-  'جزوه‌ی بلند خودکار تقسیم می‌شود',
-  'اگر خطا بخورد، رونوشت خام می‌آید',
+  'رونوشت فارسی',
+  'متن و اسلاید کنار هم',
+  'جزوه‌های بلند در چند پیام',
+  'اگر ساخت جزوه خطا بخورد، رونوشت خام می‌آید',
 ]
 
 export default function Capabilities() {
@@ -18,8 +18,8 @@ export default function Capabilities() {
     <section id="features" className="product-tile product-tile-parchment">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
-          <h2>چه چیزی می‌گیرد.</h2>
-          <p className="mt-5 text-muted">ویس، ویدیو و پاورپوینت کلاس. تا ۲ گیگابایت.</p>
+          <h2>فرمت‌های ورودی</h2>
+          <p className="mt-5 text-muted">ویس، ویدیو و پاورپوینت کلاس؛ تا ۲ گیگابایت.</p>
         </div>
 
         <ul className="mt-14">
@@ -32,14 +32,14 @@ export default function Capabilities() {
         </ul>
 
         <p className="mt-6 text-xs text-ink-subtle">
-          <bdi dir="ltr" lang="en">PDF</bdi>، تصویر و <bdi dir="ltr" lang="en">ZIP</bdi> گرفته نمی‌شود.
+          <bdi dir="ltr" lang="en">PDF</bdi>، تصویر و <bdi dir="ltr" lang="en">ZIP</bdi> را نمی‌گیرد.
         </p>
 
-        <h3 className="mt-16">چه چیزی تحویل می‌دهد.</h3>
+        <h3 className="mt-16">در خروجی</h3>
         <ul className="mt-6 grid gap-x-12 gap-y-2 sm:grid-cols-2">
           {output.map((item) => (
             <li key={item} className="flex items-center gap-3 border-t border-subtle py-4 text-sm text-muted">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ink-subtle" aria-hidden="true" />
               <span>{item}</span>
             </li>
           ))}
