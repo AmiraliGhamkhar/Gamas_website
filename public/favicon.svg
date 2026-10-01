@@ -1,4 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="12" fill="#191816"/>
-  <text x="50%" y="58%" text-anchor="middle" dominant-baseline="middle" font-family="Lalezar, sans-serif" font-size="32" fill="#fbfaf7">گ</text>
+  <defs>
+    <linearGradient id="gamas" x1="7" y1="8" x2="57" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#177eae"/>
+      <stop offset="1" stop-color="#31bec2"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#gamas)"/>
+  <circle cx="51" cy="13" r="7" fill="#aef2e4" fill-opacity=".3"/>
+  <text x="50%" y="57%" text-anchor="middle" dominant-baseline="middle" font-family="Lalezar, Vazirmatn, sans-serif" font-size="36" fill="#fff">گ</text>
 </svg>

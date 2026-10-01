@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import Icon from './Icon'
 import { tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const navLinks = [
   { href: '#how', label: 'چطور کار می‌کند' },
-  { href: '#features', label: 'فرمت‌ها' },
+  { href: '#features', label: 'قابلیت‌ها' },
   { href: '#privacy', label: 'حریم خصوصی' },
   { href: '#faq', label: 'پرسش‌ها' },
 ]
@@ -52,7 +53,6 @@ export default function Navbar() {
       }
     }
     window.addEventListener('keydown', onKeyDown)
-
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', onKeyDown)
@@ -65,30 +65,29 @@ export default function Navbar() {
   }
 
   return (
-    <header className="global-nav sticky top-0 z-40">
-      <div className="mx-auto flex h-16 w-full max-w-content items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <a href="#" className="flex min-h-11 items-center gap-2.5" aria-label="گاماس — صفحه اصلی">
-          <span className="flex h-8 w-8 items-center justify-center rounded-11 bg-ink font-display text-sm leading-none text-canvas">گ</span>
-          <span className="text-[17px] font-semibold">گاماس</span>
+    <header className="global-nav">
+      <div className="container nav-inner">
+        <a href="#top" className="brand-link" aria-label="گاماس — صفحه‌ی اصلی">
+          <span className="brand-mark">گ</span>
+          <span className="brand-name">گاماس</span>
         </a>
 
-        <nav aria-label="ناوبری اصلی" className="hidden items-center gap-1 text-sm md:flex">
+        <nav aria-label="ناوبری اصلی" className="desktop-nav">
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="link-underline flex min-h-11 items-center px-3">
-              {link.label}
-            </a>
+            <a key={link.href} href={link.href} className="nav-link">{link.label}</a>
           ))}
         </nav>
 
-        <div className="ms-auto flex items-center gap-2 md:ms-0">
+        <div className="nav-actions">
           <a
             href={tgLink('navbar')}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackCTA('navbar')}
-            className="button-primary hidden items-center px-5 text-sm sm:inline-flex"
+            className="button-primary nav-cta"
           >
             شروع در تلگرام
+            <Icon name="arrow-left" size={16} />
           </a>
           <button
             ref={toggleButtonRef}
@@ -97,13 +96,11 @@ export default function Navbar() {
             aria-expanded={open}
             aria-controls="mobile-nav"
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-11 border border-subtle bg-surface md:hidden"
+            className={`mobile-menu-toggle ${open ? 'is-open' : ''}`}
           >
             <span className="sr-only">منو</span>
-            <span className="flex w-4 flex-col gap-1" aria-hidden="true">
-              <span className={`h-0.5 w-full rounded-full bg-ink transition-transform ${open ? 'translate-y-1.5 rotate-45' : ''}`} />
-              <span className={`h-0.5 w-full rounded-full bg-ink transition-opacity ${open ? 'opacity-0' : 'opacity-100'}`} />
-              <span className={`h-0.5 w-full rounded-full bg-ink transition-transform ${open ? '-translate-y-1.5 -rotate-45' : ''}`} />
+            <span className="hamburger-lines" aria-hidden="true">
+              <span /><span /><span />
             </span>
           </button>
         </div>
@@ -114,18 +111,18 @@ export default function Navbar() {
         id="mobile-nav"
         aria-label="منوی اصلی موبایل"
         aria-hidden={!open}
-        className={`mobile-drawer md:hidden ${open ? 'is-open' : ''}`}
+        className={`mobile-drawer ${open ? 'is-open' : ''}`}
       >
-        <div className="space-y-1 px-4 py-4 sm:px-6">
+        <div className="mobile-drawer-inner">
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
               tabIndex={open ? 0 : -1}
               onClick={closeDrawer}
-              className="flex min-h-11 items-center justify-between px-4 py-3 text-sm"
+              className="mobile-nav-link"
             >
-              {link.label}
+              {link.label}<Icon name="arrow-left" size={17} />
             </a>
           ))}
           <a
@@ -137,9 +134,11 @@ export default function Navbar() {
               closeDrawer()
               trackCTA('navbar')
             }}
-            className="button-primary mt-3 w-full items-center justify-center px-5 py-3 text-sm"
+            className="button-primary mobile-drawer-cta"
           >
+            <Icon name="telegram" size={19} />
             شروع در تلگرام
+            <Icon name="arrow-left" size={17} />
           </a>
         </div>
       </nav>
