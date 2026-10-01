@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
-import { BOT_HANDLE, tgLink, sitePath } from '../lib/constants'
+import { BOT_HANDLE, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const footerLinks = [
   { href: '#how', label: 'چطور کار می‌کند' },
   { href: '#features', label: 'فرمت‌ها' },
-  { href: '#faq', label: 'پرسش‌ها' },
+  { href: '#faq', label: 'پرسش‌های رایج' },
   { href: '#privacy', label: 'حریم خصوصی' },
 ]
 
@@ -34,11 +34,11 @@ export default function Footer() {
         <div className="flex flex-col justify-between gap-12 lg:flex-row">
           <div>
             <a href="#" className="flex min-h-11 items-center gap-2.5" aria-label="گاماس — صفحه اصلی">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink font-display text-sm leading-none text-canvas">گ</span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-11 bg-ink font-display text-sm leading-none text-canvas">گ</span>
               <span className="text-[17px] font-semibold">گاماس</span>
             </a>
             <p className="mt-4 max-w-[34ch] text-sm text-muted">
-              ویس، ویدیو و پاورپوینت کلاس را به جزوه تبدیل می‌کند.
+              فایل کلاس را می‌فرستی؛ جزوه را در تلگرام می‌گیری.
             </p>
             <p className="mt-4 text-xs text-ink-subtle" suppressHydrationWarning>
               © {persianYear} گاماس
@@ -47,7 +47,7 @@ export default function Footer() {
 
           <nav aria-label="پیوندهای فوتر" className="grid gap-10 sm:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold">صفحه</p>
+              <p className="text-sm font-semibold">لینک‌ها</p>
               <ul className="mt-4 flex flex-col items-start gap-1 text-sm text-muted">
                 {footerLinks.map((link) => (
                   <li key={link.href}>
@@ -56,7 +56,7 @@ export default function Footer() {
                 ))}
                 <li>
                   <a href="https://github.com/AmiraliGhamkhar/Gamas_bot" target="_blank" rel="noopener noreferrer" className="inline-link link-underline">
-                    سورس بات
+                    سورس ربات
                   </a>
                 </li>
               </ul>
@@ -70,12 +70,9 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackCTA('footer')}
-                  className="button-primary items-center gap-2 px-5 py-2.5 text-sm"
+                  className="button-primary items-center px-5 py-2.5 text-sm"
                 >
                   شروع در تلگرام
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl">
-                    <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
                 </a>
                 <button
                   type="button"
@@ -85,9 +82,6 @@ export default function Footer() {
                 >
                   <bdi dir="ltr">{copied ? 'کپی شد ✓' : BOT_HANDLE}</bdi>
                 </button>
-                <a href={sitePath('sitemap.xml')} className="inline-link link-underline text-xs text-ink-subtle">
-                  <bdi lang="en">Sitemap</bdi>
-                </a>
               </div>
             </div>
           </nav>

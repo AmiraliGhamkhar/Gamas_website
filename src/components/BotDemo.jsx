@@ -1,19 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
+import IsolatedText from './IsolatedText'
 import { BOT_HANDLE, tgLink, toFa } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const stages = [
   { label: 'آماده‌سازی صدا', pct: 18 },
-  { label: 'تبدیل گفتار فارسی', pct: 48 },
-  { label: 'ساختاردهی جزوه', pct: 82 },
-  { label: 'تقسیم و ارسال', pct: 100 },
+  { label: 'رونویسی گفتار', pct: 48 },
+  { label: 'ساخت جزوه', pct: 82 },
+  { label: 'ارسال نتیجه', pct: 100 },
 ]
 
 const END_PHASE = 6
 
 function PhoneFrame({ children }) {
   return (
-    <div className="overflow-hidden rounded-18 border border-dark bg-surface-dark">
+    <div className="demo-frame overflow-hidden rounded-18 border border-dark bg-surface-dark">
       <div className="flex items-center justify-between border-b border-dark px-4 py-2.5 text-xs text-on-dark-subtle">
         <span className="text-on-dark">گاماس</span>
         <bdi dir="ltr" className="hidden sm:inline">{BOT_HANDLE}</bdi>
@@ -23,19 +24,12 @@ function PhoneFrame({ children }) {
   )
 }
 
-function ChatBubble({ from, time, children }) {
+function ChatBubble({ from, children }) {
   const isUser = from === 'user'
   return (
     <div className={`flex ${isUser ? 'chat-row-user' : 'chat-row-bot'}`}>
-      <div
-        className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-xs leading-6 ${
-          isUser
-            ? 'chat-bubble-user bg-primary text-white'
-            : 'chat-bubble-bot bg-white text-zinc-900'
-        }`}
-      >
+      <div className={`demo-bubble max-w-[82%] rounded-2xl px-3.5 py-2.5 text-xs leading-6 ${isUser ? 'demo-bubble-user' : 'demo-bubble-bot'}`}>
         {children}
-        {time && <div className={`mt-1 text-[10px] ${isUser ? 'text-white' : 'text-zinc-500'}`}>{time}</div>}
       </div>
     </div>
   )
@@ -83,10 +77,10 @@ export default function BotDemo() {
 
   return (
     <section id="demo" className="product-tile product-tile-dark">
-      <div className="mx-auto grid max-w-content items-center gap-12 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-8">
+      <div className="mx-auto grid max-w-content items-center gap-12 px-4 sm:px-6 md:grid-cols-[0.9fr_1.1fr] md:gap-10 lg:gap-16 lg:px-8">
         <div>
-          <h2>همین اتفاق می‌افتد.</h2>
-          <p className="mt-5 max-w-[34ch] text-on-dark-muted">یک پیام، مرحله به مرحبه.</p>
+          <h2>همه‌چیز در یک پیام.</h2>
+          <p className="mt-5 max-w-[34ch] text-on-dark-muted">فایل را می‌فرستی؛ وضعیت و نتیجه را در تلگرام می‌بینی.</p>
 
           <div className="mt-9 flex flex-wrap gap-3">
             <a
@@ -94,12 +88,9 @@ export default function BotDemo() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackCTA('demo')}
-              className="button-primary inline-flex items-center gap-2 px-6 py-3 text-sm"
+              className="button-primary inline-flex items-center px-6 py-3 text-sm"
             >
               شروع در تلگرام
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl">
-                <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
             </a>
             <button
               type="button"
@@ -113,25 +104,25 @@ export default function BotDemo() {
               }}
               className="button-secondary-pill inline-flex items-center px-6 py-3 text-sm"
             >
-              {auto ? 'توقف پخش' : 'پخش دوباره'}
+              {auto ? 'توقف' : 'نمایش دوباره'}
             </button>
           </div>
         </div>
 
         <figure className="mx-auto w-full max-w-[340px]">
           <PhoneFrame>
-            <div className="flex flex-1 flex-col gap-3">
-              <ChatBubble from="bot" time="۱۲:۴۱">فایل کلاست را بفرست.</ChatBubble>
+            <div className="flex flex-1 flex-col gap-3" aria-live="polite">
+              <ChatBubble from="bot">فایل کلاس را بفرست.</ChatBubble>
 
               {showFile && (
-                <ChatBubble from="user" time="۱۲:۴۲">
-                  <bdi dir="ltr">lecture_03.mp3</bdi> — ۴۲:۱۷
+                <ChatBubble from="user">
+                  <IsolatedText>lecture_03.mp3</IsolatedText>
                 </ChatBubble>
               )}
 
               {showProcessing && (
                 <div className="chat-row-bot flex">
-                  <div className="max-w-[86%] rounded-2xl bg-white px-3.5 py-3 text-zinc-900">
+                  <div className="demo-bubble demo-bubble-bot max-w-[86%] rounded-2xl px-3.5 py-3">
                     <div className="flex items-center justify-between text-xs">
                       <span>{stages[phase - 2]?.label || 'در حال پردازش…'}</span>
                       <span className="persian-digits text-zinc-500">{toFa(progress)}٪</span>
@@ -155,12 +146,12 @@ export default function BotDemo() {
 
               {showNotes && (
                 <>
-                  <ChatBubble from="bot" time="۱۲:۴۶">
-                    <span className="font-semibold">جزوه — بخش ۱/۲</span>
+                  <ChatBubble from="bot">
+                    <span className="font-semibold">جزوه — بخش اول</span>
                     <span className="mt-1 block text-zinc-600">مقدمه، سرفصل‌ها و نکته‌های کلیدی.</span>
                   </ChatBubble>
-                  <ChatBubble from="bot" time="۱۲:۴۶">
-                    <span className="font-semibold">جزوه — بخش ۲/۲</span>
+                  <ChatBubble from="bot">
+                    <span className="font-semibold">جزوه — بخش دوم</span>
                     <span className="mt-1 block text-zinc-600">جمع‌بندی و پرسش‌های مرور.</span>
                   </ChatBubble>
                 </>
@@ -168,7 +159,7 @@ export default function BotDemo() {
             </div>
           </PhoneFrame>
           <figcaption className="mt-4 text-center text-xs text-on-dark-subtle">
-            شبیه‌سازی — ربات در تلگرام
+            نمونه‌ی نمایشی از گفت‌وگو
           </figcaption>
         </figure>
       </div>

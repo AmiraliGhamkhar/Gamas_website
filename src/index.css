@@ -43,40 +43,39 @@
   unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
 }
 
-/* Warm neutral palette. Paper surfaces, near-black ink, one Telegram-blue
-   accent used only for actions. Contrast pairs target WCAG AA (text on its
-   own surface ≥ 4.5:1, form borders ≥ 3:1). */
+/* Quiet editorial palette: warm paper, near-black ink and one action blue. */
 :root {
   color-scheme: light;
-  --canvas: #faf9f6;
-  --parchment: #f3f0ea;
-  --tile-dark: #171613;
+  --canvas: #fbfaf7;
+  --parchment: #f3f0e9;
+  --tile-dark: #191816;
   --surface: #ffffff;
-  --surface-muted: #f0ede6;
-  --surface-dark: #23211e;
+  --surface-muted: #eeebe4;
+  --surface-dark: #24221f;
   --on-primary: #ffffff;
-  --scroll-thumb: #c6c1b6;
-  --ink: #1a1815;
-  --ink-muted: #55514a;
-  --ink-subtle: #6b675f;
-  --on-dark: #f7f5f1;
-  --on-dark-muted: #cfcabf;
-  --on-dark-subtle: #a49e93;
-  --primary: #1b76a9;
-  --primary-on-dark: #6cc7f7;
-  --primary-focus: var(--primary);
-  --border: #e5e1d8;
-  --border-strong: #948e81;
-  --border-dark: #3a3730;
-  --border-dark-strong: #7c776e;
+  --scroll-thumb: #c5c0b6;
+  --ink: #1c1a17;
+  --ink-muted: #5f5a52;
+  --ink-subtle: #777168;
+  --on-dark: #f8f6f1;
+  --on-dark-muted: #cfc9bf;
+  --on-dark-subtle: #a7a095;
+  --primary: #177eae;
+  --primary-hover: #126b94;
+  --primary-on-dark: #6dc9f5;
+  --primary-focus: #177eae;
+  --border: #e3dfd7;
+  --border-strong: #958f84;
+  --border-dark: #3c3934;
+  --border-dark-strong: #7c766c;
   --radius-0: 0;
   --radius-8: 8px;
   --radius-11: 11px;
   --radius-18: 18px;
   --radius-pill: 999px;
-  --space-section: 88px;
+  --space-section: 84px;
   --space-section-mobile: 56px;
-  --shadow-product-image: 0 18px 40px -28px rgba(26, 24, 21, 0.55);
+  --shadow-product-image: 0 16px 36px -28px rgba(28, 26, 23, 0.6);
   --font-body: "Vazirmatn", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
   --font-display: "Lalezar", "Vazirmatn", system-ui, sans-serif;
 }
@@ -110,7 +109,7 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  background: rgba(23, 126, 174, 0.18);
 }
 
 :focus-visible {
@@ -126,6 +125,13 @@ select {
   font: inherit;
 }
 
+button {
+  min-block-size: 44px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
 a,
 button {
   color: inherit;
@@ -139,18 +145,12 @@ a {
   vertical-align: middle;
 }
 
-/* Inline text links inside a sentence must not become 44px inline boxes. */
 a.inline-link {
   display: inline;
   min-block-size: 0;
   padding-block: 3px;
   vertical-align: baseline;
 }
-
-/* Hairline between two sections that share a surface. */
-.tile-rule { border-block-start: 1px solid var(--border); }
-
-button { min-block-size: 44px; }
 
 a:active,
 button:active {
@@ -198,7 +198,8 @@ button:disabled,
   transform: translateY(0);
 }
 
-/* Full-bleed editorial sections. Utility classes handle layout only. */
+/* Full-bleed editorial sections. */
+.tile-rule { border-block-start: 1px solid var(--border); }
 .product-tile {
   position: relative;
   padding-block: var(--space-section-mobile);
@@ -215,8 +216,8 @@ button:disabled,
   color: inherit;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: clamp(26px, 3.1vw, 38px);
-  line-height: 1.55;
+  font-size: clamp(28px, 3.1vw, 40px);
+  line-height: 1.5;
   letter-spacing: 0;
   text-wrap: balance;
 }
@@ -225,7 +226,7 @@ button:disabled,
   margin-block: 0;
   color: inherit;
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
   line-height: 1.6;
   letter-spacing: 0;
@@ -236,44 +237,45 @@ button:disabled,
   line-height: 1.85;
 }
 
-/* Lalezar is reserved for the brand mark and the hero headline. */
-.font-display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; }
-.product-tile h1.hero-headline,
-.hero-headline {
+/* Lalezar appears only where it adds identity. */
+.font-display {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(32px, 5.4vw, 58px);
-  line-height: 1.36;
   letter-spacing: 0;
+}
+.hero-section {
+  padding-block: 72px;
+}
+.hero-headline {
+  font-family: var(--font-display) !important;
+  font-weight: 400 !important;
+  font-size: clamp(34px, 5.4vw, 60px) !important;
+  line-height: 1.38 !important;
+  letter-spacing: 0 !important;
   text-wrap: balance;
 }
 
-/* Actions. The blue is the only chromatic element in the interface. */
-.button-primary {
-  display: inline-flex;
-  min-block-size: 44px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  background: var(--primary) !important;
-  color: var(--on-primary) !important;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-decoration: none;
-}
+/* Actions are compact, quiet rectangles rather than a page of pills. */
+.button-primary,
 .button-secondary-pill {
   display: inline-flex;
   min-block-size: 44px;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--ink) !important;
+  border-radius: var(--radius-11);
   font-weight: 600;
   letter-spacing: 0;
   text-decoration: none;
+}
+.button-primary {
+  border: 1px solid transparent;
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+}
+.button-secondary-pill {
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--ink) !important;
 }
 .product-tile-dark .button-secondary-pill {
   border-color: var(--border-dark-strong);
@@ -281,18 +283,12 @@ button:disabled,
   color: var(--on-dark) !important;
 }
 
-/* Cards exist only for real objects: the product demo and the lead form. */
+/* Cards are reserved for the interactive demo and the access form. */
 .surface-card {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-dark);
   border-radius: var(--radius-18);
-  background: var(--surface);
-}
-.product-tile-dark .surface-card {
-  border-color: var(--border-dark);
   background: var(--surface-dark);
 }
-
-.bg-primary { background-color: var(--primary) !important; background-image: none !important; }
 
 .global-nav {
   border-block-end: 1px solid var(--border);
@@ -314,35 +310,83 @@ button:disabled,
   visibility: hidden;
   opacity: 0;
   translate: 100% 0;
-  transition: translate 240ms ease, opacity 240ms ease, visibility 240ms;
+  transition: translate 220ms ease, opacity 220ms ease, visibility 220ms;
   border-block-start: 1px solid var(--border);
 }
-.mobile-drawer.is-open { visibility: visible; opacity: 1; translate: 0 0; }
+.mobile-drawer.is-open {
+  visibility: visible;
+  opacity: 1;
+  translate: 0 0;
+}
 html[dir="ltr"] .mobile-drawer { translate: -100% 0; }
 html[dir="ltr"] .mobile-drawer.is-open { translate: 0 0; }
-.inset-inline-0 { inset-inline: 0; }
 .floating-sticky-bar {
   border-block-start: 1px solid var(--border);
   background: var(--canvas);
 }
 
-/* Persian type scale. Never tight tracking on Persian text. */
+/* Persian type never uses tight tracking. */
 .text-xs { font-size: max(13px, 0.8125rem); line-height: 1.7; }
 [class*="text-[10px]"],
 [class*="text-[11px]"],
-[class*="text-[11.5px]"] { font-size: 12px !important; line-height: 1.6 !important; }
+[class*="text-[11.5px]"] {
+  font-size: 12px !important;
+  line-height: 1.6 !important;
+}
 
 @media (min-width: 834px) {
   .product-tile { padding-block: var(--space-section); }
 }
 
-/* Logical RTL icon mirroring: logos, checks and arrows are not marked. */
-.mirror-rtl { transform: none; }
-html[dir="rtl"] .mirror-rtl { transform: scaleX(-1); }
-html[dir="ltr"] .mirror-rtl { transform: scaleX(1); }
-.inline-nudge { transition: translate 180ms ease; }
-html[dir="rtl"] .group:hover .inline-nudge { translate: -0.125rem 0; }
-html[dir="ltr"] .group:hover .inline-nudge { translate: 0.125rem 0; }
+@media (hover: hover) {
+  .button-primary,
+  .button-secondary-pill,
+  .link-underline,
+  .faq-row,
+  .disclosure-marker,
+  .copy-handle {
+    transition-duration: 160ms;
+    transition-timing-function: ease;
+  }
+  .button-primary { transition-property: background-color; }
+  .button-primary:hover { background-color: var(--primary-hover) !important; }
+  .button-secondary-pill {
+    transition-property: background-color, border-color;
+  }
+  .button-secondary-pill:hover {
+    border-color: var(--ink-muted);
+    background-color: var(--surface-muted);
+  }
+  .product-tile-dark .button-secondary-pill:hover {
+    border-color: var(--on-dark-subtle);
+    background-color: var(--surface-dark);
+  }
+  .link-underline {
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 4px;
+    transition-property: text-decoration-color;
+  }
+  .link-underline:hover { text-decoration-color: currentColor; }
+  .faq-row { transition-property: background-color; }
+  .faq-row:hover { background-color: var(--surface-muted); }
+  .disclosure-marker { transition-property: color; }
+  .disclosure > summary:hover .disclosure-marker { color: var(--ink); }
+}
+
+.copy-handle { transition: color 160ms ease; }
+.copy-handle.is-copied { color: var(--primary); }
+
+/* Demo bubbles are an object, not a decorative card system. */
+.demo-bubble-user {
+  background: var(--primary);
+  color: #fff;
+}
+.demo-bubble-bot {
+  background: #fff;
+  color: #201e1a;
+}
+.demo-frame { border-color: var(--border-dark); }
 
 .persian-digits { font-variant-numeric: lining-nums; }
 .safe-pb { padding-block-end: max(0.75rem, env(safe-area-inset-bottom)); }
@@ -367,78 +411,14 @@ html[dir="ltr"] .group:hover .inline-nudge { translate: 0.125rem 0; }
 }
 .product-tile-dark input::placeholder { color: var(--on-dark-subtle); }
 
-@media (hover: hover) {
-  /* Quiet micro-interactions only: tint, border and a 2px nudge. */
-  .button-primary {
-    transition: background-color 160ms ease;
-  }
-  .button-primary:hover {
-    background-color: color-mix(in srgb, var(--primary) 88%, #000000) !important;
-  }
-  .button-secondary-pill {
-    transition: background-color 160ms ease, border-color 160ms ease;
-  }
-  .button-secondary-pill:hover {
-    border-color: var(--ink-muted);
-    background-color: var(--surface-muted);
-  }
-  .product-tile-dark .button-secondary-pill:hover {
-    border-color: var(--on-dark-subtle);
-    background-color: var(--surface-dark);
-  }
-  .link-underline {
-    text-decoration-line: underline;
-    text-decoration-color: transparent;
-    text-underline-offset: 4px;
-    transition: text-decoration-color 160ms ease;
-  }
-  .link-underline:hover {
-    text-decoration-color: currentColor;
-  }
-  .faq-row:hover {
-    background-color: var(--surface-muted);
-  }
-  .product-tile-dark .faq-row:hover {
-    background-color: var(--surface-dark);
-  }
-  .faq-row:hover .faq-marker {
-    border-color: var(--ink-muted);
-  }
-}
-
-/* Copy-to-clipboard handle feedback. */
-.copy-handle {
-  transition: color 160ms ease;
-}
-.copy-handle.is-copied { color: var(--primary); }
-
-/* Reduced motion: keep every element visible and static. */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-  }
-  .hero-reveal { opacity: 1 !important; transform: none !important; animation: none !important; }
-}
-
-@media (hover: hover) {
-  a:hover,
-  button:hover { text-decoration-thickness: 2px; }
-}
-
-::-webkit-scrollbar { inline-size: 8px; block-size: 8px; }
-::-webkit-scrollbar-track { background: var(--surface-muted); }
-::-webkit-scrollbar-thumb { border-radius: var(--radius-pill); background: var(--scroll-thumb); }
-
+/* One small reveal in the hero; it disappears completely for reduced motion. */
 @keyframes heroReveal {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .hero-reveal {
   opacity: 0;
-  animation: heroReveal 0.5s ease-out forwards;
+  animation: heroReveal 420ms ease-out forwards;
 }
 
 /* Native disclosure used for the privacy detail list. */
@@ -455,14 +435,11 @@ html[dir="ltr"] .group:hover .inline-nudge { translate: 0.125rem 0; }
   font-weight: 600;
 }
 .disclosure > summary::-webkit-details-marker { display: none; }
-.disclosure-marker { flex: none; color: var(--ink-subtle); transition: rotate 180ms ease; }
+.disclosure-marker { flex: none; color: var(--ink-subtle); }
 .disclosure[open] .disclosure-marker { rotate: 45deg; }
 .disclosure-body { padding-block: 2px 24px; }
-@media (hover: hover) {
-  .disclosure > summary:hover .disclosure-marker { color: var(--ink); }
-}
 
-/* The single soft shadow in the interface: the product screenshot. */
+/* The product image is the only soft shadow on the page. */
 .product-image { box-shadow: var(--shadow-product-image); }
 
 .chat-bubble-user { border-end-start-radius: var(--radius-8); }
@@ -473,8 +450,31 @@ html[dir="ltr"] .chat-row-user { justify-content: flex-end; }
 html[dir="ltr"] .chat-row-bot { justify-content: flex-start; }
 
 #root { min-block-size: 100svh; }
-footer.product-tile { padding-block-end: calc(4rem + env(safe-area-inset-bottom)); }
+footer.product-tile {
+  padding-block-end: calc(4rem + env(safe-area-inset-bottom));
+}
 .footer { border-block-start: 1px solid var(--border); }
 @media (min-width: 834px) {
   footer.product-tile { padding-block-end: var(--space-section); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hero-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
+::-webkit-scrollbar { inline-size: 8px; block-size: 8px; }
+::-webkit-scrollbar-track { background: var(--surface-muted); }
+::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-pill);
+  background: var(--scroll-thumb);
 }

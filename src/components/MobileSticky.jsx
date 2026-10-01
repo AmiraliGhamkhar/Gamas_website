@@ -9,12 +9,9 @@ export default function MobileSticky() {
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackCTA('mobile_sticky')}
-        className="button-primary w-full items-center justify-center gap-2 py-3 text-sm"
+        className="button-primary w-full items-center justify-center py-3 text-sm"
       >
         شروع در تلگرام
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mirror-rtl">
-          <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
       </a>
     </div>
   )

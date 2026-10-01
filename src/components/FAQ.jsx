@@ -4,7 +4,7 @@ import IsolatedText from './IsolatedText'
 const faqs = [
   {
     q: 'چه فرمت‌هایی می‌پذیرد؟',
-    a: 'ویس تلگرام، MP3، M4A، WAV، OGG، ویدیو و پاورپوینت. PDF، تصویر و ZIP نه.',
+    a: 'ویس تلگرام، MP3، M4A، WAV، OGG، ویدیو و پاورپوینت. PDF، تصویر و ZIP را نمی‌گیرد.',
   },
   {
     q: 'حداکثر حجم چقدر است؟',
@@ -12,19 +12,19 @@ const faqs = [
   },
   {
     q: 'فایل‌هایم کجا می‌مانند؟',
-    a: 'برای پردازش به سرویس گفتار و سرویس ساخت جزوه می‌روند. فایل موقت حذف می‌شود؛ رونوشت و جزوه ممکن است در دیتابیس بمانند.',
+    a: 'برای پردازش به سرویس‌های لازم می‌روند. فایل موقت حذف می‌شود؛ رونوشت و جزوه ممکن است در دیتابیس بمانند.',
   },
   {
     q: 'دقت چقدر است؟',
-    a: 'به کیفیت ضبط و نویز بستگی دارد. با یک فایل واقعی خودت تست کن.',
+    a: 'به کیفیت ضبط و نویز بستگی دارد.',
   },
   {
     q: 'هزینه چقدر است؟',
-    a: 'هنوز نهایی نشده. دسترسی با تأیید است.',
+    a: 'هنوز نهایی نشده. دسترسی فعلاً با تأیید است.',
   },
   {
     q: 'اگر خطا بخورد چه؟',
-    a: 'رونوشت خام هم فرستاده می‌شود.',
+    a: 'اگر ساخت جزوه خطا بخورد، رونوشت خام فرستاده می‌شود.',
   },
 ]
 
@@ -76,15 +76,14 @@ export default function FAQ() {
       acceptedAnswer: { '@type': 'Answer', text: f.a },
     })),
   }
-  // Escape "<" so no answer text can ever close the <script> tag early
-  // (JSON.stringify does not escape "</script>").
+  // Escape "<" so no answer text can ever close the <script> tag early.
   const jsonLdHtml = JSON.stringify(jsonLd).replace(/</g, '\\u003c')
 
   return (
     <section id="faq" className="product-tile product-tile-parchment">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
-          <h2>پرسش‌ها</h2>
+          <h2>سؤال‌های رایج</h2>
         </div>
 
         <div className="mt-12 max-w-3xl border-t border-subtle">
@@ -101,7 +100,6 @@ export default function FAQ() {
         </div>
       </div>
 
-      {/* FAQPage JSON-LD — prerendered */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml }} />
     </section>
   )

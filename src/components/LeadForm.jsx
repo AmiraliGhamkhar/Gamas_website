@@ -24,7 +24,7 @@ export default function LeadForm({ source = 'access' }) {
   }, [])
 
   useEffect(() => {
-    // Fetch CSRF token on mount; onSubmit retries if this ever failed.
+    // Fetch CSRF token on mount; onSubmit retries if that request failed.
     fetchToken().catch(() => {})
   }, [fetchToken])
 
@@ -34,7 +34,7 @@ export default function LeadForm({ source = 'access' }) {
     const trimmed = email.trim()
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setStatus('error')
-      setMsg('نشانی ایمیل را به‌درستی وارد کنید.')
+      setMsg('ایمیل را درست وارد کنید.')
       return
     }
     setStatus('loading')
@@ -51,7 +51,7 @@ export default function LeadForm({ source = 'access' }) {
     }
     if (!token) {
       setStatus('error')
-      setMsg('اتصال امن برقرار نشد؛ صفحه را تازه‌سازی کنید.')
+      setMsg('امکان اتصال امن نبود؛ صفحه را تازه کنید.')
       return
     }
 
@@ -70,18 +70,18 @@ export default function LeadForm({ source = 'access' }) {
       const data = await res.json().catch(() => ({}))
       if (res.ok && (data.ok || data.csrf_token)) {
         setStatus('success')
-        setMsg('درخواست شما ثبت شد؛ ایمیل پیگیری خودکار ارسال نمی‌شود.')
+        setMsg('درخواست ثبت شد؛ ایمیل خودکار ارسال نمی‌شود.')
         setEmail('')
       } else if (res.status === 429) {
         setStatus('error')
-        setMsg('تعداد درخواست‌ها زیاد است؛ کمی بعد دوباره تلاش کنید.')
+        setMsg('کمی بعد دوباره تلاش کنید.')
       } else {
         if (res.status === 403) {
           setCsrf('')
           fetchToken().catch(() => {})
         }
         setStatus('error')
-        setMsg('ثبت درخواست انجام نشد؛ دوباره تلاش کنید.')
+        setMsg('درخواست ثبت نشد؛ دوباره تلاش کنید.')
       }
     } catch {
       setStatus('error')
@@ -107,7 +107,7 @@ export default function LeadForm({ source = 'access' }) {
 
       <div className="flex flex-col gap-2">
         <label htmlFor={`email-${source}`} className="text-sm font-semibold">ایمیل برای درخواست دسترسی</label>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
             id={`email-${source}`}
             type="email"
@@ -121,14 +121,14 @@ export default function LeadForm({ source = 'access' }) {
             disabled={status === 'loading' || status === 'success'}
             aria-invalid={status === 'error'}
             aria-describedby={`email-message-${source}`}
-            className="min-w-0 flex-1 rounded-11 border border-dark bg-surface-dark px-4 py-3 text-sm text-on-dark placeholder:text-on-dark-subtle focus:outline-none disabled:opacity-60"
+            className="min-w-0 flex-1 rounded-11 border border-dark bg-surface-dark px-4 py-3 text-sm text-on-dark placeholder:text-on-dark-subtle disabled:opacity-60"
           />
           <button
             type="submit"
             disabled={status === 'loading' || status === 'success'}
             className="button-primary inline-flex items-center justify-center px-6 py-3 text-sm"
           >
-            {status === 'loading' ? 'در حال ارسال…' : status === 'success' ? 'ثبت شد' : 'ثبت ایمیل'}
+            {status === 'loading' ? 'در حال ثبت…' : status === 'success' ? 'ثبت شد' : 'ثبت ایمیل'}
           </button>
         </div>
       </div>
@@ -146,7 +146,7 @@ export default function LeadForm({ source = 'access' }) {
       </p>
 
       <p className="text-xs leading-6 text-on-dark-subtle">
-        فقط برای مدیریت فهرست دسترسی ذخیره می‌شود؛ ایمیلی ارسال نمی‌شود.{' '}
+        ایمیل فقط برای مدیریت فهرست دسترسی ذخیره می‌شود؛ ایمیل خودکار ارسال نمی‌شود.{' '}
         <a href="#privacy" className="inline-link link-underline">جزئیات</a>
       </p>
     </form>
