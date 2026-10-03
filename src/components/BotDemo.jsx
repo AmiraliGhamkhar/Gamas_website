@@ -101,7 +101,6 @@ export default function BotDemo() {
       <div className="demo-backdrop-glow demo-backdrop-glow-two" aria-hidden="true" />
       <div className="container demo-layout">
         <div className="demo-copy">
-          <p className="section-eyebrow section-eyebrow-light"><span className="live-dot" /> پیش‌نمایش تعاملی</p>
           <h2 className="section-title">یک پیام. سه قدم. جزوه‌ی آماده.</h2>
           <p className="section-description">
             فایل کلاس را در تلگرام می‌فرستی؛ گاماس وضعیت پردازش را نشان می‌دهد و وقتی آماده شد، جزوه را همان‌جا تحویل می‌گیری.

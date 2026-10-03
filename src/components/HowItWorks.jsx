@@ -28,7 +28,6 @@ export default function HowItWorks() {
     <section id="how" className="product-tile product-tile-light how-section">
       <div className="container">
         <div className="section-heading how-heading">
-          <p className="section-eyebrow"><Icon name="sparkles" size={17} /> شروع ساده است</p>
           <h2 className="section-title">از فایل تا جزوه، در سه قدم.</h2>
           <p className="section-description">همه‌چیز همان‌جایی می‌ماند که فایل را فرستادی: داخل تلگرام.</p>
         </div>

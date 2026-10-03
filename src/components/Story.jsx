@@ -13,7 +13,6 @@ export default function Story() {
       <div className="container">
         <div className="story-card">
           <div className="story-copy">
-            <p className="section-eyebrow"><Icon name="sparkles" size={17} /> وقتت را پس بگیر</p>
             <h2 className="section-title">حواست به کلاس باشد، نه به جزوه‌نویسی.</h2>
             <p className="section-description">
               بعد از کلاس لازم نیست دوباره ساعت‌ها فایل را گوش کنی. گاماس نکته‌های مهم را به یک جزوه‌ی خوانا تبدیل می‌کند تا زودتر برسی به فهمیدن و مرور کردن.

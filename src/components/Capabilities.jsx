@@ -20,7 +20,6 @@ export default function Capabilities() {
     <section id="features" className="product-tile product-tile-parchment features-section">
       <div className="container">
         <div className="section-heading features-heading">
-          <p className="section-eyebrow"><Icon name="notes" size={17} /> هر ورودی، یک شروع</p>
           <h2 className="section-title">فایل خام داخل؛ نکته‌های مرتب بیرون.</h2>
           <p className="section-description">یک پیام از کلاس، یک جزوه‌ی سبک و آماده‌ی مرور.</p>
         </div>

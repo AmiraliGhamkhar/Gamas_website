@@ -10,7 +10,6 @@ export default function FinalCTA() {
       <div className="cta-glow cta-glow-two" aria-hidden="true" />
       <div className="container cta-layout">
         <div className="cta-copy">
-          <p className="section-eyebrow section-eyebrow-light"><Icon name="sparkles" size={17} /> آماده‌ای؟</p>
           <h2 className="cta-title">جلسه‌ی بعدی را<br /><span>با خیال راحت گوش کن.</span></h2>
           <p className="cta-description">فایل را بفرست؛ گاماس نکته‌ها را جمع می‌کند تا تو روی یادگیری تمرکز کنی.</p>
           <a

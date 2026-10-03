@@ -180,28 +180,6 @@ svg { display: block; flex: none; }
 .product-tile-dark { background: var(--tile-dark); color: var(--on-dark); }
 .gamas-icon { display: inline-block; flex: none; color: currentColor; }
 
-.section-eyebrow {
-  display: inline-flex;
-  min-block-size: 34px;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 15px;
-  padding: 5px 12px;
-  border: 1px solid rgba(23, 126, 174, 0.16);
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.76);
-  color: #176f91;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-.section-eyebrow .gamas-icon { color: var(--teal); }
-.section-eyebrow-light {
-  border-color: rgba(116, 218, 226, 0.3);
-  background: rgba(90, 202, 209, 0.1);
-  color: #c5f1ed;
-}
-.section-eyebrow-light .gamas-icon { color: var(--cyan); }
 .section-title {
   max-inline-size: 19ch;
   margin: 0;
@@ -384,8 +362,7 @@ svg { display: block; flex: none; }
   font-weight: 600;
   box-shadow: 0 8px 20px -15px rgba(19, 89, 111, 0.3);
 }
-.hero-kicker-dot,
-.live-dot { inline-size: 9px; block-size: 9px; flex: none; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 4px rgba(21, 159, 145, 0.13); }
+.hero-kicker-dot { inline-size: 9px; block-size: 9px; flex: none; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 4px rgba(21, 159, 145, 0.13); }
 .hero-headline {
   max-inline-size: 13ch;
   margin: 23px 0 0;
@@ -481,7 +458,6 @@ svg { display: block; flex: none; }
 .demo-copy { max-inline-size: 530px; }
 .demo-copy .section-title { max-inline-size: 14ch; color: var(--on-dark); }
 .demo-copy .section-description { color: var(--on-dark-muted); }
-.demo-copy .live-dot { inline-size: 8px; block-size: 8px; background: #58dfba; box-shadow: 0 0 0 4px rgba(88, 223, 186, 0.14); }
 .demo-flow-list { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; margin-block-start: 25px; }
 .demo-flow-list span { display: inline-flex; min-block-size: 34px; align-items: center; gap: 7px; padding: 5px 10px; border: 1px solid rgba(199, 238, 239, 0.17); border-radius: 999px; color: #d5e9e9; font-size: 12px; }
 .demo-flow-list b { display: inline-flex; inline-size: 20px; block-size: 20px; align-items: center; justify-content: center; border-radius: 50%; background: rgba(77, 210, 208, 0.14); color: #8ae4de; font-size: 11px; }
