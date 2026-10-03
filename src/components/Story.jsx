@@ -1,5 +1,5 @@
 import Icon from './Icon'
-import { sitePath } from '../lib/constants'
+import ResponsiveIllustration from './ResponsiveIllustration'
 
 const outcomes = [
   { icon: 'audio', title: 'از صدا، متن می‌سازد', text: 'گفتار کلاس را برای مرور آماده می‌کند.' },
@@ -37,12 +37,10 @@ export default function Story() {
 
           <figure className="story-visual">
             <div className="story-visual-badge"><span className="badge-spark">✦</span> تمرکز روی یادگیری</div>
-            <img
-              src={sitePath('images/illustration-student.webp')}
-              width="1280"
-              height="960"
-              loading="lazy"
-              decoding="async"
+            <ResponsiveIllustration
+              name="student"
+              priority
+              sizes="(max-width: 639px) 360px, 600px"
               alt="تصویر مفهومی سه‌بعدی از دانشجویی که در کلاس با تلفن همراه، درس را ضبط می‌کند"
             />
             <figcaption className="story-visual-caption">از جلسه‌ی زنده تا مرورِ راحت‌تر</figcaption>

@@ -5,7 +5,6 @@ import { trackCTA } from '../lib/track'
 const proofPoints = [
   { icon: 'microphone', label: 'ویس و فایل صوتی' },
   { icon: 'presentation', label: 'ویدیو و پاورپوینت' },
-  { icon: 'notes', label: 'جزوه در همان چت' },
 ]
 
 export default function Hero() {
@@ -16,11 +15,6 @@ export default function Hero() {
 
       <div className="container hero-layout">
         <div className="hero-copy">
-          <div className="hero-kicker">
-            <span className="hero-kicker-dot" aria-hidden="true" />
-            دستیار هوشمند جزوه‌ساز در تلگرام
-          </div>
-
           <h1 className="hero-headline">
             از صدای کلاس
             <span className="hero-headline-accent">تا جزوه‌ی حسابی.</span>
@@ -47,12 +41,6 @@ export default function Hero() {
               <span className="play-dot" aria-hidden="true">▶</span>
               دیدن نمونه‌ی زنده
             </a>
-          </div>
-
-          <div className="hero-social-proof" aria-label="ویژگی‌های گاماس">
-            <span className="proof-note">بدون نصب اپ جدید</span>
-            <span className="proof-divider" aria-hidden="true" />
-            <span className="proof-note">مناسب درس و جلسه</span>
           </div>
 
           <ul className="hero-proof-points" aria-label="قابلیت‌ها">

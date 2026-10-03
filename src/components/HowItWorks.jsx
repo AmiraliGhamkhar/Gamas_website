@@ -1,6 +1,7 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import { sitePath, BOT_HANDLE } from '../lib/constants'
+import ResponsiveIllustration from './ResponsiveIllustration'
+import { BOT_HANDLE } from '../lib/constants'
 
 const steps = [
   {
@@ -54,12 +55,9 @@ export default function HowItWorks() {
           </ol>
 
           <figure className="waveform-visual">
-            <img
-              src={sitePath('images/illustration-waveform.webp')}
-              width="1280"
-              height="960"
-              loading="lazy"
-              decoding="async"
+            <ResponsiveIllustration
+              name="waveform"
+              sizes="(max-width: 639px) 394px, 600px"
               alt="موج صوتی فیروزه‌ای که در یک تصویر مفهومی به صفحه‌های جزوه‌ی مرتب تبدیل می‌شود"
             />
             <figcaption className="waveform-visual-caption">

@@ -23,6 +23,13 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(base)) {
   throw new Error(`Invalid VITE_BASE "${base}". Use / or a path such as /gamas/`)
 }
 
+// Port selection lives here, not in the npm scripts: npm runs scripts through
+// cmd.exe on Windows, where a `${PORT:-5173}` argument is passed to Vite
+// literally and crashes the server with `listen EACCES: ... ${PORT:-5173}`.
+// process.env.PORT still overrides, and now works on every platform.
+const devPort = Number(process.env.PORT) || 5173
+const previewPort = Number(process.env.PREVIEW_PORT) || Number(process.env.PORT) || 4173
+
 const rawSiteUrl = (process.env.VITE_SITE_URL || 'https://gamas.bot').replace(/\/+$/, '')
 let siteOrigin = 'https://gamas.bot'
 try {
@@ -49,16 +56,19 @@ export default defineConfig({
   ssgOptions: {
     script: 'async',
     formatting: 'minify',
-    crittersOptions: {
-      reduceInlineStyles: false
-    },
+    // No critters/beasties options on purpose. vite-react-ssg only runs its
+    // critical-CSS pass when the optional `beasties` (or legacy `critters`)
+    // peer dependency is installed; without one it skips silently and the
+    // emitted dist/index.html contains zero inline <style> blocks. To turn
+    // inlining on: add `beasties` as a devDependency and set `beastiesOptions`
+    // here (`crittersOptions` is only a deprecated alias).
     onFinished() {
       console.log('SSG finished')
     }
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: devPort,
     // No forced HMR host: pinning it to localhost breaks HMR through proxies.
     // Vite follows window.location and allows the Arena preview subdomain,
     // without turning off DNS-rebinding protection for arbitrary Host headers.
@@ -66,7 +76,7 @@ export default defineConfig({
   },
   preview: {
     host: '0.0.0.0',
-    port: 4173,
+    port: previewPort,
     allowedHosts: ['.e2b.app']
   },
   build: {

@@ -17,6 +17,11 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+// Shared with the page so the bot handle in llms.txt cannot drift from the
+// handle rendered in the UI. normaliseUsername() is the single owner of the
+// sanitising; this script supplies the env value Node cannot see through
+// import.meta.env.
+import { normaliseUsername } from '../src/lib/constants.js'
 
 const dist = path.resolve(process.cwd(), 'dist')
 
@@ -54,7 +59,7 @@ if (removed.length) {
 }
 
 // ---------------------------------------------------------------------------
-// 2. Generate base-aware crawler files (root deploy is VITE_BASE=/).
+// 2. Generate base-aware crawler files: robots.txt, sitemap.xml and llms.txt
 //    Public files are copied verbatim by Vite, so rewrite these after copying
 //    when the site is deployed below a cPanel domain root.
 // ---------------------------------------------------------------------------
@@ -83,6 +88,9 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
     '',
     `Sitemap: ${siteOrigin}${prefix}/sitemap.xml`,
     '',
+    '# Plain-text summary for AI answer engines and LLM crawlers:',
+    `# ${siteOrigin}${prefix}/llms.txt`,
+    '',
   ].join('\n')
   const sitemap = [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -99,6 +107,70 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
   fs.writeFileSync(path.join(dist, 'robots.txt'), robots)
   fs.writeFileSync(path.join(dist, 'sitemap.xml'), sitemap)
   ok(`crawler files generated for base ${configuredBase}`)
+
+  // --------------------------------------------------------------------------
+  // 2b. llms.txt — plain-text summary for AI answer engines (llmstxt.org).
+  //     Every fact below is already stated on the page; nothing is invented,
+  //     and pricing is deliberately omitted because it is still undecided.
+  // --------------------------------------------------------------------------
+  const bot = normaliseUsername(process.env.VITE_BOT_USERNAME)
+  const site = `${siteOrigin}${prefix}/`
+  const botLink = `https://t.me/${bot}`
+  const llms = [
+    `# گاماس (Gamas)`,
+    '',
+    '> ربات تلگرامی فارسی که ویس، ویدیو و پاورپوینت کلاس را به یک جزوه‌ی مرتب و فارسی تبدیل می‌کند.',
+    '',
+    `- Site: ${site}`,
+    `- Telegram bot: ${botLink} (@${bot})`,
+    '- Language: Persian (fa), right-to-left',
+    '',
+    '## What it does',
+    '',
+    'You send a class recording, video or slide deck to the Telegram bot. It transcribes the',
+    'speech, merges it with the slide text, and returns a structured Persian study guide in the',
+    'same chat. Nothing has to be installed: the whole product is the Telegram bot.',
+    '',
+    '## Accepted files',
+    '',
+    '- Audio: Telegram voice notes, MP3, M4A, WAV, OGG',
+    '- Video: MP4, MKV, MOV, AVI',
+    '- Slides: PPTX, PPSX, PPT, ODP',
+    '- Not accepted: PDF, images, ZIP',
+    '- Maximum file size: 2 GB',
+    '',
+    '## Output',
+    '',
+    '- Persian transcript that can be searched and re-read',
+    '- Slide text placed next to the transcript',
+    '- Long notes are split across several messages',
+    '- If note generation fails, the raw transcript is sent instead',
+    '',
+    '## Privacy',
+    '',
+    '- Files are forwarded to the services needed to process them',
+    '- The temporary file is deleted after processing',
+    '- The transcript and the notes may remain in the database',
+    '- Full details are on the site: ' + `${site}#privacy`,
+    '',
+    '## Access',
+    '',
+    'Access is granted by approval and the price is not finalised yet, so no price is listed here.',
+    '',
+    '## Page sections',
+    '',
+    `- [Overview and call to action](${site}#top): what the bot does and how to start`,
+    `- [Why it exists](${site}#story): the problem it solves`,
+    `- [Live demo](${site}#demo): sample conversation with a class recording`,
+    `- [How it works](${site}#how): the three steps`,
+    `- [Capabilities](${site}#features): accepted formats, size limit, what you get back`,
+    `- [Privacy](${site}#privacy): which files are removed and which may remain`,
+    `- [FAQ](${site}#faq): formats, size, storage, accuracy, price, how to start`,
+    `- [Access request](${site}#access): email capture for the access list`,
+    '',
+  ].join('\n')
+  fs.writeFileSync(path.join(dist, 'llms.txt'), llms)
+  ok('llms.txt generated for ' + site)
 }
 
 // ---------------------------------------------------------------------------

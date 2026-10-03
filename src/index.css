@@ -348,21 +348,6 @@ svg { display: block; flex: none; }
 .hero-backdrop-orb-two { inline-size: 250px; block-size: 250px; inset-block-end: 6%; inset-inline-end: -130px; background: radial-gradient(circle, rgba(241, 155, 103, 0.18), transparent 69%); }
 .hero-layout { position: relative; display: grid; align-items: center; gap: 6px; }
 .hero-copy { position: relative; z-index: 2; padding-block: 23px 0; animation: fadeUp 620ms both ease-out; }
-.hero-kicker {
-  display: inline-flex;
-  min-block-size: 37px;
-  align-items: center;
-  gap: 9px;
-  padding: 6px 14px;
-  border: 1px solid rgba(23, 126, 174, 0.17);
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.8);
-  color: #176c8d;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 8px 20px -15px rgba(19, 89, 111, 0.3);
-}
-.hero-kicker-dot { inline-size: 9px; block-size: 9px; flex: none; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 4px rgba(21, 159, 145, 0.13); }
 .hero-headline {
   max-inline-size: 13ch;
   margin: 23px 0 0;
@@ -390,10 +375,6 @@ svg { display: block; flex: none; }
 .hero-primary-cta { min-block-size: 58px; padding-inline: 23px; font-size: 16px; }
 .hero-secondary-cta { min-block-size: 58px; padding-inline: 19px; font-size: 14px; }
 .play-dot { display: inline-flex; inline-size: 24px; block-size: 24px; align-items: center; justify-content: center; border-radius: 50%; background: rgba(23, 126, 174, 0.11); color: var(--primary); font-size: 9px; }
-.hero-social-proof { display: flex; align-items: center; gap: 12px; margin-block-start: 22px; color: var(--ink-subtle); font-size: 13px; }
-.proof-note { display: inline-flex; align-items: center; gap: 6px; }
-.proof-note::before { inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--teal); content: ""; }
-.proof-divider { inline-size: 1px; block-size: 16px; background: var(--border-strong); }
 .hero-proof-points { display: flex; flex-wrap: wrap; gap: 9px 17px; padding: 0; margin: 20px 0 0; list-style: none; }
 .hero-proof-points li { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-muted); font-size: 13px; }
 .hero-proof-icon { display: inline-flex; inline-size: 26px; block-size: 26px; align-items: center; justify-content: center; border-radius: 9px; background: rgba(23, 126, 174, 0.09); color: var(--primary); }
@@ -772,13 +753,11 @@ a.inline-link { display: inline; min-block-size: 0; padding-block: 2px; }
   .hero-section { padding-block: 19px 54px; }
   .hero-layout { gap: 2px; }
   .hero-copy { padding-block-start: 17px; }
-  .hero-kicker { min-block-size: 33px; font-size: 12px; }
   .hero-headline { margin-block-start: 17px; font-size: clamp(42px, 12vw, 54px); line-height: 1.31; }
   .hero-lede { margin-block-start: 14px; font-size: 16px; line-height: 1.85; }
   .hero-actions { gap: 9px; margin-block-start: 20px; }
   .hero-primary-cta,
   .hero-secondary-cta { min-block-size: 53px; padding-inline: 15px; font-size: 14px; }
-  .hero-social-proof { margin-block-start: 16px; font-size: 12px; }
   .hero-proof-points { gap: 8px; margin-block-start: 13px; }
   .hero-proof-points li { gap: 5px; font-size: 11px; }
   .hero-proof-icon { inline-size: 23px; block-size: 23px; }
@@ -836,7 +815,6 @@ a.inline-link { display: inline; min-block-size: 0; padding-block: 2px; }
   .container { width: calc(100% - 30px); }
   .hero-actions { flex-direction: column; align-items: stretch; }
   .hero-actions > * { width: 100%; }
-  .hero-social-proof { gap: 8px; font-size: 11px; }
   .hero-proof-points { gap: 6px; }
   .hero-proof-points li { font-size: 10px; }
   .hero-float-icon { inline-size: 38px; block-size: 38px; }

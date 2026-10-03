@@ -1,6 +1,7 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import { BOT_HANDLE, sitePath } from '../lib/constants'
+import ResponsiveIllustration from './ResponsiveIllustration'
+import { BOT_HANDLE } from '../lib/constants'
 
 const details = [
   'صدا و ویدیو برای رونویسی به Speechmatics یا Deepgram فرستاده می‌شود.',
@@ -52,12 +53,9 @@ export default function Privacy() {
         </div>
 
         <figure className="privacy-visual">
-          <img
-            src={sitePath('images/illustration-teacher-privacy.webp')}
-            width="1280"
-            height="960"
-            loading="lazy"
-            decoding="async"
+          <ResponsiveIllustration
+            name="teacher-privacy"
+            sizes="(max-width: 639px) 394px, 600px"
             alt="تصویر مفهومی سه‌بعدی از پنل آموزشی مدرس در کنار سپر و قفل حریم خصوصی"
           />
           <figcaption><span><Icon name="lock" size={15} /> تصویر مفهومی</span> طراحی‌شده برای یادگیری با اطمینان بیشتر</figcaption>

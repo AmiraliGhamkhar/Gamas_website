@@ -1,6 +1,6 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import { sitePath } from '../lib/constants'
+import ResponsiveIllustration from './ResponsiveIllustration'
 
 const formats = [
   { icon: 'microphone', label: 'صدا', examples: 'ویس · MP3 · M4A · WAV · OGG' },
@@ -58,12 +58,9 @@ export default function Capabilities() {
               <span className="before-label">یادداشت‌های پراکنده</span>
               <span className="after-label">جزوه‌ی ساختاریافته</span>
             </div>
-            <img
-              src={sitePath('images/illustration-before-after.webp')}
-              width="1280"
-              height="960"
-              loading="lazy"
-              decoding="async"
+            <ResponsiveIllustration
+              name="before-after"
+              sizes="(max-width: 639px) 394px, 600px"
               alt="تصویر مفهومی از یادداشت‌های شلوغ که با موجی فیروزه‌ای به صفحه‌ی جزوه‌ی مرتب تبدیل می‌شوند"
             />
             <figcaption>پیش از مرور، همه‌چیز یک‌جا مرتب می‌شود.</figcaption>

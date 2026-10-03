@@ -11,6 +11,11 @@
     <!-- Critical fonts + 2x hero LCP image preload -->
     <link rel="preload" href="%BASE_URL%fonts/vazirmatn-v16-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="%BASE_URL%fonts/lalezar-v16-arabic-400.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Vazirmatn 600 paints the hero CTA, .hero-audience and .text-link above
+         the fold, so it was fetched only after the stylesheet parsed. It is
+         downloaded on every visit either way; preloading changes when, not how
+         much. -->
+    <link rel="preload" href="%BASE_URL%fonts/vazirmatn-v16-arabic-600.woff2" as="font" type="font/woff2" crossorigin />
     <!-- AVIF matches the first source in the hero picture; unsupported browsers skip it. -->
     <link rel="preload" as="image" href="%BASE_URL%images/hero-phone.avif" type="image/avif" imagesrcset="%BASE_URL%images/hero-phone.avif 941w" imagesizes="(max-width: 639px) 270px, (max-width: 833px) 330px, 430px" fetchpriority="high" />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
@@ -29,19 +34,9 @@
     <meta name="twitter:title" content="گاماس — صدای کلاس، جزوه‌ای که می‌شود خواند" />
     <meta name="twitter:description" content="ویس، ویدیو یا پاورپوینت کلاس را بفرستید؛ گاماس نکته‌ها را به جزوه‌ای مرتب و فارسی تبدیل می‌کند." />
     <meta name="twitter:image" content="https://gamas.bot%BASE_URL%og-image.jpg" />
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "گاماس",
-        "alternateName": "Gamas Bot",
-        "operatingSystem": "Telegram",
-        "applicationCategory": "EducationApplication",
-        "inLanguage": "fa",
-        "description": "ربات تلگرامی فارسی: ویس، ویدیو و پاورپوینت کلاس را به جزوه تبدیل می‌کند.",
-        "url": "https://gamas.bot%BASE_URL%"
-      }
-    </script>
+    <!-- The JSON-LD entity graph is rendered by src/components/StructuredData.jsx,
+         next to the constants it describes, so it stays correct for a subfolder
+         deploy and cannot drift from the bot handle. -->
   </head>
   <body>
     <div id="root"></div>
