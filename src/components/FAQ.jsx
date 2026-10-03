@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Icon from './Icon'
 import IsolatedText from './IsolatedText'
 
 const faqs = [
@@ -74,7 +73,6 @@ export default function FAQ() {
     <section id="faq" className="product-tile product-tile-parchment faq-section">
       <div className="container faq-layout">
         <div className="faq-intro">
-          <p className="section-eyebrow"><Icon name="sparkles" size={17} /> پاسخ‌های کوتاه و روشن</p>
           <h2 className="section-title">سؤال داری؟</h2>
           <p className="section-description">چند جواب درباره‌ی فایل‌ها، خروجی و دسترسی.</p>
         </div>

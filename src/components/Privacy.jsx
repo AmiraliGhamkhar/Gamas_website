@@ -20,7 +20,6 @@ export default function Privacy() {
     <section id="privacy" className="product-tile product-tile-light privacy-section">
       <div className="container privacy-layout">
         <div className="privacy-copy">
-          <p className="section-eyebrow"><Icon name="lock" size={17} /> حریم خصوصی</p>
           <h2 className="section-title">شفاف، چون فایل‌هایت مهم‌اند.</h2>
           <p className="section-description">
             برای پردازش، فایل‌ها به سرویس‌های لازم فرستاده می‌شوند. اینجا دقیق می‌گوییم چه چیزی حذف می‌شود و چه چیزی ممکن است بماند.
