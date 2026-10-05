@@ -109,17 +109,16 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
   ok(`crawler files generated for base ${configuredBase}`)
 
   // --------------------------------------------------------------------------
-  // 2b. llms.txt — plain-text summary for AI answer engines (llmstxt.org).
-  //     Every fact below is already stated on the page; nothing is invented,
-  //     and pricing is deliberately omitted because it is still undecided.
+  // 2b. llms.txt — a plain-text summary aligned with the bot and page.
+  //     Avoid unsupported access, price, proof and retention promises.
   // --------------------------------------------------------------------------
   const bot = normaliseUsername(process.env.VITE_BOT_USERNAME)
   const site = `${siteOrigin}${prefix}/`
   const botLink = `https://t.me/${bot}`
   const llms = [
-    `# گاماس (Gamas)`,
+    '# گاماس (Gamas)',
     '',
-    '> ربات تلگرامی فارسی که ویس، ویدیو و پاورپوینت کلاس را به یک جزوه‌ی مرتب و فارسی تبدیل می‌کند.',
+    '> ربات تلگرامی فارسی که با کمک هوش مصنوعی گفتار کلاس را به رونوشت و جزوه‌ی قابل مرور تبدیل می‌کند.',
     '',
     `- Site: ${site}`,
     `- Telegram bot: ${botLink} (@${bot})`,
@@ -127,46 +126,53 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
     '',
     '## What it does',
     '',
-    'You send a class recording, video or slide deck to the Telegram bot. It transcribes the',
-    'speech, merges it with the slide text, and returns a structured Persian study guide in the',
-    'same chat. Nothing has to be installed: the whole product is the Telegram bot.',
+    'Send an audio recording, video or PowerPoint file to the Telegram bot. It transcribes',
+    'speech and can use slide text when processing a presentation. The bot returns a raw',
+    'transcript and, when note generation succeeds, a structured Word study guide in the chat.',
     '',
-    '## Accepted files',
+    '## Supported files',
     '',
-    '- Audio: Telegram voice notes, MP3, M4A, WAV, OGG',
-    '- Video: MP4, MKV, MOV, AVI',
-    '- Slides: PPTX, PPSX, PPT, ODP',
-    '- Not accepted: PDF, images, ZIP',
-    '- Maximum file size: 2 GB',
+    '- Audio examples: MP3, M4A, WAV, OGG, FLAC, WMA, AMR and other formats readable by the bundled media libraries',
+    '- Video: MP4, MKV, MOV, AVI, WEBM and Telegram video notes',
+    '- PowerPoint: PPTX, PPTM, PPSX, PPSM, POTX, POTM, PPT, PPS and POT',
+    '- Not supported: ODP, OTP, PDF, images and ZIP',
+    '- Default application file-size limit: 2 GB; provider and hosting limits may differ',
     '',
     '## Output',
     '',
-    '- Persian transcript that can be searched and re-read',
-    '- Slide text placed next to the transcript',
-    '- Long notes are split across several messages',
-    '- If note generation fails, the raw transcript is sent instead',
+    '- Raw Persian speech transcript as a TXT file',
+    '- Structured study notes as a Word DOCX file when note generation succeeds',
+    '- Slide text can be included when the input is a supported PowerPoint file',
+    '- If note generation fails, the raw transcript is still delivered',
+    '',
+    '## Demo',
+    '',
+    'The conversation shown on the website is a simulation. It is not connected to a live bot response.',
     '',
     '## Privacy',
     '',
-    '- Files are forwarded to the services needed to process them',
-    '- The temporary file is deleted after processing',
-    '- The transcript and the notes may remain in the database',
-    '- Full details are on the site: ' + `${site}#privacy`,
+    '- The current landing page does not collect email addresses.',
+    '- CTA analytics records the page section and event time; a private rate-limit bucket uses a keyed IP pseudonym.',
+    '- The hosting provider may keep separate access logs, subject to its own settings and retention policy.',
+    '- The bot forwards audio and, when configured, transcript or slide text to external processing providers.',
+    '- Temporary working media is removed after processing.',
+    '- The reviewed bot implementation stores Telegram user identifiers, file metadata, transcripts and notes in SQLite; no automatic transcript/note expiry is defined there.',
+    '- Do not send files you are not comfortable processing with external services.',
+    `- Full details: ${site}#privacy`,
     '',
-    '## Access',
+    '## Start',
     '',
-    'Access is granted by approval and the price is not finalised yet, so no price is listed here.',
+    `Open ${botLink} and send an eligible class file. This page does not state a verified price.`,
     '',
     '## Page sections',
     '',
-    `- [Overview and call to action](${site}#top): what the bot does and how to start`,
-    `- [Why it exists](${site}#story): the problem it solves`,
-    `- [Live demo](${site}#demo): sample conversation with a class recording`,
+    `- [Overview and start](${site}#top): what the bot does and how to open it`,
+    `- [Why it exists](${site}#story): a common class-note problem`,
+    `- [Simulated demo](${site}#demo): a sample processing flow, not a live response`,
     `- [How it works](${site}#how): the three steps`,
-    `- [Capabilities](${site}#features): accepted formats, size limit, what you get back`,
-    `- [Privacy](${site}#privacy): which files are removed and which may remain`,
-    `- [FAQ](${site}#faq): formats, size, storage, accuracy, price, how to start`,
-    `- [Access request](${site}#access): email capture for the access list`,
+    `- [Capabilities](${site}#features): accepted formats, size limit and outputs`,
+    `- [Privacy](${site}#privacy): providers and data retention`,
+    `- [FAQ](${site}#faq): files, outputs, accuracy and storage`,
     '',
   ].join('\n')
   fs.writeFileSync(path.join(dist, 'llms.txt'), llms)
@@ -174,7 +180,50 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Refuse to ship anything sensitive
+// 3. Root-relative public font URLs in CSS need the deploy prefix.
+//    Vite rewrites JS/HTML assets for `base`, but leaves `/fonts/...` URLs in
+//    CSS as root-absolute paths. Rewrite and assert these before upload.
+// ---------------------------------------------------------------------------
+if (configuredBase !== '/' && /^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
+  const assetsDir = path.join(dist, 'assets')
+  const cssFiles = []
+  const findCss = (dir) => {
+    if (!fs.existsSync(dir)) return
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name)
+      if (entry.isDirectory()) findCss(entryPath)
+      else if (entry.isFile() && entry.name.endsWith('.css')) cssFiles.push(entryPath)
+    }
+  }
+  findCss(assetsDir)
+
+  if (!cssFiles.length) {
+    fail('no built CSS found while checking subfolder font URLs')
+  }
+
+  const fontPrefix = `${configuredBase}fonts/`
+  let rewrittenCount = 0
+  for (const cssFile of cssFiles) {
+    const css = fs.readFileSync(cssFile, 'utf8')
+    const rewritten = css.replace(/url\(\s*(["']?)\/fonts\//g, (_match, quote) => `url(${quote}${fontPrefix}`)
+    if (rewritten !== css) {
+      fs.writeFileSync(cssFile, rewritten)
+      rewrittenCount++
+    }
+    if (/url\(\s*["']?\/fonts\//.test(rewritten)) {
+      fail(`root-relative font URL remains in ${path.relative(dist, cssFile)}`)
+    }
+    if (rewritten.includes('/fonts/')) {
+      if (!rewritten.includes(fontPrefix)) {
+        fail(`font URL does not use ${configuredBase} in ${path.relative(dist, cssFile)}`)
+      }
+    }
+  }
+  ok(`subfolder font URLs checked (${rewrittenCount} CSS file${rewrittenCount === 1 ? '' : 's'} rewritten)`)
+}
+
+// ---------------------------------------------------------------------------
+// 4. Refuse to ship anything sensitive
 // ---------------------------------------------------------------------------
 const forbidden = [
   /^node_modules$/,

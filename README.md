@@ -1,46 +1,60 @@
-# Gamas_website
+# Gamas website
 
-Landing page for **Gamas**, a Persian Telegram bot that turns class audio,
-video and PowerPoint files into structured notes.
+Persian, right-to-left landing page for **Gamas**, a Telegram bot that uses AI to transcribe class speech and prepare study notes from supported audio, video and PowerPoint files.
 
-React + Vite, pre-rendered with `vite-react-ssg`, GSAP for animation,
-Tailwind for styling, self-hosted Vazirmatn + Lalezar fonts.
+The site keeps its existing React + Vite + `vite-react-ssg` architecture. It is pre-rendered as static HTML for cPanel; Node is used only at build time. Styling is plain CSS, with self-hosted Vazirmatn and Lalezar fonts. A small PHP endpoint records CTA clicks; the former email form is retired.
 
-## Deploying
-
-**Everything you need is in [`DEPLOY.md`](DEPLOY.md)** — cPanel shared
-hosting (Apache + PHP), no Node on the server.
+## Build and deploy
 
 ```bash
 npm ci
-npm run build      # → dist/  (also runs scripts/postbuild.mjs)
+npm run lint
+npm run build       # static production output in dist/
 ```
 
-`dist/` is uploaded to `public_html/`; `api/` is uploaded to
-`public_html/api/`. Visitor data is written to `~/gamas_data`, **outside**
-the web root.
+For a subfolder such as `https://gamas.bot/gamas/`:
 
-## Layout
+```bash
+VITE_BASE=/gamas/ VITE_SITE_URL=https://gamas.bot npm run build
+```
 
-| Path | What it is |
+Upload the contents of `dist/` (including `.htaccess`) to `public_html/`, then upload `api/` to `public_html/api/`. For a subfolder build, put both under the matching subfolder. Node is not required on cPanel. See [`DEPLOY.md`](DEPLOY.md) for PHP, Apache, storage, privacy, exact-origin configuration, verification and rollback details.
+
+## Repository map
+
+| Path | Purpose |
 |---|---|
-| `src/` | React app (SSG, single page) |
-| `public/` | static assets — **and `public/.htaccess`, which Vite copies to `dist/.htaccess`** |
-| `api/` | PHP endpoints: `lead.php` (email capture), `track.php` (CTA counter), `bootstrap.php` (shared) |
-| `scripts/postbuild.mjs` | strips build manifests from `dist/` and fails the build on leaks |
-| `DEPLOY.md` | cPanel deployment, hardening and rollback |
-| `AUDIT.md` | findings, verification performed, and remaining production checks |
+| `src/` | React page, accessible components, Persian RTL copy and CSS |
+| `public/` | Self-hosted fonts, responsive image assets, crawler files and production `.htaccess` |
+| `api/` | `track.php` for CTA events, retired `lead.php` (410), shared PHP storage/security helpers |
+| `scripts/postbuild.mjs` | Removes SSG manifests, emits base-aware crawler files, checks deploy paths and sensitive files |
+| `verify-*.mjs` | Optional Playwright browser harnesses for viewports, interactions, metadata and local assets; outputs go to ignored `docs/screenshots/current/` |
+| `DEPLOY.md` | cPanel deployment and operational guide |
+| `AUDIT.md` | Evidence-based engineering audit and validation limits |
 
-## Requirements
+## Optional browser regression checks
 
-- **Build:** Node 20.19+, 22.13+, or 24+ (local or CI only — never on the server)
-- **Runtime:** PHP 7.4+ for compatibility (PHP 8.2+ recommended), Apache 2.4,
-  `pdo_sqlite` and `mbstring` recommended but optional — the backend falls back
-  to flat files without them.
+The page itself needs no browser-test package. To run the optional Playwright harnesses locally, install the tool/browser temporarily, start the Vite server in another terminal, then run the checks:
 
-## Security notes
+```bash
+npm install --no-save --package-lock=false playwright
+npx playwright install chromium
+npm run dev
+# in another terminal:
+BASE_URL=http://127.0.0.1:5173/ node verify-redesign.mjs
+BASE_URL=http://127.0.0.1:5173/ node verify-deep.mjs
+BASE_URL=http://127.0.0.1:5173/ node verify-final.mjs
+```
 
-The API is same-origin only, CSRF-protected with a signed double-submit
-cookie (no sessions), rate limited per IP, and honeypot checked. It never
-leaks a filesystem path or stack trace. See `DEPLOY.md` §11 for the
-shared-hosting gotchas.
+The interaction harness stubs Telegram and `/api/track.php`; it does not test PHP or contact the live bot. Screenshots/reports go under ignored `docs/screenshots/current/`. These tools are optional and are not part of the production build or cPanel upload.
+
+## Runtime notes
+
+- Build: Node 20.19+, 22.13+, or 24+.
+- PHP: 7.4 is the compatibility floor; use a maintained release (8.2+ recommended).
+- `pdo_sqlite` is optional for the small CTA tracker; it falls back to a private NDJSON file.
+- Set `GAMAS_ALLOWED_ORIGINS` to a comma-separated list of **full origins** only when the canonical deployed origin differs from `https://gamas.bot`. Scheme and port are checked, not just the hostname.
+- Set `GAMAS_DATA_DIR` to a private directory outside `public_html` when cPanel does not derive a suitable account-home directory automatically.
+- Set `GAMAS_TRUST_CF_IP=1` only when Cloudflare is actually the trusted reverse proxy.
+
+The site does not collect email addresses. The bot repository describes the external processing and the transcript/note storage; the site’s privacy section summarizes the verified behavior and warns that no automatic deletion period is defined for bot transcripts or notes.

@@ -1,6 +1,6 @@
 /**
  * CTA click tracker — POST to /api/track.php
- * Same-origin, no CSRF, beacon-like, fails silently
+ * CTA analytics only; no form/session state. Failures never block navigation.
  */
 import { sitePath } from './constants'
 

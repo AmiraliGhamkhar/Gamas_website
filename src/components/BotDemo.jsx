@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
 import { BOT_HANDLE, tgLink, toFa } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const stages = [
-  { label: 'آماده‌سازی صدا', pct: 18 },
-  { label: 'رونویسی گفتار', pct: 48 },
-  { label: 'ساخت جزوه', pct: 82 },
-  { label: 'ارسال نتیجه', pct: 100 },
+  { label: 'دریافت و آماده‌سازی فایل', pct: 20 },
+  { label: 'پیاده‌سازی گفتار', pct: 46 },
+  { label: 'مرتب‌کردن نکته‌ها', pct: 73 },
+  { label: 'آماده‌کردن فایل‌های خروجی', pct: 92 },
 ]
 
 const END_PHASE = 6
@@ -50,13 +50,12 @@ function PhoneFrame({ children }) {
 }
 
 export default function BotDemo() {
-  const [phase, setPhase] = useState(1)
-  const [progress, setProgress] = useState(0)
-  const [auto, setAuto] = useState(true)
-  const intervalRef = useRef(null)
+  const [phase, setPhase] = useState(END_PHASE)
+  const [progress, setProgress] = useState(100)
+  const [playing, setPlaying] = useState(false)
 
   useEffect(() => {
-    if (!auto) return undefined
+    if (!playing) return undefined
 
     if (
       typeof window !== 'undefined' &&
@@ -64,35 +63,45 @@ export default function BotDemo() {
     ) {
       setPhase(END_PHASE)
       setProgress(100)
-      setAuto(false)
+      setPlaying(false)
       return undefined
     }
 
     let step = 0
-    const tick = () => {
-      step = (step + 1) % (END_PHASE + 1)
+    let timeoutId
+    const advance = () => {
+      step += 1
+      if (step >= END_PHASE) {
+        setPhase(END_PHASE)
+        setProgress(100)
+        setPlaying(false)
+        return
+      }
+
       setPhase(step)
-      if (step >= 2 && step <= 5) setProgress(stages[Math.min(step - 2, stages.length - 1)].pct)
-      else if (step === END_PHASE) setProgress(100)
+      if (step >= 2 && step <= 5) setProgress(stages[step - 2].pct)
       else setProgress(0)
+      timeoutId = window.setTimeout(advance, 1500)
     }
 
-    tick()
-    intervalRef.current = setInterval(tick, 1850)
-    return () => clearInterval(intervalRef.current)
-  }, [auto])
+    advance()
+    return () => window.clearTimeout(timeoutId)
+  }, [playing])
 
   const showFile = phase >= 1
   const showProcessing = phase >= 2 && phase <= 5
+  const showTranscript = phase >= 4
   const showNotes = phase === END_PHASE
   const activeStage = stages[Math.min(Math.max(phase - 2, 0), stages.length - 1)]
 
   const replay = () => {
-    if (!auto) {
-      setPhase(0)
-      setProgress(0)
+    if (playing) {
+      setPlaying(false)
+      return
     }
-    setAuto((value) => !value)
+    setPhase(0)
+    setProgress(0)
+    setPlaying(true)
   }
 
   return (
@@ -101,16 +110,19 @@ export default function BotDemo() {
       <div className="demo-backdrop-glow demo-backdrop-glow-two" aria-hidden="true" />
       <div className="container demo-layout">
         <div className="demo-copy">
-          <h2 className="section-title">یک پیام. سه قدم. جزوه‌ی آماده.</h2>
+          <h2 className="section-title">یک فایل؛ از گفتار تا جزوه.</h2>
           <p className="section-description">
-            فایل کلاس را در تلگرام می‌فرستی؛ گاماس وضعیت پردازش را نشان می‌دهد و وقتی آماده شد، جزوه را همان‌جا تحویل می‌گیری.
+            این پیش‌نمایش، مراحل معمول پردازش را نشان می‌دهد: دریافت فایل، تبدیل گفتار به متن و آماده‌شدن خروجی‌ها.
+          </p>
+          <p className="demo-disclaimer">
+            شبیه‌سازی تعاملی است؛ به ربات زنده وصل نیست و پیام‌ها و متن‌های داخل گوشی نمونه‌اند.
           </p>
 
-          <div className="demo-flow-list" aria-label="مراحل کار">
-            <span><b>۱</b> ارسال فایل</span>
-            <span><b>۲</b> پردازش هوشمند</span>
-            <span><b>۳</b> دریافت جزوه</span>
-          </div>
+          <ol className="demo-flow-list" aria-label="مراحل نمایش داده‌شده">
+            <li><b>۱</b> ارسال فایل</li>
+            <li><b>۲</b> تبدیل گفتار به متن</li>
+            <li><b>۳</b> دریافت خروجی</li>
+          </ol>
 
           <div className="demo-actions">
             <a
@@ -121,17 +133,17 @@ export default function BotDemo() {
               className="button-primary demo-primary-cta"
             >
               <Icon name="telegram" size={20} />
-              امتحان در تلگرام
+              باز کردن ربات تلگرام
               <Icon name="arrow-left" size={18} className="cta-arrow" />
             </a>
             <button
               type="button"
               onClick={replay}
-              aria-pressed={!auto}
+              aria-pressed={playing}
               className="button-secondary-pill demo-replay-button"
             >
-              <span className={`replay-symbol ${auto ? 'is-playing' : ''}`} aria-hidden="true">{auto ? 'Ⅱ' : '↻'}</span>
-              {auto ? 'توقف نمایش' : 'نمایش دوباره'}
+              <span className={`replay-symbol ${playing ? 'is-playing' : ''}`} aria-hidden="true">{playing ? 'Ⅱ' : '↻'}</span>
+              {playing ? 'توقف نمایش' : 'نمایش مراحل از ابتدا'}
             </button>
           </div>
         </div>
@@ -141,7 +153,7 @@ export default function BotDemo() {
           <div className="demo-preview-orbit demo-preview-orbit-two" aria-hidden="true" />
           <PhoneFrame>
             <div className="demo-day-tag">امروز</div>
-            <div className="demo-chat-messages" aria-live="polite" aria-atomic="false">
+            <div className="demo-chat-messages">
               <ChatBubble from="bot" className="demo-greeting">
                 <span>سلام! 👋</span>
                 <small>فایل کلاس را بفرست تا جزوه‌ی مرتبش را بسازم.</small>
@@ -162,7 +174,7 @@ export default function BotDemo() {
 
               {showProcessing && (
                 <ChatBubble from="bot" className="demo-progress-bubble">
-                  <div className="demo-progress-heading">
+                  <div className="demo-progress-heading" aria-live="polite">
                     <span className="progress-orb"><Icon name="sparkles" size={15} /></span>
                     <span>{activeStage.label}</span>
                     <bdi dir="ltr" className="progress-percent">{toFa(progress)}٪</bdi>
@@ -170,10 +182,11 @@ export default function BotDemo() {
                   <div
                     className="demo-progress-track"
                     role="progressbar"
-                    aria-label="پیشرفت ساخت جزوه"
+                    aria-label="پیشرفت نمایشی پردازش فایل"
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-valuenow={progress}
+                    aria-valuetext={`${activeStage.label}؛ ${toFa(progress)} درصد`}
                   >
                     <span className="demo-progress-fill" style={{ width: `${progress}%` }} />
                   </div>
@@ -181,31 +194,38 @@ export default function BotDemo() {
                 </ChatBubble>
               )}
 
+              {showTranscript && (
+                <ChatBubble from="bot" className="demo-transcript-bubble">
+                  <strong>رونوشت فارسی</strong>
+                  <p>در این بخش، گفتار کلاس به متن تبدیل می‌شود تا بتوانی نکته‌ها را دوباره بخوانی.</p>
+                </ChatBubble>
+              )}
+
               {showNotes && (
                 <>
                   <ChatBubble from="bot" className="demo-success-note">
-                    <div className="note-topline">
+                    <div className="note-topline" role="status">
                       <span className="note-success-icon"><Icon name="check" size={15} /></span>
-                      <strong>جزوه‌ات آماده شد!</strong>
+                      <strong>جزوه‌ی نمونه آماده شد</strong>
                     </div>
                     <div className="note-paper">
                       <span className="note-paper-label"><Icon name="notes" size={14} /> خلاصه‌ی جلسه</span>
-                      <strong>زیست‌شناسی · فصل یازدهم</strong>
+                      <strong>عنوان و موضوع‌های درس</strong>
                       <span className="note-line note-line-long" />
                       <span className="note-line note-line-medium" />
                       <span className="note-bullet"><i /> نکته‌های کلیدی و تعاریف</span>
                       <span className="note-bullet"><i /> پرسش‌های مرور سریع</span>
                     </div>
-                    <small className="demo-note-timestamp">همین حالا</small>
+                    <small className="demo-note-timestamp">نمونه‌ی نمایشی</small>
                   </ChatBubble>
                   <ChatBubble from="bot" className="demo-next-message">
-                    نسخه‌ی کامل جزوه و رونوشت فارسی را از همین‌جا ببین.
+                    فایل Word جزوه و متن خام به‌صورت فایل در همین گفت‌وگو می‌رسند.
                   </ChatBubble>
                 </>
               )}
             </div>
           </PhoneFrame>
-          <figcaption className="demo-caption"><Icon name="sparkles" size={15} /> نمونه‌ی نمایشی از گفت‌وگوی گاماس</figcaption>
+          <figcaption className="demo-caption"><Icon name="sparkles" size={15} /> پیش‌نمایش شبیه‌سازی‌شده؛ نه پاسخ زنده‌ی ربات</figcaption>
         </figure>
       </div>
     </section>

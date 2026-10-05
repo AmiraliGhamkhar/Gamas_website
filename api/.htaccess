@@ -44,7 +44,7 @@
   Header unset X-Frame-Options
   Header always set X-Frame-Options "DENY"
 
-  # API responses must never be cached — /api/lead.php?v=csrf hands out tokens
+  # CTA-tracker and retired-endpoint responses must never be cached.
   <FilesMatch "(?i)\.php$">
     Header unset Cache-Control
     Header always set Cache-Control "no-store, no-cache, must-revalidate, private"

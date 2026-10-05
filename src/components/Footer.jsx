@@ -14,14 +14,16 @@ export default function Footer() {
   const [copied, setCopied] = useState(false)
   const copyTimer = useRef(null)
 
-  const copyHandle = async (e) => {
-    e.preventDefault()
+  const copyHandle = async (event) => {
+    event.preventDefault()
     try {
       await navigator.clipboard.writeText(BOT_HANDLE)
       setCopied(true)
       clearTimeout(copyTimer.current)
       copyTimer.current = setTimeout(() => setCopied(false), 1600)
-    } catch {}
+    } catch {
+      setCopied(false)
+    }
   }
 
   const persianYear = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
@@ -59,7 +61,7 @@ export default function Footer() {
               className="button-primary footer-cta"
             >
               <Icon name="telegram" size={17} />
-              رفتن به تلگرام
+              باز کردن ربات تلگرام
             </a>
             <button
               type="button"

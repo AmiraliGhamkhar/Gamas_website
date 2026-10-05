@@ -7,7 +7,7 @@ const navLinks = [
   { href: '#how', label: 'چطور کار می‌کند' },
   { href: '#features', label: 'قابلیت‌ها' },
   { href: '#privacy', label: 'حریم خصوصی' },
-  { href: '#faq', label: 'پرسش‌ها' },
+  { href: '#faq', label: 'پرسش‌های رایج' },
 ]
 
 export default function Navbar() {
@@ -25,14 +25,16 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!open) return undefined
+
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    const focusFrame = window.requestAnimationFrame(() => {
+      drawerRef.current?.querySelector('a[href]')?.focus()
+    })
 
     const getFocusable = () => drawerRef.current?.querySelectorAll(
-      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      'a[href]:not([tabindex="-1"]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )
-    requestAnimationFrame(() => getFocusable()?.[0]?.focus())
-
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
         setOpen(false)
@@ -52,8 +54,10 @@ export default function Navbar() {
         first.focus()
       }
     }
+
     window.addEventListener('keydown', onKeyDown)
     return () => {
+      window.cancelAnimationFrame(focusFrame)
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', onKeyDown)
     }
@@ -62,6 +66,11 @@ export default function Navbar() {
   const closeDrawer = () => {
     setOpen(false)
     toggleButtonRef.current?.focus({ preventScroll: true })
+  }
+
+  const handleTelegramClick = () => {
+    closeDrawer()
+    trackCTA('navbar')
   }
 
   return (
@@ -86,7 +95,7 @@ export default function Navbar() {
             onClick={() => trackCTA('navbar')}
             className="button-primary nav-cta"
           >
-            شروع در تلگرام
+            باز کردن ربات تلگرام
             <Icon name="arrow-left" size={16} />
           </a>
           <button
@@ -130,14 +139,11 @@ export default function Navbar() {
             tabIndex={open ? 0 : -1}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => {
-              closeDrawer()
-              trackCTA('navbar')
-            }}
+            onClick={handleTelegramClick}
             className="button-primary mobile-drawer-cta"
           >
             <Icon name="telegram" size={19} />
-            شروع در تلگرام
+            باز کردن ربات تلگرام
             <Icon name="arrow-left" size={17} />
           </a>
         </div>

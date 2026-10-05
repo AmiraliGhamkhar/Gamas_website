@@ -9,20 +9,20 @@ const proofPoints = [
 
 export default function Hero() {
   return (
-    <section id="top" className="hero-section product-tile product-tile-light">
+    <section id="top" aria-labelledby="hero-title" className="hero-section product-tile product-tile-light">
       <div className="hero-backdrop-orb hero-backdrop-orb-one" aria-hidden="true" />
       <div className="hero-backdrop-orb hero-backdrop-orb-two" aria-hidden="true" />
 
       <div className="container hero-layout">
         <div className="hero-copy">
-          <h1 className="hero-headline">
-            از صدای کلاس
-            <span className="hero-headline-accent">تا جزوه‌ی حسابی.</span>
+          <h1 id="hero-title" className="hero-headline">
+            با هوش مصنوعی،
+            <span className="hero-headline-accent">صدای کلاس را به جزوه تبدیل کن.</span>
           </h1>
 
           <p className="hero-lede">
-            ویس، ویدیو یا پاورپوینت را بفرست؛ گاماس نکته‌های کلاس را به جزوه‌ای مرتب و فارسی تبدیل می‌کند.
-            <span className="hero-audience"> برای دانشجوها، مدرس‌ها و جلسه‌های کاری.</span>
+            سه ساعت ضبط مانده و فردا امتحان است؟ فایل صوتی، ویدیوی کلاس یا پاورپوینت را در تلگرام بفرست. گاماس با کمک هوش مصنوعی گفتار را به متن فارسی تبدیل می‌کند و نکته‌ها را برای مرور مرتب می‌کند.
+            <span className="hero-audience"> برای دانشجوها و هرکسی که فایل آموزشی دارد.</span>
           </p>
 
           <div className="hero-actions">
@@ -34,16 +34,16 @@ export default function Hero() {
               className="button-primary hero-primary-cta"
             >
               <Icon name="telegram" size={20} />
-              شروع در تلگرام
+              باز کردن ربات تلگرام
               <Icon name="arrow-left" size={18} className="cta-arrow" />
             </a>
             <a href="#demo" className="button-secondary-pill hero-secondary-cta">
               <span className="play-dot" aria-hidden="true">▶</span>
-              دیدن نمونه‌ی زنده
+              دیدن نمونه‌ی نمایشی
             </a>
           </div>
 
-          <ul className="hero-proof-points" aria-label="قابلیت‌ها">
+          <ul className="hero-proof-points" aria-label="فایل‌های آموزشی قابل ارسال">
             {proofPoints.map((point) => (
               <li key={point.label}>
                 <span className="hero-proof-icon"><Icon name={point.icon} size={17} /></span>
@@ -70,14 +70,16 @@ export default function Hero() {
               sizes="(max-width: 639px) 270px, (max-width: 833px) 330px, 430px"
               width="941"
               height="1672"
-              alt="ماکاپ سه‌بعدی موبایل گاماس؛ ارسال فایل صوتی، نوار پیشرفت فیروزه‌ای و جزوه‌ی ساختاریافته در گفت‌وگوی تلگرام"
+              alt="تصویر مفهومی از گوشی با حباب‌های گفت‌وگو و صفحه‌ی یادداشتِ بدون متن"
               loading="eager"
               decoding="async"
               fetchpriority="high"
               className="hero-phone-image"
             />
           </picture>
-          <figcaption className="sr-only">پیش‌نمایش مفهومی از تجربه‌ی کار با ربات گاماس</figcaption>
+          <figcaption className="hero-image-caption">
+            محتوای روی گوشی انتزاعی است؛ گفت‌وگو یا خروجی واقعی ربات نیست.
+          </figcaption>
         </figure>
       </div>
     </section>
