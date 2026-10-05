@@ -13,11 +13,11 @@ import MobileSticky from './components/MobileSticky'
 
 export default function App() {
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="app-shell">
       <a className="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
       <StructuredData />
       <Navbar />
-      <main id="main-content" className="flex-1">
+      <main id="main-content" className="app-main">
         <Hero />
         <Story />
         <BotDemo />

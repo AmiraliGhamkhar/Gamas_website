@@ -3,7 +3,7 @@
 /**
  * Gamas — shared bootstrap for /api/*.php
  * ---------------------------------------------------------------------------
- * Minimum PHP: 7.4   Tested through: 8.4
+ * Minimum PHP syntax target: 7.4
  * No framework, no Composer, no external dependencies.
  *
  * Every directive below is PHP_INI_ALL (settable at runtime). The
@@ -11,14 +11,13 @@
  * .htaccess would 500 on the CGI/FPM/LSAPI handlers cPanel uses.
  *
  * Deliberate design choices for shared hosting:
- *   - No sessions. Session save paths on shared hosting are frequently not
- *     writable, and a session file per crawler hit fills the account quota.
- *     CSRF uses a signed double-submit cookie instead (zero server state).
+ *   - No visitor accounts, sessions or CSRF token endpoint; the only API
+ *     records non-sensitive CTA clicks and is same-origin/rate limited.
  *   - Storage goes OUTSIDE public_html (/home/USER/gamas_data) by default,
  *     with an .htaccess-protected in-root fallback.
  *   - SQLite when pdo_sqlite exists, flat NDJSON files when it does not.
- *   - Rate limiting is file-based with flock, so it works even if the DB is
- *     down; it fails OPEN (never blocks the site because the limiter broke).
+ *   - Rate-limit files contain a short-lived HMAC of the client IP, not the
+ *     raw address. An unavailable limiter fails closed for analytics.
  */
 
 declare(strict_types=1);
@@ -27,10 +26,6 @@ if (defined('GAMAS_BOOTSTRAP')) {
     return;
 }
 define('GAMAS_BOOTSTRAP', true);
-
-// CSRF cookie name and lifetime (seconds)
-define('GAMAS_CSRF_COOKIE', 'gamas_csrf');
-define('GAMAS_CSRF_TTL', 43200); // 12 hours
 
 // ---------------------------------------------------------------------------
 // 1. Version guard — fail loudly but generically on ancient PHP
@@ -159,7 +154,7 @@ function gamas_log(string $message): void
             if (@filesize($file) > 1048576) {
                 @rename($file, $dir . '/app.log.1');
             }
-            $line = gmdate('c') . ' ' . gamas_client_ip() . ' ' . $flat . "\n";
+            $line = gmdate('c') . ' ' . $flat . "\n";
             $fp = @fopen($file, 'ab');
             if ($fp !== false) {
                 if (flock($fp, LOCK_EX)) {
@@ -225,10 +220,10 @@ function gamas_client_ip(): string
     return $ip;
 }
 
-/** Stable, non-reversible key for rate-limit filenames. */
+/** Keyed, short-lived pseudonym for rate-limit filenames. */
 function gamas_ip_key(): string
 {
-    return substr(hash('sha256', gamas_client_ip()), 0, 16);
+    return substr(hash_hmac('sha256', gamas_client_ip(), gamas_secret()), 0, 16);
 }
 
 // ---------------------------------------------------------------------------
@@ -376,9 +371,8 @@ function gamas_data_dir(): string
 }
 
 /**
- * HMAC signing key for CSRF tokens. Generated once, stored 0600 in the
- * private data dir. Throws if it cannot be persisted — a per-request key
- * would make every token invalid on the next request.
+ * HMAC key for short-lived IP rate-limit pseudonyms. Stored privately with
+ * restrictive permissions and a lock so concurrent first requests agree.
  */
 function gamas_secret(): string
 {
@@ -387,33 +381,49 @@ function gamas_secret(): string
         return $secret;
     }
 
-    $file = gamas_data_dir() . '/csrf.key';
+    $file = gamas_data_dir() . '/ip-rate.key';
+    $lock = @fopen($file . '.lock', 'c+');
+    if ($lock === false) {
+        throw new RuntimeException('Cannot open rate-limit key lock.');
+    }
+    @chmod($file . '.lock', 0600);
+    if (!flock($lock, LOCK_EX)) {
+        fclose($lock);
+        throw new RuntimeException('Cannot lock rate-limit key.');
+    }
 
-    $existing = @file_get_contents($file);
-    if (is_string($existing) && strlen($existing) >= 32) {
-        $secret = $existing;
+    try {
+        $existing = @file_get_contents($file);
+        if (is_string($existing) && strlen($existing) >= 64) {
+            $secret = $existing;
+            return $secret;
+        }
+
+        $fresh = bin2hex(random_bytes(32));
+        $tmp = $file . '.' . bin2hex(random_bytes(6)) . '.tmp';
+        $written = @file_put_contents($tmp, $fresh, LOCK_EX);
+        if ($written !== strlen($fresh)) {
+            @unlink($tmp);
+            throw new RuntimeException('Cannot persist rate-limit key.');
+        }
+        @chmod($tmp, 0600);
+        if (!@rename($tmp, $file)) {
+            @unlink($tmp);
+            throw new RuntimeException('Cannot persist rate-limit key.');
+        }
+        @chmod($file, 0600);
+
+        $check = @file_get_contents($file);
+        if (!is_string($check) || strlen($check) < 64) {
+            throw new RuntimeException('Rate-limit key unreadable after write.');
+        }
+        $secret = $check;
         return $secret;
+    } finally {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+        @chmod($file . '.lock', 0600);
     }
-
-    $fresh = bin2hex(random_bytes(32));
-    $tmp = $file . '.' . bin2hex(random_bytes(6)) . '.tmp';
-    if (@file_put_contents($tmp, $fresh, LOCK_EX) === false) {
-        throw new RuntimeException('Cannot persist CSRF secret.');
-    }
-    @chmod($tmp, 0600);
-    if (!@rename($tmp, $file)) {
-        @unlink($tmp);
-        throw new RuntimeException('Cannot persist CSRF secret.');
-    }
-    @chmod($file, 0600);
-
-    $check = @file_get_contents($file);
-    if (!is_string($check) || strlen($check) < 32) {
-        throw new RuntimeException('CSRF secret unreadable after write.');
-    }
-
-    $secret = $check;
-    return $secret;
 }
 
 // ---------------------------------------------------------------------------
@@ -468,16 +478,6 @@ function gamas_db(): ?PDO
 
         $schemaVersion = (int)$db->query('PRAGMA user_version')->fetchColumn();
         if ($schemaVersion < 2) {
-            $db->exec('CREATE TABLE IF NOT EXISTS leads (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                email      TEXT NOT NULL UNIQUE COLLATE NOCASE,
-                source     TEXT,
-                ip         TEXT NOT NULL,
-                user_agent TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )');
-            $db->exec('CREATE INDEX IF NOT EXISTS idx_leads_ip_created ON leads(ip, created_at)');
-
             $db->exec('CREATE TABLE IF NOT EXISTS clicks (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 section    TEXT NOT NULL,
@@ -513,8 +513,23 @@ function gamas_db(): ?PDO
             $db->exec('PRAGMA user_version=2');
         }
 
+        // Version 3 retires the former email waitlist and its PII. Dropping
+        // the legacy table removes it from queries; VACUUM attempts to reclaim
+        // the deleted pages from the private SQLite file as well.
+        if ($schemaVersion < 3) {
+            $db->exec('DROP INDEX IF EXISTS idx_leads_ip_created');
+            $db->exec('DROP TABLE IF EXISTS leads');
+            $db->exec('PRAGMA user_version=3');
+            try {
+                $db->exec('PRAGMA wal_checkpoint(TRUNCATE)');
+                $db->exec('VACUUM');
+            } catch (Throwable $e) {
+                gamas_log('legacy lead data vacuum incomplete: ' . $e->getMessage());
+            }
+        }
+
         // Do not rely on the hosting account's default umask for database
-        // files, which contain waitlist emails and anti-abuse metadata.
+        // files, which contain click events and rate-limit metadata.
         foreach ([$dbPath, $dbPath . '-wal', $dbPath . '-shm'] as $privateFile) {
             if (is_file($privateFile)) {
                 @chmod($privateFile, 0600);
@@ -554,35 +569,34 @@ function gamas_append_record(string $name, array $record): bool
         // The click log is best-effort analytics, not an audit archive. Clear
         // legacy IP/UA-bearing rows once, then cap fallback storage so hosts
         // without SQLite cannot fill their quota.
+        $ready = true;
         if ($safeName === 'clicks') {
             $migrationMarker = dirname($file) . '/.clicks-v2';
-            if (!is_file($migrationMarker) && ftruncate($fp, 0)) {
-                fflush($fp);
-                if (@file_put_contents($migrationMarker, '1', LOCK_EX) !== false) {
+            if (!is_file($migrationMarker)) {
+                if (!ftruncate($fp, 0) || !fflush($fp)) {
+                    $ready = false;
+                } elseif (@file_put_contents($migrationMarker, '1', LOCK_EX) !== 1) {
+                    $ready = false;
+                } else {
                     @chmod($migrationMarker, 0600);
                 }
             }
-            $stats = fstat($fp);
-            if (is_array($stats) && (int)($stats['size'] ?? 0) + strlen($line) + 1 > 1048576) {
-                ftruncate($fp, 0);
-            }
-        }
-        if ($safeName === 'leads' && isset($record['email'])) {
-            $needle = strtolower((string)$record['email']);
-            rewind($fp);
-            while (($existingLine = fgets($fp)) !== false) {
-                $decoded = json_decode($existingLine, true);
-                if (is_array($decoded) && isset($decoded['email']) && strtolower((string)$decoded['email']) === $needle) {
-                    flock($fp, LOCK_UN);
-                    fclose($fp);
-                    @chmod($file, 0600);
-                    return true;
+
+            if ($ready) {
+                $stats = fstat($fp);
+                if (!is_array($stats)) {
+                    $ready = false;
+                } elseif ((int)($stats['size'] ?? 0) + strlen($line) + 1 > 1048576) {
+                    $ready = ftruncate($fp, 0) && fflush($fp);
                 }
             }
         }
-        fseek($fp, 0, SEEK_END);
-        $ok = fwrite($fp, $line . "\n") !== false;
-        fflush($fp);
+
+        if ($ready && fseek($fp, 0, SEEK_END) === 0) {
+            $contents = $line . "\n";
+            $written = fwrite($fp, $contents);
+            $ok = $written === strlen($contents) && fflush($fp);
+        }
         flock($fp, LOCK_UN);
     }
     fclose($fp);
@@ -590,78 +604,114 @@ function gamas_append_record(string $name, array $record): bool
     return $ok;
 }
 
+/** Remove the retired flat-file waitlist when the API is next used. */
+function gamas_purge_legacy_leads(): bool
+{
+    try {
+        $legacyFile = gamas_data_dir() . '/leads.ndjson';
+    } catch (Throwable $e) {
+        return false;
+    }
+
+    if (!is_file($legacyFile)) {
+        return true;
+    }
+    if (@unlink($legacyFile) || !file_exists($legacyFile)) {
+        gamas_log('retired NDJSON email list removed');
+        return true;
+    }
+
+    gamas_log('retired NDJSON email list could not be removed');
+    return false;
+}
+
 // ---------------------------------------------------------------------------
-//  Rate limiting — file based, flock guarded, fails open
+//  Rate limiting — file based, flock guarded, fail closed for analytics
 // ---------------------------------------------------------------------------
 
 /**
- * Sliding-window limiter keyed by client IP.
+ * Sliding-window limiter keyed by a private HMAC pseudonym of client IP.
  *
- * @param string $namespace separate bucket, e.g. "lead_hour"
+ * @param string $namespace separate bucket, e.g. "track_minute"
  * @param int    $limit     max events
  * @param int    $window    seconds
- * @return bool true = allowed (the call has been counted)
+ * @return bool|null true = allowed and counted; false = limit; null = storage failure
  */
-function gamas_rate_limit(string $namespace, int $limit, int $window): bool
+function gamas_rate_limit(string $namespace, int $limit, int $window): ?bool
 {
-    try {
-        $dir = gamas_data_dir() . '/ratelimit';
-    } catch (Throwable $e) {
-        return true; // fail open
-    }
-    if (!gamas_ensure_dir($dir)) {
-        return true; // fail open
+    $bucket = preg_replace('/[^a-z0-9_-]/i', '', $namespace) ?? '';
+    if ($bucket === '' || $limit < 1 || $window < 1) {
+        return null;
     }
 
-    $bucket = preg_replace('/[^a-z0-9_-]/i', '', $namespace);
-    $file = $dir . '/' . $bucket . '_' . gamas_ip_key() . '.txt';
-    $now = time();
+    try {
+        $dir = gamas_data_dir() . '/ratelimit';
+        if (!gamas_ensure_dir($dir)) {
+            return null;
+        }
+        $file = $dir . '/' . $bucket . '_' . gamas_ip_key() . '.txt';
+    } catch (Throwable $e) {
+        return null;
+    }
 
     $fp = @fopen($file, 'c+');
     if ($fp === false) {
-        return true; // fail open
+        return null;
     }
+    @chmod($file, 0600);
 
-    $allowed = true;
+    $result = null;
+    $locked = false;
     try {
-        if (flock($fp, LOCK_EX)) {
-            rewind($fp);
-            $raw = stream_get_contents($fp);
-            $hits = [];
-            if (is_string($raw) && $raw !== '') {
-                foreach (preg_split('/\s+/', trim($raw)) as $piece) {
-                    if (ctype_digit($piece)) {
-                        $ts = (int)$piece;
-                        if ($ts > $now - $window) {
-                            $hits[] = $ts;
-                        }
+        $locked = flock($fp, LOCK_EX);
+        if (!$locked || !rewind($fp)) {
+            return null;
+        }
+        $raw = stream_get_contents($fp);
+        if (!is_string($raw)) {
+            return null;
+        }
+
+        $now = time();
+        $hits = [];
+        if ($raw !== '') {
+            foreach (preg_split('/\s+/', trim($raw)) as $piece) {
+                if (ctype_digit($piece)) {
+                    $timestamp = (int)$piece;
+                    if ($timestamp > $now - $window) {
+                        $hits[] = $timestamp;
                     }
                 }
             }
+        }
 
-            if (count($hits) >= $limit) {
-                $allowed = false;
-            } else {
-                $hits[] = $now;
-                ftruncate($fp, 0);
-                rewind($fp);
-                fwrite($fp, implode(' ', $hits));
-            }
-            fflush($fp);
+        if (count($hits) >= $limit) {
+            return false;
+        }
+
+        $hits[] = $now;
+        $contents = implode(' ', $hits);
+        if (!ftruncate($fp, 0) || !rewind($fp)) {
+            return null;
+        }
+        $written = fwrite($fp, $contents);
+        $result = $written === strlen($contents) && fflush($fp) ? true : null;
+    } catch (Throwable $e) {
+        $result = null;
+    } finally {
+        if ($locked) {
             flock($fp, LOCK_UN);
         }
-    } catch (Throwable $e) {
-        $allowed = true;
+        fclose($fp);
+        @chmod($file, 0600);
     }
-    fclose($fp);
-    @chmod($file, 0600);
 
-    // ~1% of requests sweep up stale buckets
-    if (mt_rand(1, 100) === 1) {
+    // Sweep a bounded number of expired buckets occasionally.
+    if ($result === true && mt_rand(1, 100) === 1) {
         gamas_gc_ratelimit($dir, max($window, 3600));
     }
 
-    return $allowed;
+    return $result;
 }
 
 /** Delete rate-limit files untouched for longer than $ttl seconds. */
@@ -691,117 +741,105 @@ function gamas_gc_ratelimit(string $dir, int $ttl): void
 }
 
 // ---------------------------------------------------------------------------
-//  Same-origin / CORS
+//  Exact-origin validation
 // ---------------------------------------------------------------------------
 
-/** Lowercase hostname of a URL, or '' if unparseable. */
-function gamas_host_of_url(string $url): string
+/** Normalize a URL to scheme + host + effective port, or '' if invalid. */
+function gamas_origin_of_url(string $url): string
 {
-    $host = parse_url($url, PHP_URL_HOST);
-    if (!is_string($host) || $host === '') {
+    $parts = @parse_url(trim($url));
+    if (!is_array($parts) || !isset($parts['scheme'], $parts['host'])) {
         return '';
     }
-    return strtolower(preg_replace('/:\d+$/', '', $host) ?? $host);
+    if (isset($parts['user']) || isset($parts['pass'])) {
+        return '';
+    }
+
+    $scheme = strtolower((string)$parts['scheme']);
+    if ($scheme !== 'http' && $scheme !== 'https') {
+        return '';
+    }
+
+    $unbracketedHost = strtolower(trim((string)$parts['host'], '[]'));
+    if (filter_var($unbracketedHost, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        $host = '[' . $unbracketedHost . ']';
+    } elseif (
+        filter_var($unbracketedHost, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false
+        && preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)(?:\.(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?))*$/i', $unbracketedHost) !== 1
+    ) {
+        return '';
+    } else {
+        $host = $unbracketedHost;
+    }
+
+    $port = isset($parts['port']) ? (int)$parts['port'] : null;
+    if ($port !== null && ($port < 1 || $port > 65535)) {
+        return '';
+    }
+    if (($scheme === 'http' && $port === 80) || ($scheme === 'https' && $port === 443)) {
+        $port = null;
+    }
+
+    return $scheme . '://' . $host . ($port !== null ? ':' . $port : '');
 }
 
 /**
- * Hosts allowed to call the API. Defaults to the current Host plus the
- * project's real domains. Override with GAMAS_ALLOWED_HOSTS="a.com,b.com"
- * (set in cPanel → Environment Variables) to pin it down.
+ * Exact origins permitted to call this site's API. Host, scheme and port are
+ * all significant; never trust HTTP_HOST as an implicit allowlist entry.
+ * Set GAMAS_ALLOWED_ORIGINS to a comma-separated list of full origins only
+ * when the deployed site uses another origin.
  *
  * @return string[]
  */
-function gamas_allowed_hosts(): array
+function gamas_allowed_origins(): array
 {
-    $env = getenv('GAMAS_ALLOWED_HOSTS');
+    $env = getenv('GAMAS_ALLOWED_ORIGINS');
     if (is_string($env) && trim($env) !== '') {
-        $out = [];
-        foreach (explode(',', $env) as $h) {
-            $h = strtolower(trim($h));
-            if (strpos($h, '://') !== false) {
-                $h = gamas_host_of_url($h);
-            } else {
-                $h = strtolower(preg_replace('/:\d+$/', '', $h) ?? $h);
-            }
-            if ($h !== '') {
-                $out[] = $h;
+        $origins = [];
+        foreach (explode(',', $env) as $entry) {
+            $origin = gamas_origin_of_url($entry);
+            if ($origin !== '') {
+                $origins[] = $origin;
             }
         }
-        if ($out !== []) {
-            return array_values(array_unique($out));
-        }
+        return array_values(array_unique($origins));
     }
 
-    $hosts = ['gamas.bot', 'www.gamas.bot'];
-    $host = isset($_SERVER['HTTP_HOST']) ? (string)$_SERVER['HTTP_HOST'] : '';
-    if ($host === '' && isset($_SERVER['SERVER_NAME'])) {
-        $host = (string)$_SERVER['SERVER_NAME'];
-    }
-    $host = strtolower(preg_replace('/:\d+$/', '', $host) ?? '');
-    if ($host !== '') {
-        $hosts[] = $host;
-    }
-    return array_values(array_unique($hosts));
+    return ['https://gamas.bot'];
 }
 
-/**
- * Enforce a same-origin request.
- *
- * @param bool $strict When true, a request carrying neither Origin nor
- *                     Referer is rejected. Use true for state-changing
- *                     requests (POST), false for read-only ones.
- *
- * Why the distinction:
- *   - Browsers send Origin on every non-GET/HEAD request, same-origin or
- *     not, so strict mode is safe (and correct) for POST.
- *   - Browsers do NOT send Origin on same-origin GET. The token endpoint
- *     relies on Referer, which some privacy settings strip. Handing out a
- *     token is harmless anyway: we never emit Access-Control-Allow-Origin
- *     unless the caller's Origin is already on the allowlist, so a
- *     cross-site fetch cannot READ the token. Theft protection comes from
- *     the token being bound to a cookie the attacker cannot set.
- */
-function gamas_require_same_origin(bool $strict = true): void
+/** Require a browser-supplied Origin or Referer matching the exact allowlist. */
+function gamas_require_same_origin(): void
 {
-    $allowed = gamas_allowed_hosts();
-
+    $allowed = gamas_allowed_origins();
     $origin = gamas_header('Origin');
-    if ($origin !== null && $origin !== '') {
-        if (!in_array(gamas_host_of_url($origin), $allowed, true)) {
+    if ($origin !== null && trim($origin) !== '') {
+        $normalized = gamas_origin_of_url($origin);
+        if ($normalized === '' || !in_array($normalized, $allowed, true)) {
             gamas_log('blocked cross-origin request from ' . $origin);
             gamas_json(['error' => 'origin_not_allowed', 'message' => 'Origin مجاز نیست.'], 403);
         }
-        // Echo back only for hosts we already vetted (never a wildcard)
-        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Origin: ' . $normalized);
         header('Vary: Origin');
-        header('Access-Control-Allow-Credentials: true');
-        header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token, X-Requested-With');
+        header('Access-Control-Allow-Methods: POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type');
         header('Access-Control-Max-Age: 600');
         return;
     }
 
     $referer = gamas_header('Referer');
-    if ($referer !== null && $referer !== '') {
-        if (!in_array(gamas_host_of_url($referer), $allowed, true)) {
+    if ($referer !== null && trim($referer) !== '') {
+        $normalized = gamas_origin_of_url($referer);
+        if ($normalized === '' || !in_array($normalized, $allowed, true)) {
             gamas_log('blocked cross-origin referer from ' . $referer);
             gamas_json(['error' => 'origin_not_allowed', 'message' => 'Origin مجاز نیست.'], 403);
         }
         return;
     }
 
-    // Neither header present. Modern browsers send Sec-Fetch-Site, which is
-    // not spoofable from script — trust it as a fallback signal.
-    $fetchSite = gamas_header('Sec-Fetch-Site');
-    if ($fetchSite !== null && strtolower(trim($fetchSite)) === 'same-origin') {
-        return;
-    }
-
-    if (!$strict) {
-        return; // read-only endpoint: nothing to protect
-    }
-
-    gamas_log('blocked request with neither Origin nor Referer (strict)');
+    // Analytics is browser-only; never infer trust from an attacker-controlled
+    // Host header or from missing request metadata.
+    gamas_log('blocked request with neither Origin nor Referer');
     gamas_json(['error' => 'origin_required', 'message' => 'Origin یا Referer الزامی است.'], 403);
 }
 
@@ -817,110 +855,6 @@ function gamas_require_method(array $allowed, bool $isOptions = true): void
         exit;
     }
     gamas_json(['error' => 'method_not_allowed'], 405, ['Allow' => implode(', ', $allowed)]);
-}
-
-// ---------------------------------------------------------------------------
-//  CSRF — signed double-submit cookie, no session, no server state
-// ---------------------------------------------------------------------------
-
-function gamas_is_https(): bool
-{
-    if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') {
-        return true;
-    }
-    $fwd = gamas_header('X-Forwarded-Proto');
-    if ($fwd !== null) {
-        $firstProto = strtolower(trim(explode(',', $fwd)[0]));
-        if ($firstProto === 'https') {
-            return true;
-        }
-    }
-    return false;
-}
-
-/** Current CSRF cookie value, creating or refreshing its expiry. */
-function gamas_csrf_cookie(): string
-{
-    $existing = isset($_COOKIE[GAMAS_CSRF_COOKIE]) ? (string)$_COOKIE[GAMAS_CSRF_COOKIE] : '';
-    if (preg_match('/^[A-Za-z0-9_-]{16,64}$/', $existing) === 1) {
-        $value = $existing;
-    } else {
-        $value = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
-    }
-    $ttl = time() + GAMAS_CSRF_TTL;
-
-    if (PHP_VERSION_ID >= 70300) {
-        setcookie(GAMAS_CSRF_COOKIE, $value, [
-            'expires'  => $ttl,
-            'path'     => '/',
-            'domain'   => '',
-            'secure'   => gamas_is_https(),
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-    } else {
-        setcookie(
-            GAMAS_CSRF_COOKIE,
-            $value,
-            $ttl,
-            '/; SameSite=Lax',
-            '',
-            gamas_is_https(),
-            true
-        );
-    }
-    $_COOKIE[GAMAS_CSRF_COOKIE] = $value;
-    return $value;
-}
-
-/**
- * Issue a token: nonce.expiry.signature, bound to the CSRF cookie.
- * An attacker on another origin can obtain a token but cannot read or set
- * this visitor's gamas.bot cookie, so the signature never matches for them.
- */
-function gamas_csrf_issue(): string
-{
-    $cookie = gamas_csrf_cookie();
-    $nonce = rtrim(strtr(base64_encode(random_bytes(12)), '+/', '-_'), '=');
-    $expiry = (string)(time() + GAMAS_CSRF_TTL);
-    $sig = rtrim(strtr(base64_encode(hash_hmac(
-        'sha256',
-        $nonce . '.' . $expiry . '.' . $cookie,
-        gamas_secret(),
-        true
-    )), '+/', '-_'), '=');
-    return $nonce . '.' . $expiry . '.' . $sig;
-}
-
-function gamas_csrf_verify(?string $token): bool
-{
-    $cookie = isset($_COOKIE[GAMAS_CSRF_COOKIE]) ? (string)$_COOKIE[GAMAS_CSRF_COOKIE] : '';
-    if ($token === null || $token === '' || $cookie === '') {
-        return false;
-    }
-
-    $parts = explode('.', $token);
-    if (count($parts) !== 3) {
-        return false;
-    }
-    [$nonce, $expiry, $sig] = $parts;
-
-    if (!ctype_digit($expiry)) {
-        return false;
-    }
-    $expiry = (int)$expiry;
-    if ($expiry < time()) {
-        return false;
-    }
-
-    $expected = rtrim(strtr(base64_encode(hash_hmac(
-        'sha256',
-        $nonce . '.' . (string)$expiry . '.' . $cookie,
-        gamas_secret(),
-        true
-    )), '+/', '-_'), '=');
-
-    return hash_equals($expected, $sig);
 }
 
 // ---------------------------------------------------------------------------
@@ -986,23 +920,4 @@ function gamas_field(array $input, string $key, int $maxLen = 255): string
         $value = substr($value, 0, $maxLen);
     }
     return $value;
-}
-
-/** Normalise an email address, or '' when invalid. */
-function gamas_normalise_email(string $email): string
-{
-    $email = trim($email);
-    if ($email === '' || strlen($email) > 254) {
-        return '';
-    }
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return '';
-    }
-    // Lowercase the entire address so User@example.com and user@example.com
-    // map to the same normalized waitlist record.
-    $at = strrpos($email, '@');
-    if ($at === false) {
-        return '';
-    }
-    return function_exists('mb_strtolower') ? mb_strtolower($email, 'UTF-8') : strtolower($email);
 }

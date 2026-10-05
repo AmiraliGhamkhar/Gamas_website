@@ -62,13 +62,16 @@
   #
   #    >>> TO MAKE www.gamas.bot CANONICAL INSTEAD: see DEPLOY.md §7. <<<
   # ---------------------------------------------------------------------------
-  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
-  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L,NE]
+  # Only redirect requests addressed to the two configured production hosts.
+  # Never reflect an arbitrary Host header into a Location response.
+  RewriteCond %{HTTP_HOST} ^www\.gamas\.bot(?::\d+)?$ [NC]
+  RewriteRule ^ https://gamas.bot%{REQUEST_URI} [R=301,L]
 
+  RewriteCond %{HTTP_HOST} ^gamas\.bot(?::\d+)?$ [NC]
   RewriteCond %{HTTP:X-Forwarded-Proto} ^http$ [NC,OR]
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !^https [NC]
-  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L,NE]
+  RewriteRule ^ https://gamas.bot%{REQUEST_URI} [R=301,L]
 
   # ---------------------------------------------------------------------------
   # 4. Deny everything that should never be served
@@ -153,11 +156,10 @@
   #                                Its value changes per build so it cannot be
   #                                pinned with a static hash. See DEPLOY.md §8
   #                                for how to drop it if you want a strict CSP.
-  #  style-src  'unsafe-inline'  — required. GSAP animates by writing inline
-  #                                element styles, and React sets style props.
-  #                                Dropping this breaks every animation.
+  #  style-src  'unsafe-inline'  — required for small React-controlled style
+  #                                values (for example, the demo progress bar).
   #  font-src 'self'             — fonts are self-hosted from /fonts.
-  #  connect-src 'self'          — /api/lead.php and /api/track.php only.
+  #  connect-src 'self'          — the CTA tracker posts to /api/track.php.
   # ---------------------------------------------------------------------------
   Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests"
 

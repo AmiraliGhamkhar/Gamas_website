@@ -3,16 +3,16 @@ import IsolatedText from './IsolatedText'
 import ResponsiveIllustration from './ResponsiveIllustration'
 
 const formats = [
-  { icon: 'microphone', label: 'صدا', examples: 'ویس · MP3 · M4A · WAV · OGG' },
-  { icon: 'video', label: 'ویدیو', examples: 'MP4 · MKV · MOV · AVI' },
-  { icon: 'presentation', label: 'پاورپوینت', examples: 'PPTX · PPSX · PPT · ODP' },
+  { icon: 'microphone', label: 'صدا', examples: 'MP3 · M4A · WAV · OGG · OPUS · FLAC · WMA · AMR' },
+  { icon: 'video', label: 'ویدیو', examples: 'MP4 · MKV · MOV · AVI · WEBM · ویدیوی گرد تلگرام' },
+  { icon: 'presentation', label: 'PowerPoint', examples: 'PPTX · PPTM · PPSX · PPSM · POTX · POTM · PPT · PPS · POT' },
 ]
 
 const outputs = [
-  'رونوشت فارسی برای جست‌وجو و مرور',
-  'متن و اسلاید کنار هم',
-  'جزوه‌های بلند در چند پیام',
-  'اگر ساخت جزوه خطا بخورد، رونوشت خام می‌آید',
+  'جزوه‌ی مرتب در فایل Word با پسوند DOCX',
+  'رونوشت گفتار در فایل متنی TXT',
+  'متن اسلایدها در کنار گفتارِ ارائه‌های PowerPoint',
+  'اگر ساخت جزوه انجام نشود، متن خام همچنان فرستاده می‌شود',
 ]
 
 export default function Capabilities() {
@@ -20,8 +20,10 @@ export default function Capabilities() {
     <section id="features" className="product-tile product-tile-parchment features-section">
       <div className="container">
         <div className="section-heading features-heading">
-          <h2 className="section-title">فایل خام داخل؛ نکته‌های مرتب بیرون.</h2>
-          <p className="section-description">یک پیام از کلاس، یک جزوه‌ی سبک و آماده‌ی مرور.</p>
+          <h2 className="section-title">از صوت و ویدیو تا جزوه‌ی فارسی.</h2>
+          <p className="section-description">
+            فایل آموزشی را بفرست؛ رونوشت گفتار و نکته‌های درس را برای مرور در تلگرام تحویل بگیر.
+          </p>
         </div>
 
         <div className="features-layout">
@@ -37,13 +39,13 @@ export default function Capabilities() {
             </div>
             <div className="format-limit-note">
               <span className="limit-mark"><bdi dir="ltr">۲GB</bdi></span>
-              <span>تا ۲ گیگابایت · PDF، تصویر و ZIP پشتیبانی نمی‌شوند.</span>
+              <span>سقف پیش‌فرض فایل ۲ گیگابایت است؛ ODP/OTP، PDF، تصویر و ZIP پشتیبانی نمی‌شوند.</span>
             </div>
 
             <div className="output-card">
               <div className="output-card-heading">
-                <span className="output-card-icon"><Icon name="sparkles" size={19} /></span>
-                <div><h3>در خروجی می‌گیری</h3><p>برای فهمیدن، نه فقط ذخیره‌کردن.</p></div>
+                <span className="output-card-icon"><Icon name="notes" size={19} /></span>
+                <div><h3>چه چیزی تحویل می‌گیری؟</h3><p>فایل‌هایی برای خواندن و برگشتن به کلاس.</p></div>
               </div>
               <ul>
                 {outputs.map((item) => (
@@ -56,14 +58,14 @@ export default function Capabilities() {
           <figure className="before-after-visual">
             <div className="before-after-labels" aria-hidden="true">
               <span className="before-label">یادداشت‌های پراکنده</span>
-              <span className="after-label">جزوه‌ی ساختاریافته</span>
+              <span className="after-label">صفحه‌ی مرور</span>
             </div>
             <ResponsiveIllustration
               name="before-after"
               sizes="(max-width: 639px) 394px, 600px"
-              alt="تصویر مفهومی از یادداشت‌های شلوغ که با موجی فیروزه‌ای به صفحه‌ی جزوه‌ی مرتب تبدیل می‌شوند"
+              alt="تصویر مفهومی از یادداشت‌های شلوغ در کنار صفحه‌ای مرتب برای مرور درس"
             />
-            <figcaption>پیش از مرور، همه‌چیز یک‌جا مرتب می‌شود.</figcaption>
+            <figcaption>تصویر مفهومی؛ نمونه‌ی واقعیِ خروجی نیست.</figcaption>
           </figure>
         </div>
       </div>

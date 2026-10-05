@@ -1,120 +1,149 @@
-/* Verification harness for the DESIGN.md / RTL redesign (Phase 5).
-   Dev-only; not wired into package.json. Serve the app on :5173 first. */
+/*
+ * Optional Playwright regression harness for the responsive RTL landing page.
+ * Run a Vite server first and set BASE_URL; Playwright/browser are intentionally
+ * not runtime dependencies of the static cPanel deployment.
+ */
 import { chromium } from 'playwright'
 import fs from 'node:fs'
 
-const BASE = process.env.BASE_URL || 'http://localhost:5173/'
-const OUT = 'docs/screenshots'
-fs.mkdirSync(OUT, { recursive: true })
-
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:4173/'
+const OUT = process.env.VERIFY_OUT || 'docs/screenshots/current'
 const VIEWPORTS = [
-  { w: 320, h: 640, name: '320' },
-  { w: 375, h: 667, name: '375' },
-  { w: 414, h: 896, name: '414' },
-  { w: 768, h: 1024, name: '768' },
-  { w: 834, h: 1112, name: '834' },
-  { w: 1024, h: 768, name: '1024' },
-  { w: 1280, h: 800, name: '1280' },
-  { w: 1440, h: 900, name: '1440' },
+  { w: 320, h: 720 },
+  { w: 360, h: 780 },
+  { w: 375, h: 812 },
+  { w: 414, h: 896 },
+  { w: 640, h: 900 },
+  { w: 768, h: 1024 },
+  { w: 834, h: 1112 },
+  { w: 1024, h: 768 },
+  { w: 1068, h: 900 },
+  { w: 1280, h: 800 },
+  { w: 1440, h: 900 },
 ]
 
+fs.mkdirSync(OUT, { recursive: true })
 const report = { base: BASE, viewports: [], reducedMotion: null, bidi: null }
-
 const browser = await chromium.launch()
+let failed = false
 
 for (const vp of VIEWPORTS) {
   const page = await browser.newPage({ viewport: { width: vp.w, height: vp.h } })
   const errors = []
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
-  page.on('pageerror', (e) => errors.push(String(e)))
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
+  page.on('pageerror', (error) => errors.push(String(error)))
 
-  await page.goto(BASE, { waitUntil: 'networkidle' })
-  await page.waitForTimeout(600)
-
+  const response = await page.goto(BASE, { waitUntil: 'networkidle' })
+  await page.evaluate(async () => {
+    await document.fonts.ready
+    const images = [...document.images]
+    images.forEach((image) => { image.loading = 'eager' })
+    await Promise.all(images.map((image) => image.decode().catch(() => {})))
+  })
   const result = await page.evaluate(() => {
-    const doc = document.documentElement
-    const overflowX = Math.max(doc.scrollWidth, document.body.scrollWidth) - window.innerWidth
-    const imgs = [...document.images].map((img) => ({
-      src: img.currentSrc.split('/').pop() || img.src.split('/').pop(),
-      ok: img.complete && img.naturalWidth > 0,
+    const root = document.documentElement
+    const clientWidth = root.clientWidth || window.innerWidth
+    const scrollWidth = Math.max(root.scrollWidth, document.body.scrollWidth)
+    const images = [...document.images].map((image) => ({
+      src: image.currentSrc || image.src,
+      loaded: image.complete && image.naturalWidth > 0,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+      altPresent: image.hasAttribute('alt'),
     }))
-    const font = getComputedStyle(document.body).fontFamily
-    const fontsLoaded = document.fonts.status
-    const h1Count = document.querySelectorAll('h1').length
-    const skipLink = !!document.querySelector('.skip-link')
-    const landmarks = {
-      header: !!document.querySelector('header'),
-      main: !!document.querySelector('main'),
-      footer: !!document.querySelector('footer'),
-      nav: !!document.querySelector('nav'),
-    }
+    const targetSelectors = [
+      'a.button-primary', 'a.button-secondary-pill', 'button', '.mobile-nav-link',
+      '.footer-nav a', '.copy-handle', '.privacy-details > summary', '.text-link',
+    ].join(',')
+    const smallTargets = [...document.querySelectorAll(targetSelectors)]
+      .filter((element) => {
+        const style = getComputedStyle(element)
+        const rect = element.getBoundingClientRect()
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0
+          && (rect.width < 44 || rect.height < 44)
+      })
+      .map((element) => ({
+        tag: element.tagName.toLowerCase(),
+        text: (element.textContent || element.getAttribute('aria-label') || '').trim().slice(0, 40),
+        width: Math.round(element.getBoundingClientRect().width),
+        height: Math.round(element.getBoundingClientRect().height),
+      }))
     return {
-      overflowX,
-      dir: doc.getAttribute('dir'),
-      lang: doc.getAttribute('lang'),
-      font,
-      fontsLoaded,
-      h1Count,
-      skipLink,
-      landmarks,
-      brokenImages: imgs.filter((i) => !i.ok),
-      imageCount: imgs.length,
-      scrollHeight: doc.scrollHeight,
+      dir: root.getAttribute('dir'),
+      lang: root.getAttribute('lang'),
+      title: document.title,
+      h1Count: document.querySelectorAll('h1').length,
+      skipLink: !!document.querySelector('.skip-link[href="#main-content"]'),
+      landmarks: {
+        header: !!document.querySelector('header'),
+        main: !!document.querySelector('main#main-content'),
+        footer: !!document.querySelector('footer'),
+        navigation: document.querySelectorAll('nav').length >= 2,
+      },
+      overflowX: Math.max(0, scrollWidth - clientWidth),
+      fontFamily: getComputedStyle(document.body).fontFamily,
+      vazirmatnLoaded: document.fonts.check('17px Vazirmatn'),
+      images,
+      smallTargets,
+      formCount: document.querySelectorAll('form').length,
     }
   })
 
-  await page.screenshot({ path: `${OUT}/${vp.name}.png`, fullPage: true })
-  report.viewports.push({ viewport: `${vp.w}x${vp.h}`, ...result, consoleErrors: errors })
-  await page.close()
-}
-
-// Reduced-motion pass (320px)
-{
-  const page = await browser.newPage({ viewport: { width: 320, height: 640 }, reducedMotion: 'reduce' })
-  const errors = []
-  page.on('pageerror', (e) => errors.push(String(e)))
-  await page.goto(BASE, { waitUntil: 'networkidle' })
-  await page.waitForTimeout(400)
-  const gsapActive = await page.evaluate(() => {
-    return document.querySelectorAll('[style*="translate"], [style*="transform"]').length
+  if (process.env.CAPTURE_SCREENSHOTS === '1') {
+    await page.screenshot({ path: `${OUT}/${vp.w}.png`, fullPage: true })
+  }
+  report.viewports.push({
+    viewport: `${vp.w}x${vp.h}`,
+    httpStatus: response?.status() ?? null,
+    ...result,
+    consoleErrors: errors,
   })
-  await page.screenshot({ path: `${OUT}/320-reduced-motion.png`, fullPage: true })
-  report.reducedMotion = { gsapTransformedElements: gsapActive, errors }
+
+  if (!response?.ok() || result.overflowX > 1 || result.dir !== 'rtl' || result.lang !== 'fa'
+    || result.h1Count !== 1 || !result.skipLink || !result.landmarks.main
+    || !result.vazirmatnLoaded || result.images.some((image) => !image.loaded || !image.altPresent)
+    || result.smallTargets.length || result.formCount) {
+    failed = true
+  }
   await page.close()
 }
 
-// Mixed-bidi sanity: Persian sentence + handle + URL + Latin word + digits
+{
+  const page = await browser.newPage({ viewport: { width: 375, height: 812 }, reducedMotion: 'reduce' })
+  await page.goto(BASE, { waitUntil: 'networkidle' })
+  report.reducedMotion = await page.evaluate(() => {
+    const button = document.querySelector('.button-primary')
+    const style = button ? getComputedStyle(button) : null
+    return {
+      requested: matchMedia('(prefers-reduced-motion: reduce)').matches,
+      transitionDuration: style?.transitionDuration ?? null,
+      animationDuration: style?.animationDuration ?? null,
+      scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
+    }
+  })
+  await page.close()
+  if (!report.reducedMotion.requested || report.reducedMotion.scrollBehavior !== 'auto') failed = true
+}
+
 {
   const page = await browser.newPage({ viewport: { width: 414, height: 896 } })
   await page.goto(BASE, { waitUntil: 'networkidle' })
-  const bidi = await page.evaluate(() => {
-    const probe = document.createElement('div')
-    probe.dir = 'rtl'
-    probe.style.cssText = 'position:absolute;visibility:hidden;font-size:17px;width:380px'
-    probe.textContent = 'ربات گاماس را در تلگرام امتحان کنید: @Gamas_bot — https://t.me/Gamas_bot نسخه 2 ویژه کلاس‌ها'
-    document.body.appendChild(probe)
-    const rect = probe.getBoundingClientRect()
-    probe.remove()
-    return { width: rect.width, height: rect.height }
-  })
-  const isolated = await page.evaluate(() => ({
+  report.bidi = await page.evaluate(() => ({
     bdiCount: document.querySelectorAll('bdi').length,
-    ltrSpans: document.querySelectorAll('[dir="ltr"]').length,
+    ltrIsolates: document.querySelectorAll('[dir="ltr"], [lang="en"]').length,
+    rtlRoot: document.documentElement.dir === 'rtl',
   }))
-  report.bidi = { ...bidi, ...isolated }
   await page.close()
+  if (!report.bidi.rtlRoot || report.bidi.bdiCount < 1) failed = true
 }
 
 await browser.close()
-fs.writeFileSync(`${OUT}/verify-report.json`, JSON.stringify(report, null, 2))
-
-let failed = false
-for (const v of report.viewports) {
-  if (v.overflowX > 1) { console.log(`✗ ${v.viewport}: horizontal overflow ${v.overflowX}px`); failed = true }
-  else { console.log(`✓ ${v.viewport}: no overflow (dir=${v.dir}, lang=${v.lang}, h1=${v.h1Count})`) }
-  if (v.brokenImages.length) { console.log(`  ✗ broken images: ${v.brokenImages.map((i) => i.src).join(', ')}`); failed = true }
-  if (v.consoleErrors.length) { console.log(`  ⚠ console errors: ${v.consoleErrors.join(' | ')}`); }
+fs.writeFileSync(`${OUT}/responsive-report.json`, JSON.stringify(report, null, 2))
+for (const item of report.viewports) {
+  const status = item.httpStatus === 200 && item.overflowX <= 1 && !item.smallTargets.length ? '✓' : '✗'
+  console.log(`${status} ${item.viewport}: overflow ${item.overflowX}px; ${item.images.length} images; ${item.smallTargets.length} small targets`)
+  for (const error of item.consoleErrors) console.warn(`  console: ${error}`)
 }
-console.log(`reduced-motion: ${JSON.stringify(report.reducedMotion)}`)
-console.log(`bidi: ${JSON.stringify(report.bidi)}`)
+console.log(`reduced motion: ${JSON.stringify(report.reducedMotion)}`)
+console.log(`bidi isolation: ${JSON.stringify(report.bidi)}`)
 process.exit(failed ? 1 : 0)

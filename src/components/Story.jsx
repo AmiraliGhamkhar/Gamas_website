@@ -2,9 +2,9 @@ import Icon from './Icon'
 import ResponsiveIllustration from './ResponsiveIllustration'
 
 const outcomes = [
-  { icon: 'audio', title: 'از صدا، متن می‌سازد', text: 'گفتار کلاس را برای مرور آماده می‌کند.' },
-  { icon: 'notes', title: 'نکته‌ها را مرتب می‌کند', text: 'سرفصل‌ها و نکات کلیدی را از دل جلسه بیرون می‌کشد.' },
-  { icon: 'presentation', title: 'اسلاید را جا نمی‌اندازد', text: 'متن و محتوای پاورپوینت را کنار هم می‌آورد.' },
+  { icon: 'audio', title: 'گفتار را به متن تبدیل می‌کند', text: 'رونوشت فارسی برای برگشتن به نکته‌های کلاس.' },
+  { icon: 'notes', title: 'مطالب را مرتب می‌کند', text: 'برای مرور، نکته‌ها و موضوع‌های درس را کنار هم می‌گذارد.' },
+  { icon: 'presentation', title: 'از اسلایدها هم کمک می‌گیرد', text: 'در فایل‌های PowerPoint، متن اسلایدها هم وارد جزوه می‌شود.' },
 ]
 
 export default function Story() {
@@ -13,9 +13,9 @@ export default function Story() {
       <div className="container">
         <div className="story-card">
           <div className="story-copy">
-            <h2 className="section-title">حواست به کلاس باشد، نه به جزوه‌نویسی.</h2>
+            <h2 className="section-title">سر کلاس گوش بده؛ جزوه را بعداً مرور کن.</h2>
             <p className="section-description">
-              بعد از کلاس لازم نیست دوباره ساعت‌ها فایل را گوش کنی. گاماس نکته‌های مهم را به یک جزوه‌ی خوانا تبدیل می‌کند تا زودتر برسی به فهمیدن و مرور کردن.
+              جزوه‌نویسی هم‌زمان با کلاس همیشه شدنی نیست. وقتی فایل ضبط‌شده مانده و وقت گوش‌دادن دوباره نداری، گاماس گفتار را به متن فارسی تبدیل می‌کند و نکته‌های درس را برای مرور کنار هم می‌گذارد.
             </p>
 
             <ul className="outcome-list">
@@ -31,19 +31,18 @@ export default function Story() {
             </ul>
 
             <a href="#how" className="text-link">
-              ببین چطور کار می‌کند <Icon name="arrow-left" size={18} />
+              مراحل کار را ببین <Icon name="arrow-left" size={18} />
             </a>
           </div>
 
           <figure className="story-visual">
-            <div className="story-visual-badge"><span className="badge-spark">✦</span> تمرکز روی یادگیری</div>
+            <div className="story-visual-badge"><span className="badge-spark">✦</span> وقت بیشتر برای یادگیری</div>
             <ResponsiveIllustration
               name="student"
-              priority
               sizes="(max-width: 639px) 360px, 600px"
-              alt="تصویر مفهومی سه‌بعدی از دانشجویی که در کلاس با تلفن همراه، درس را ضبط می‌کند"
+              alt="تصویر مفهومی از دانشجویی که در کلاس درس را دنبال می‌کند و یادداشت برمی‌دارد"
             />
-            <figcaption className="story-visual-caption">از جلسه‌ی زنده تا مرورِ راحت‌تر</figcaption>
+            <figcaption className="story-visual-caption">تصویر مفهومی از یک موقعیت آشنا برای دانشجوها</figcaption>
           </figure>
         </div>
       </div>

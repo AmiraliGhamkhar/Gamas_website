@@ -1,6 +1,10 @@
 node_modules
 dist
 
+# Local-only browser artifacts and temporary audit work
+.audit-tmp/
+docs/screenshots/current/
+
 # vite-react-ssg build scratch dirs (both spellings seen across versions)
 .ssg-temp
 .vite-react-ssg-temp

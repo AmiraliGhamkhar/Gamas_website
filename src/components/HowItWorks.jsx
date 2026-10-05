@@ -7,20 +7,20 @@ const steps = [
   {
     n: '۰۱',
     icon: 'telegram',
-    title: 'فایل را بفرست',
-    desc: `ویس، ویدیو یا پاورپوینت را برای ${BOT_HANDLE} بفرست.`,
+    title: 'فایل کلاس را بفرست',
+    desc: `ویس، ویدیو یا پاورپوینت را برای ${BOT_HANDLE} در تلگرام بفرست.`,
   },
   {
     n: '۰۲',
     icon: 'audio',
-    title: 'گاماس مرتبش می‌کند',
-    desc: 'گفتار رونویسی می‌شود؛ متن و محتوای اسلایدها کنار هم می‌آیند.',
+    title: 'گفتار به متن می‌آید',
+    desc: 'هوش مصنوعی گفتار را پیاده می‌کند و در فایل ارائه از متن اسلایدها هم استفاده می‌شود.',
   },
   {
     n: '۰۳',
     icon: 'notes',
-    title: 'جزوه را تحویل بگیر',
-    desc: 'خلاصه‌ی ساختاریافته و رونوشت فارسی در چت منتظرت هستند.',
+    title: 'رونوشت و جزوه را بگیر',
+    desc: 'فایل Word جزوه و رونوشت متنی در همان گفت‌وگو فرستاده می‌شوند.',
   },
 ]
 
@@ -29,8 +29,8 @@ export default function HowItWorks() {
     <section id="how" className="product-tile product-tile-light how-section">
       <div className="container">
         <div className="section-heading how-heading">
-          <h2 className="section-title">از فایل تا جزوه، در سه قدم.</h2>
-          <p className="section-description">همه‌چیز همان‌جایی می‌ماند که فایل را فرستادی: داخل تلگرام.</p>
+          <h2 className="section-title">از فایل کلاس تا جزوه، در سه قدم.</h2>
+          <p className="section-description">گاماس یک ربات تلگرامی است؛ فایل را همان‌جا می‌فرستی و نتیجه را همان‌جا می‌گیری.</p>
         </div>
 
         <div className="how-layout">
@@ -58,18 +58,18 @@ export default function HowItWorks() {
             <ResponsiveIllustration
               name="waveform"
               sizes="(max-width: 639px) 394px, 600px"
-              alt="موج صوتی فیروزه‌ای که در یک تصویر مفهومی به صفحه‌های جزوه‌ی مرتب تبدیل می‌شود"
+              alt="تصویر مفهومی از صدای کلاس و یک صفحه‌ی یادداشت مرتب"
             />
             <figcaption className="waveform-visual-caption">
               <span className="waveform-caption-icon"><Icon name="audio" size={18} /></span>
-              صدا به نکته‌های قابل مرور تبدیل می‌شود
+              گفتار کلاس به متن فارسی تبدیل می‌شود
             </figcaption>
           </figure>
         </div>
 
         <p className="how-privacy-note">
-          فایل‌ها برای ساخت جزوه به سرویس‌های لازم فرستاده می‌شوند؛{' '}
-          <a href="#privacy" className="text-link">جزئیات حریم خصوصی <Icon name="arrow-left" size={16} /></a>
+          برای پردازش، بخش‌های لازم از فایل به سرویس‌های گفتاربه‌متن و ساخت جزوه فرستاده می‌شود؛{' '}
+          <a href="#privacy" className="text-link">جزئیات نگهداری فایل‌ها <Icon name="arrow-left" size={16} /></a>
         </p>
       </div>
     </section>

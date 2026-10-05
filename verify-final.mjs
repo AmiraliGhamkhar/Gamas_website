@@ -1,88 +1,97 @@
-/* Final acceptance check for the humanize/palette/micro-interaction pass. */
-import { chromium } from 'playwright'
+/* Optional Playwright checks for prerendered SEO metadata, assets and local requests. */
+import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import { chromium } from 'playwright'
 
-const BASE = process.env.BASE_URL || 'http://localhost:5173/'
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:4173/'
+const OUT = process.env.VERIFY_OUT || 'docs/screenshots/current'
+fs.mkdirSync(OUT, { recursive: true })
 const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
-const errors = []
-page.on('pageerror', (e) => errors.push(String(e)))
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
-await page.goto(BASE, { waitUntil: 'networkidle' })
-await page.waitForTimeout(500)
-
-const result = await page.evaluate(() => {
-  const out = {}
-  // Eyebrows: pill badges with a status dot directly above headings should be gone.
-  // Heuristic: any inline-flex chip that contains ONLY a dot span + short text inside a centered header stack.
-  out.chipCount = document.querySelectorAll('.chip').length
-  // The old eyebrows were chips placed as first child of header stacks; remaining chips should be hero trust + bento/faq aux only
-  const headerChips = [...document.querySelectorAll('section h2, section h1')].map((h) => {
-    let prev = h.previousElementSibling
-    const chips = []
-    while (prev) { chips.push(prev); prev = prev.previousElementSibling }
-    return chips.filter((c) => c.classList?.contains('chip') || (c.className || '').includes('rounded-pill')).length
-  })
-  out.eyebrowsAboveHeadings = headerChips.reduce((a, b) => a + b, 0)
-
-  // Palette live
-  const cs = getComputedStyle(document.documentElement)
-  out.palette = {
-    canvas: cs.getPropertyValue('--canvas').trim(),
-    primary: cs.getPropertyValue('--primary').trim(),
-    tileDark: cs.getPropertyValue('--tile-dark').trim(),
-  }
-  const btn = document.querySelector('.button-primary')
-  out.buttonBg = getComputedStyle(btn).backgroundColor
-  const darkTile = document.querySelector('.product-tile-dark')
-  out.darkTileBg = getComputedStyle(darkTile).backgroundColor
-  const parchmentTile = document.querySelector('.product-tile-parchment')
-  out.parchmentBg = getComputedStyle(parchmentTile).backgroundColor
-
-  // Micro-interactions present in stylesheet (hover rules live in a media block).
-  // Note: CSSStyleRule exposes an empty cssRules list for CSS nesting, so a
-  // non-empty length check is what distinguishes a container rule from a leaf.
-  const flat = (list) => list.flatMap((r) => (r.cssRules && r.cssRules.length ? flat([...r.cssRules]) : [r]))
-  const rules = [...document.styleSheets].flatMap((s) => { try { return flat([...s.cssRules]) } catch { return [] } })
-  out.hasBtnHover = rules.some((r) => r.selectorText && r.selectorText === '.button-primary:hover')
-  out.hasLinkUnderline = rules.some((r) => r.selectorText && r.selectorText === '.link-underline:hover')
-  out.hoverSelectors = rules.map((r) => r.selectorText).filter((s) => s && s.includes(':hover')).slice(0, 12)
-  out.cardCount = document.querySelectorAll('.surface-card').length
-  out.linkUnderlineUsage = document.querySelectorAll('.link-underline').length
-  out.copyHandleUsage = document.querySelectorAll('.copy-handle').length
-
-  // Body still 17px/1.8 Vazirmatn
-  const body = getComputedStyle(document.body)
-  out.body = { size: body.fontSize, lineHeight: body.lineHeight, family: body.fontFamily.split(',')[0] }
-  return out
-})
-
-// Hover the primary button and confirm the hover tint applies
-const primary = page.locator('.button-primary').first()
-await primary.hover()
-await page.waitForTimeout(250)
-result.primaryHoverBg = await page.evaluate(() => {
-  const el = document.querySelector('.button-primary')
-  return getComputedStyle(el).backgroundColor
-})
-
-// Copy-handle click micro-interaction (footer handle)
-result.copyHandleClicked = await (async () => {
+const localErrors = []
+const requests = []
+page.on('request', (request) => requests.push({ method: request.method(), url: request.url() }))
+page.on('response', (response) => {
   try {
-    // Grant clipboard permission in context; if unavailable, the class flip still proves the interaction
-    await page.context().grantPermissions(['clipboard-write', 'clipboard-read'])
-    const handle = page.locator('.copy-handle').last()
-    await handle.scrollIntoViewIfNeeded()
-    await handle.click()
-    await page.waitForTimeout(200)
-    return await page.evaluate(() => {
-      const el = document.querySelector('.copy-handle.is-copied')
-      return el ? el.textContent.trim() : null
-    })
-  } catch (e) { return `error: ${e.message.slice(0, 80)}` }
-})()
+    if (new URL(response.url()).origin === new URL(BASE).origin && response.status() >= 400) {
+      localErrors.push({ status: response.status(), url: response.url() })
+    }
+  } catch {}
+})
+page.on('pageerror', (error) => localErrors.push({ status: 'pageerror', url: String(error) }))
 
-result.consoleErrors = errors
-fs.writeFileSync('docs/screenshots/final-checks.json', JSON.stringify(result, null, 2))
-console.log(JSON.stringify(result, null, 2))
+const response = await page.goto(BASE, { waitUntil: 'networkidle' })
+await page.evaluate(async () => {
+  await document.fonts.ready
+  const images = [...document.images]
+  images.forEach((image) => { image.loading = 'eager' })
+  await Promise.all(images.map((image) => image.decode().catch(() => {})))
+})
+const report = await page.evaluate(() => {
+  const meta = (selector) => document.querySelector(selector)?.content ?? null
+  const images = [...document.images].map((image) => ({
+    src: image.currentSrc || image.src,
+    alt: image.getAttribute('alt'),
+    loaded: image.complete && image.naturalWidth > 0,
+    naturalSize: `${image.naturalWidth}x${image.naturalHeight}`,
+    declaredSize: `${image.getAttribute('width') || ''}x${image.getAttribute('height') || ''}`,
+  }))
+  const internalLinks = [...document.querySelectorAll('a[href^="#"]')].map((anchor) => ({
+    href: anchor.getAttribute('href'),
+    exists: !!document.getElementById(anchor.getAttribute('href').slice(1)),
+  }))
+  const externalTargets = [...document.querySelectorAll('a[target="_blank"]')].map((anchor) => ({
+    href: anchor.href,
+    rel: anchor.rel,
+    safe: anchor.relList.contains('noopener') && anchor.relList.contains('noreferrer'),
+  }))
+  const jsonLd = [...document.querySelectorAll('script[type="application/ld+json"]')].map((script) => {
+    try { return { valid: true, type: JSON.parse(script.textContent)?.['@type'] || null } }
+    catch (error) { return { valid: false, error: String(error) } }
+  })
+  const resources = performance.getEntriesByType('resource').map((item) => item.name)
+  return {
+    lang: document.documentElement.lang,
+    dir: document.documentElement.dir,
+    title: document.title,
+    description: meta('meta[name="description"]'),
+    canonical: document.querySelector('link[rel="canonical"]')?.href ?? null,
+    ogTitle: meta('meta[property="og:title"]'),
+    ogDescription: meta('meta[property="og:description"]'),
+    ogImage: meta('meta[property="og:image"]'),
+    twitterCard: meta('meta[name="twitter:card"]'),
+    h1Count: document.querySelectorAll('h1').length,
+    images,
+    internalLinks,
+    externalTargets,
+    jsonLd,
+    emailForms: document.querySelectorAll('form, input[type="email"]').length,
+    demoClearlySimulated: /شبیه.سازی|نمونه/.test(document.querySelector('.demo-disclaimer')?.textContent || ''),
+    assetRequests: resources.filter((url) => /\.(?:css|js|woff2|avif|webp|jpe?g|svg)(?:\?|$)/i.test(url)),
+    fontRequests: resources.filter((url) => /\.woff2(?:\?|$)/i.test(url)),
+    leadEndpointRequested: resources.some((url) => /\/api\/lead\.php(?:\?|$)/.test(new URL(url).pathname)),
+    trackingRequestedOnLoad: resources.some((url) => /\/api\/track\.php(?:\?|$)/.test(new URL(url).pathname)),
+  }
+})
+report.httpStatus = response?.status() ?? null
+report.localErrors = localErrors
+report.trackingRequestsOnLoad = requests.filter((request) => /\/api\/track\.php/.test(new URL(request.url).pathname))
+
+assert.equal(response?.status(), 200, 'prerendered page should load successfully')
+assert.equal(report.lang, 'fa')
+assert.equal(report.dir, 'rtl')
+assert.equal(report.h1Count, 1)
+assert.ok(report.title && report.description && report.canonical && report.ogImage, 'basic SEO metadata must be present')
+assert.equal(report.emailForms, 0)
+assert.equal(report.demoClearlySimulated, true, 'the interactive preview must be identified as a simulation')
+assert.equal(report.leadEndpointRequested, false)
+assert.equal(report.trackingRequestedOnLoad, false)
+assert.equal(report.images.some((image) => !image.loaded || image.alt === null), false, 'all images should load and have alt attributes')
+assert.equal(report.internalLinks.some((link) => !link.exists), false, 'all in-page links should resolve')
+assert.equal(report.externalTargets.some((link) => !link.safe), false, 'new-tab links should use noopener and noreferrer')
+assert.equal(report.jsonLd.some((script) => !script.valid), false, 'JSON-LD should parse')
+assert.equal(localErrors.length, 0, 'no failed local asset/API requests or uncaught page errors')
+
+fs.writeFileSync(`${OUT}/metadata-assets-report.json`, JSON.stringify(report, null, 2))
+console.log(JSON.stringify(report, null, 2))
 await browser.close()
