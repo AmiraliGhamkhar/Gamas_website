@@ -14,14 +14,8 @@ export default function Privacy() {
       <div className="container privacy-layout">
         <div className="privacy-copy">
           <h2 className="section-title">فایل‌هایت را با چشم باز بفرست.</h2>
-          <p className="section-description">
-            پردازش صدا و ساخت جزوه به سرویس‌های بیرونی نیاز دارد. فایل‌های موقت پاک می‌شوند؛ رونوشت و جزوه ممکن است در پایگاه‌داده‌ی ربات بمانند.
-          </p>
           <p className="product-source-note privacy-source-note">
             {PRODUCT.source.noticeFa}{' '}
-            <a href={PRODUCT.source.commitUrl} target="_blank" rel="noopener noreferrer">
-              کد بررسی‌شده ({PRODUCT.source.reviewedOn})
-            </a>
           </p>
 
           <div className="privacy-facts">

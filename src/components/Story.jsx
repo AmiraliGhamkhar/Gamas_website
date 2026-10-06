@@ -42,7 +42,7 @@ export default function Story() {
               sizes="(max-width: 360px) calc(100vw - 66px), (max-width: 639px) calc(100vw - 72px), (max-width: 833px) calc(90vw - 66px), (max-width: 1067px) max(330px, calc(42.75vw - 55px)), (max-width: 1123px) 440px, (max-width: 1319px) calc(50vw - 122px), 538px"
               alt="تصویر مفهومی از دانشجویی که در کلاس درس را دنبال می‌کند و یادداشت برمی‌دارد"
             />
-            <figcaption className="story-visual-caption">تصویر مفهومی از یک موقعیت آشنا برای دانشجوها</figcaption>
+            <figcaption className="story-visual-caption">با خیال راحت به درس گوش کن </figcaption>
           </figure>
         </div>
       </div>

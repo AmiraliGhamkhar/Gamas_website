@@ -69,7 +69,6 @@ export default function HowItWorks() {
 
         <p className="how-privacy-note">
           برای پردازش، بخش‌های لازم از فایل به سرویس‌های گفتاربه‌متن و ساخت جزوه فرستاده می‌شود؛{' '}
-          <a href="#privacy" className="text-link">جزئیات نگهداری فایل‌ها <Icon name="arrow-left" size={16} /></a>
         </p>
       </div>
     </section>

@@ -26,9 +26,6 @@ export default function Capabilities() {
       <div className="container">
         <div className="section-heading features-heading">
           <h2 className="section-title">از صوت و ویدیو تا جزوه‌ی فارسی.</h2>
-          <p className="section-description">
-            فایل آموزشی را بفرست؛ رونوشت گفتار و نکته‌های درس را برای مرور در تلگرام تحویل بگیر.
-          </p>
         </div>
 
         <div className="features-layout">
@@ -51,9 +48,6 @@ export default function Capabilities() {
             </div>
             <p className="product-source-note">
               {PRODUCT.source.noticeFa}{' '}
-              <a href={PRODUCT.source.commitUrl} target="_blank" rel="noopener noreferrer">
-                نسخه‌ی کد بررسی‌شده
-              </a>
             </p>
 
             <div className="output-card">
@@ -71,15 +65,15 @@ export default function Capabilities() {
 
           <figure className="before-after-visual">
             <div className="before-after-labels" aria-hidden="true">
-              <span className="before-label">یادداشت‌های پراکنده</span>
-              <span className="after-label">صفحه‌ی مرور</span>
+              <span className="before-label">جزوه مرتب</span>
+              <span className="after-label">یادداشت‌های پراکنده </span>
             </div>
             <ResponsiveIllustration
               name="before-after"
               sizes="(max-width: 360px) calc(100vw - 30px), (max-width: 639px) calc(100vw - 36px), (max-width: 833px) calc(100vw - 64px), (max-width: 1067px) calc(100vw - 80px), 600px"
               alt="تصویر مفهومی از یادداشت‌های شلوغ در کنار صفحه‌ای مرتب برای مرور درس"
             />
-            <figcaption>تصویر مفهومی؛ نمونه‌ی واقعیِ خروجی نیست.</figcaption>
+            <figcaption>به همین سادگی</figcaption>
           </figure>
         </div>
       </div>

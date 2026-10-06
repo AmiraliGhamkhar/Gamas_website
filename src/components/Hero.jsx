@@ -43,9 +43,6 @@ export default function Hero() {
             </a>
           </div>
 
-          {!BOT_IDENTITY_VERIFIED && (
-            <p className="bot-identity-note" role="note">{PRODUCT.bot.identityNoticeFa}</p>
-          )}
 
           <ul className="hero-proof-points" aria-label="فایل‌های آموزشی قابل ارسال">
             {proofPoints.map((point) => (
@@ -81,9 +78,6 @@ export default function Hero() {
               className="hero-phone-image"
             />
           </picture>
-          <figcaption className="hero-image-caption">
-            محتوای روی گوشی انتزاعی است؛ گفت‌وگو یا خروجی واقعی ربات نیست.
-          </figcaption>
         </figure>
       </div>
     </section>
