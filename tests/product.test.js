@@ -15,7 +15,7 @@ test('Telegram username normalization accepts handles, not URLs or malformed ide
   assert.equal(normaliseUsername('https://t.me/GamasBot'), '')
   assert.equal(normaliseUsername('Gamas Bot'), '')
   assert.equal(normaliseUsername('a'.repeat(33)), '')
-  assert.equal(BOT_USERNAME_DEFAULT, 'GamasBot')
+  assert.equal(BOT_USERNAME_DEFAULT, 'Gamas_jozveh_bot')
 })
 
 test('CTA deep-link parameters are the same canonical values used by analytics', () => {

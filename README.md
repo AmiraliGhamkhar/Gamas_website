@@ -13,7 +13,7 @@ npm test
 npm run build       # static production output in dist/
 ```
 
-The default Telegram username (`GamasBot`) is an unverified fallback. Configure the intended handle at build time; the override itself does not prove ownership or live availability:
+The default Telegram username (`Gamas_jozveh_bot`) is the fallback baked into the source. It can still be overridden at build time; the override itself does not prove ownership or live availability:
 
 ```bash
 VITE_BOT_USERNAME=your_bot_username npm run build

@@ -290,18 +290,12 @@ svg { display: block; flex: none; }
 .brand-link { display: inline-flex; min-block-size: 48px; align-items: center; gap: 10px; text-decoration: none; }
 .brand-mark {
   display: inline-flex;
-  inline-size: 42px;
-  block-size: 42px;
+  inline-size: 40px;
+  block-size: 40px;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 15px;
-  background: linear-gradient(145deg, #15759f, #147987);
-  color: white;
-  font-family: var(--font-display);
-  font-size: 23px;
-  line-height: 1;
-  box-shadow: 0 7px 19px -8px rgba(23, 126, 174, 0.65);
+  border-radius: 10px;
+  box-shadow: 0 7px 19px -8px rgba(22, 76, 94, 0.55);
 }
 .brand-name { font-family: var(--font-display); font-size: 23px; line-height: 1.2; }
 .desktop-nav { display: none; align-items: center; gap: 3px; }
