@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Icon from './Icon'
-import { sitePath, tgLink } from '../lib/constants'
-import { trackCTA } from '../lib/track'
+import TelegramCTA from './TelegramCTA'
+import { sitePath } from '../lib/constants'
 
 const navLinks = [
   { href: '#how', label: 'چطور کار می‌کند' },
@@ -73,11 +73,6 @@ export default function Navbar() {
     toggleButtonRef.current?.focus({ preventScroll: true })
   }
 
-  const handleTelegramClick = () => {
-    closeDrawer()
-    trackCTA('navbar')
-  }
-
   return (
     <header className="global-nav">
       <div className="container nav-inner">
@@ -93,16 +88,7 @@ export default function Navbar() {
         </nav>
 
         <div className="nav-actions">
-          <a
-            href={tgLink('navbar')}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackCTA('navbar')}
-            className="button-primary nav-cta"
-          >
-            باز کردن ربات تلگرام
-            <Icon name="arrow-left" size={16} />
-          </a>
+          <TelegramCTA placement="navbar" showTelegram={false} arrowSize={16} className="nav-cta" aria-label="باز کردن ربات گاماس از ناوبری" />
           <button
             ref={toggleButtonRef}
             type="button"
@@ -139,18 +125,14 @@ export default function Navbar() {
               {link.label}<Icon name="arrow-left" size={17} />
             </a>
           ))}
-          <a
-            href={tgLink('navbar')}
+          <TelegramCTA
+            placement="navbar"
+            telegramSize={19}
+            arrowSize={17}
+            className="mobile-drawer-cta"
             tabIndex={open ? 0 : -1}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleTelegramClick}
-            className="button-primary mobile-drawer-cta"
-          >
-            <Icon name="telegram" size={19} />
-            باز کردن ربات تلگرام
-            <Icon name="arrow-left" size={17} />
-          </a>
+            onClick={closeDrawer}
+          />
         </div>
       </nav>
     </header>

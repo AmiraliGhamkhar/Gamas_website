@@ -3,7 +3,7 @@
 /**
  * Gamas — shared bootstrap for /api/*.php
  * ---------------------------------------------------------------------------
- * Minimum PHP syntax target: 7.4
+ * Minimum PHP syntax target: 8.2
  * No framework, no Composer, no external dependencies.
  *
  * Every directive below is PHP_INI_ALL (settable at runtime). The
@@ -28,12 +28,12 @@ if (defined('GAMAS_BOOTSTRAP')) {
 define('GAMAS_BOOTSTRAP', true);
 
 // ---------------------------------------------------------------------------
-// 1. Version guard — fail loudly but generically on ancient PHP
+// 1. Version guard — fail loudly but generically on unsupported PHP
 // ---------------------------------------------------------------------------
-if (PHP_VERSION_ID < 70400) {
+if (PHP_VERSION_ID < 80200) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['error' => 'server_error', 'message' => 'PHP 7.4+ required.']);
+    echo json_encode(['error' => 'server_error', 'message' => 'PHP 8.2+ required.']);
     exit;
 }
 
@@ -373,11 +373,22 @@ function gamas_data_dir(): string
 /**
  * HMAC key for short-lived IP rate-limit pseudonyms. Stored privately with
  * restrictive permissions and a lock so concurrent first requests agree.
+ *
+ * Prefer the GAMAS_HMAC_KEY environment variable (set it in cPanel →
+ * Environment Variables) so the key does not live next to the data it
+ * pseudonymizes. Falls back to the locked on-disk key for shared hosting
+ * without env support.
  */
 function gamas_secret(): string
 {
     static $secret = null;
     if ($secret !== null) {
+        return $secret;
+    }
+
+    $envKey = getenv('GAMAS_HMAC_KEY');
+    if (is_string($envKey) && strlen($envKey) >= 64) {
+        $secret = $envKey;
         return $secret;
     }
 

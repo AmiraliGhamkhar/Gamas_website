@@ -1,7 +1,7 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import { PRODUCT, tgLink } from '../lib/constants'
-import { trackCTA } from '../lib/track'
+import TelegramCTA from './TelegramCTA'
+import { PRODUCT } from '../lib/constants'
 
 const deliverables = [
   `جزوه‌ی دسته‌بندی‌شده در فایل Word (${PRODUCT.outputs.notesExtension})`,
@@ -19,17 +19,7 @@ export default function FinalCTA() {
           <p className="cta-description">
             ربات گاماس را در تلگرام باز کن و فایل آموزشی‌ات را بفرست. نتیجه‌ی پردازش در همان گفت‌وگو می‌رسد.
           </p>
-          <a
-            href={tgLink('final_cta')}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackCTA('final_cta')}
-            className="button-primary cta-main-button"
-          >
-            <Icon name="telegram" size={21} />
-            باز کردن ربات تلگرام
-            <Icon name="arrow-left" size={19} className="cta-arrow" />
-          </a>
+          <TelegramCTA placement="final_cta" telegramSize={21} arrowSize={19} className="cta-main-button" aria-label="ارسال فایل کلاس در تلگرام — باز کردن ربات گاماس" />
           <div className="cta-micro-proof"><Icon name="check" size={16} /> ربات تلگرامی گاماس <span>·</span> فایل را در همان گفت‌وگو می‌فرستی</div>
         </div>
 

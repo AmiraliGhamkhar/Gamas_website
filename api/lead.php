@@ -8,6 +8,7 @@
 
 declare(strict_types=1);
 
+@error_log('gamas lead tombstone hit');
 http_response_code(410);
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, private');

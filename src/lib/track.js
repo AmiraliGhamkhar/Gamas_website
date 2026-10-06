@@ -6,6 +6,9 @@ import { landingEventFor, sitePath } from './constants'
 
 export function trackCTA(section) {
   try {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('gamas_no_track') === '1') return
+    if (typeof navigator !== 'undefined' && navigator.doNotTrack === '1') return
+    if (typeof globalThis !== 'undefined' && globalThis.window?.doNotTrack === '1') return
     const body = JSON.stringify({ section: landingEventFor(section) })
     // Use keepalive for unload, but fall back to fetch when the browser refuses
     // to queue the beacon (sendBeacon returns false in that case).

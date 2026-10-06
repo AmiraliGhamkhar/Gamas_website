@@ -1,21 +1,9 @@
-import { tgLink } from '../lib/constants'
-import { trackCTA } from '../lib/track'
-import Icon from './Icon'
+import TelegramCTA from './TelegramCTA'
 
 export default function MobileSticky() {
   return (
     <div className="floating-sticky-bar">
-      <a
-        href={tgLink('mobile_sticky')}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => trackCTA('mobile_sticky')}
-        className="button-primary sticky-cta"
-      >
-        <Icon name="telegram" size={19} />
-        باز کردن ربات تلگرام
-        <Icon name="arrow-left" size={17} className="cta-arrow" />
-      </a>
+      <TelegramCTA placement="mobile_sticky" telegramSize={19} arrowSize={17} className="sticky-cta" />
     </div>
   )
 }

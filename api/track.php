@@ -9,7 +9,7 @@
  * POST only. There is no public read endpoint. The API is restricted to exact
  * allowed origins and uses short-window rate limiting for abuse control.
  *
- * Minimum PHP syntax target: 7.4. pdo_sqlite is optional (NDJSON fallback).
+ * Minimum PHP syntax target: 8.2. pdo_sqlite is optional (NDJSON fallback).
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ if ($minuteLimit === false) {
     gamas_json(['error' => 'rate_limited'], 429, ['Retry-After' => '60']);
 }
 
-$hourLimit = gamas_rate_limit('track_hour', 200, 3600);
+$hourLimit = gamas_rate_limit('track_hour', 50, 3600);
 if ($hourLimit === null) {
     gamas_json(['error' => 'storage_unavailable'], 503);
 }

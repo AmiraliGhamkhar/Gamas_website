@@ -1,13 +1,10 @@
 import { sitePath } from '../lib/constants'
 
-export default function Icon({ name, size = 22, className = '', title }) {
-  const labelProps = title
-    ? { role: 'img', 'aria-label': title }
-    : { 'aria-hidden': true, focusable: 'false' }
-
+export default function Icon({ name, size = 22, className = '' }) {
   return (
     <svg
-      {...labelProps}
+      aria-hidden="true"
+      focusable="false"
       className={`gamas-icon ${className}`.trim()}
       width={size}
       height={size}

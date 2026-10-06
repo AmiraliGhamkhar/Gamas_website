@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
-import Icon from './Icon'
-import { BOT_HANDLE, sitePath, tgLink } from '../lib/constants'
-import { trackCTA } from '../lib/track'
+import { BOT_HANDLE, sitePath } from '../lib/constants'
+import TelegramCTA from './TelegramCTA'
 
 const footerLinks = [
   { href: '#how', label: 'چطور کار می‌کند' },
@@ -53,16 +52,7 @@ export default function Footer() {
           </div>
           <div className="footer-start">
             <h2>شروع کن</h2>
-            <a
-              href={tgLink('footer')}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackCTA('footer')}
-              className="button-primary footer-cta"
-            >
-              <Icon name="telegram" size={17} />
-              باز کردن ربات تلگرام
-            </a>
+            <TelegramCTA placement="footer" telegramSize={17} showArrow={false} className="footer-cta footer-cta-text" aria-label="باز کردن ربات گاماس از فوتر" />
             <button
               type="button"
               onClick={copyHandle}

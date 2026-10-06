@@ -1,13 +1,12 @@
 import {
   BOT_IDENTITY_VERIFIED,
   BOT_USERNAME,
-  BOT_USERNAME_CONFIGURED,
   PRODUCT,
   landingEventFor,
   normaliseUsername,
 } from './product.js'
 
-export { BOT_IDENTITY_VERIFIED, BOT_USERNAME, BOT_USERNAME_CONFIGURED, PRODUCT, landingEventFor, normaliseUsername }
+export { BOT_IDENTITY_VERIFIED, BOT_USERNAME, PRODUCT, landingEventFor, normaliseUsername }
 export const BOT_HANDLE = `@${BOT_USERNAME}`
 export const BOT_URL_BASE = `https://t.me/${BOT_USERNAME}`
 

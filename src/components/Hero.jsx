@@ -1,6 +1,6 @@
 import Icon from './Icon'
-import { BOT_IDENTITY_VERIFIED, PRODUCT, sitePath, tgLink } from '../lib/constants'
-import { trackCTA } from '../lib/track'
+import TelegramCTA from './TelegramCTA'
+import { sitePath } from '../lib/constants'
 
 const proofPoints = [
   { icon: 'microphone', label: 'ویس و فایل صوتی' },
@@ -26,17 +26,7 @@ export default function Hero() {
           </p>
 
           <div className="hero-actions">
-            <a
-              href={tgLink('hero')}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackCTA('hero')}
-              className="button-primary hero-primary-cta"
-            >
-              <Icon name="telegram" size={20} />
-              باز کردن ربات تلگرام
-              <Icon name="arrow-left" size={18} className="cta-arrow" />
-            </a>
+            <TelegramCTA placement="hero" telegramSize={20} arrowSize={18} className="hero-primary-cta" aria-label="شروع در تلگرام — باز کردن ربات گاماس" />
             <a href="#demo" className="button-secondary-pill hero-secondary-cta">
               <span className="play-dot" aria-hidden="true">▶</span>
               دیدن نمونه‌ی نمایشی
