@@ -5,7 +5,7 @@
  */
 const env = import.meta.env ?? {}
 
-export const BOT_USERNAME_DEFAULT = 'GamasBot'
+export const BOT_USERNAME_DEFAULT = 'Gamas_jozveh_bot'
 
 /** Return a valid Telegram username without a leading @, or an empty string. */
 export function normaliseUsername(raw) {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Icon from './Icon'
-import { tgLink } from '../lib/constants'
+import { sitePath, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const navLinks = [
@@ -82,7 +82,7 @@ export default function Navbar() {
     <header className="global-nav">
       <div className="container nav-inner">
         <a href="#top" className="brand-link" aria-label="گاماس — صفحه‌ی اصلی">
-          <span className="brand-mark">گ</span>
+          <img src={sitePath('logo-mark.svg')} alt="" width="42" height="42" className="brand-mark" />
           <span className="brand-name">گاماس</span>
         </a>
 

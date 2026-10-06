@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import Icon from './Icon'
-import { BOT_HANDLE, tgLink } from '../lib/constants'
+import { BOT_HANDLE, sitePath, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const footerLinks = [
@@ -36,7 +36,7 @@ export default function Footer() {
       <div className="container footer-layout">
         <div className="footer-brand-block">
           <a href="#top" className="brand-link" aria-label="گاماس — صفحه‌ی اصلی">
-            <span className="brand-mark">گ</span>
+            <img src={sitePath('logo-mark.svg')} alt="" width="42" height="42" className="brand-mark" />
             <span className="brand-name">گاماس</span>
           </a>
           <p>از صدای کلاس، جزوه‌ای که می‌شود خواند.</p>
