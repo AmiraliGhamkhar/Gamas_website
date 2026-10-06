@@ -1,12 +1,10 @@
 /* Optional Playwright interaction checks for navigation, demo, FAQ and CTA tracking. */
 import assert from 'node:assert/strict'
-import fs from 'node:fs'
 import { chromium } from 'playwright'
+import { BASE, ensureOut, writeReport, gotoAndWarmup } from './scripts/verify-helpers.mjs'
 import { landingEventFor } from './src/lib/product.js'
 
-const BASE = process.env.BASE_URL || 'http://127.0.0.1:4173/'
-const OUT = process.env.VERIFY_OUT || 'docs/screenshots/current'
-fs.mkdirSync(OUT, { recursive: true })
+ensureOut()
 const browser = await chromium.launch()
 const context = await browser.newContext({ viewport: { width: 320, height: 720 } })
 const report = { base: BASE, initial: null, mobileNav: null, faq: null, demo: null, reducedMotionDemo: null, tracking: null }
@@ -31,7 +29,7 @@ const page = await context.newPage()
 const pageRequests = []
 page.on('request', (request) => pageRequests.push({ method: request.method(), url: request.url() }))
 page.on('popup', (popup) => { void popup.close().catch(() => {}) })
-await page.goto(BASE, { waitUntil: 'networkidle' })
+await gotoAndWarmup(page)
 
 report.initial = await page.evaluate(() => ({
   formCount: document.querySelectorAll('form').length,
@@ -135,6 +133,5 @@ assert.equal(trackedRequests.some((request) => {
 }), true, 'CTA event should contain its section label')
 assert.equal(report.tracking.noLeadEndpoint, true)
 
-fs.writeFileSync(`${OUT}/interaction-report.json`, JSON.stringify(report, null, 2))
-console.log(JSON.stringify(report, null, 2))
+writeReport('interaction-report.json', report)
 await browser.close()

@@ -108,6 +108,7 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     '  <url>',
     `    <loc>${siteOrigin}${prefix}/</loc>`,
+    `    <lastmod>${new Date().toISOString().slice(0, 10)}</lastmod>`,
     '  </url>',
     '</urlset>',
     '',
@@ -278,10 +279,12 @@ if (offenders.length) {
 // ---------------------------------------------------------------------------
 const htaccess = path.join(dist, '.htaccess')
 let expectedScriptHashes = []
+let expectedStyleHashesList = []
 if (fs.existsSync(htaccess)) {
   let htContent = fs.readFileSync(htaccess, 'utf8')
   if (configuredBase !== '/' && /^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
     htContent = htContent.replace(/^(\s*RewriteBase\s+)\/\s*$/m, `$1${configuredBase}`)
+    htContent = htContent.replace(/^(\s*ErrorDocument\s+404\s+)\/\S*\s*$/m, `$1${configuredBase}404.html`)
   }
 
   const indexFile = path.join(dist, 'index.html')
@@ -295,6 +298,13 @@ if (fs.existsSync(htaccess)) {
     const uniqueHashes = [...new Set(inlineScripts)]
     expectedScriptHashes = uniqueHashes
 
+    const inlineStyles = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)]
+      .map(([, body]) => body)
+      .filter((body) => body.length > 0)
+      .map((body) => `sha256-${crypto.createHash('sha256').update(body, 'utf8').digest('base64')}`)
+    const uniqueStyleHashes = [...new Set(inlineStyles)]
+    expectedStyleHashesList = uniqueStyleHashes
+
     if (!uniqueHashes.length) {
       fail('no inline scripts found; review the CSP template rather than shipping a permissive fallback')
     } else if (!htContent.includes('__GAMAS_SCRIPT_HASHES__')) {
@@ -302,6 +312,12 @@ if (fs.existsSync(htaccess)) {
     } else {
       htContent = htContent.replace('__GAMAS_SCRIPT_HASHES__', uniqueHashes.map((hash) => `'${hash}'`).join(' '))
       ok(`CSP allowlists ${uniqueHashes.length} exact inline script hash${uniqueHashes.length === 1 ? '' : 'es'}`)
+    }
+    if (!htContent.includes('__GAMAS_STYLE_HASHES__')) {
+      fail('.htaccess CSP style-hash placeholder is missing; refusing to ship an unverified inline-style policy')
+    } else {
+      htContent = htContent.replace('__GAMAS_STYLE_HASHES__', uniqueStyleHashes.map((hash) => `'${hash}'`).join(' '))
+      ok(`CSP allowlists ${uniqueStyleHashes.length} exact inline style hash${uniqueStyleHashes.length === 1 ? '' : 'es'}`)
     }
 
     if (/\sstyle\s*=/i.test(html)) {
@@ -320,19 +336,36 @@ if (fs.existsSync(htaccess)) {
     fail('Content-Security-Policy header is missing from dist/.htaccess')
   } else {
     const csp = cspMatch[1]
-    if (/__GAMAS_SCRIPT_HASHES__|unsafe-inline|unsafe-eval/i.test(csp)) {
+    if (/__GAMAS_(SCRIPT|STYLE)_HASHES__|unsafe-inline|unsafe-eval/i.test(csp)) {
       fail('CSP contains an unresolved placeholder or an unsafe inline/eval source')
     }
     if (!/script-src\s+'self'\s+'sha256-[A-Za-z0-9+/=]+'/.test(csp)) {
       fail('CSP does not contain a self source and a generated SHA-256 script source')
     }
-    const policyHashes = [...csp.matchAll(/'sha256-([A-Za-z0-9+/=]+)'/g)].map(([, hash]) => `sha256-${hash}`)
+    const directives = csp.split(';').map((s) => s.trim())
+    const hashesOf = (name) => {
+      const directive = directives.find((d) => d === name || d.startsWith(`${name} `))
+      if (!directive) return []
+      return [...directive.matchAll(/'sha256-([A-Za-z0-9+/=]+)'/g)].map((m) => `sha256-${m[1]}`)
+    }
+    const policyHashes = hashesOf('script-src')
     const expectedHashes = new Set(expectedScriptHashes)
     if (policyHashes.length !== expectedHashes.size || policyHashes.some((hash) => !expectedHashes.has(hash))) {
       fail('CSP inline-script hashes do not exactly match the prerendered HTML')
     }
     if (!/style-src\s+'self'(?:\s|;)/.test(csp) || !/style-src-attr\s+'none'/.test(csp)) {
       fail('CSP must restrict styles to same-origin stylesheets and prohibit inline style attributes')
+    }
+    const policyStyleHashes = hashesOf('style-src')
+    const expectedStyleHashes = new Set(expectedStyleHashesList)
+    if (policyStyleHashes.length !== expectedStyleHashes.size || policyStyleHashes.some((hash) => !expectedStyleHashes.has(hash))) {
+      fail('CSP inline-style hashes do not exactly match the prerendered HTML')
+    }
+    if (!/report-uri\s+\/api\/csp-report\.php/.test(csp)) {
+      fail('CSP must send violation reports to /api/csp-report.php')
+    }
+    if (policyStyleHashes.length !== expectedStyleHashes.size || policyStyleHashes.some((hash) => !expectedStyleHashes.has(hash))) {
+      fail('CSP inline-style hashes do not exactly match the prerendered HTML')
     }
   }
 

@@ -82,12 +82,13 @@ export default defineConfig(({ mode }) => {
     ssgOptions: {
       script: 'async',
       formatting: 'minify',
-      // No critters/beasties options on purpose. vite-react-ssg only runs its
-      // critical-CSS pass when the optional `beasties` (or legacy `critters`)
-      // peer dependency is installed; without one it skips silently and the
-      // emitted dist/index.html contains zero inline <style> blocks. To turn
-      // inlining on: add `beasties` as a devDependency and set `beastiesOptions`
-      // here (`crittersOptions` is only a deprecated alias).
+      // Critical CSS is inlined by `beasties` when installed; without it
+      // vite-react-ssg skips silently and dist/index.html ships zero inline
+      // <style> blocks. `beasties` is a devDependency, so inlining is on.
+      beastiesOptions: {
+        pruneSource: false,
+        logLevel: 'warn',
+      },
       onFinished() {
         console.log('SSG finished')
       },

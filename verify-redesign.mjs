@@ -4,10 +4,9 @@
  * not runtime dependencies of the static cPanel deployment.
  */
 import { chromium } from 'playwright'
-import fs from 'node:fs'
+import { BASE, OUT, ensureOut, writeReport, gotoAndWarmup } from './scripts/verify-helpers.mjs'
 
-const BASE = process.env.BASE_URL || 'http://127.0.0.1:4173/'
-const OUT = process.env.VERIFY_OUT || 'docs/screenshots/current'
+ensureOut()
 const VIEWPORTS = [
   { w: 320, h: 720 },
   { w: 360, h: 780 },
@@ -22,7 +21,7 @@ const VIEWPORTS = [
   { w: 1440, h: 900 },
 ]
 
-fs.mkdirSync(OUT, { recursive: true })
+ensureOut()
 const report = { base: BASE, viewports: [], reducedMotion: null, bidi: null }
 const browser = await chromium.launch()
 let failed = false
@@ -33,13 +32,7 @@ for (const vp of VIEWPORTS) {
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
   page.on('pageerror', (error) => errors.push(String(error)))
 
-  const response = await page.goto(BASE, { waitUntil: 'networkidle' })
-  await page.evaluate(async () => {
-    await document.fonts.ready
-    const images = [...document.images]
-    images.forEach((image) => { image.loading = 'eager' })
-    await Promise.all(images.map((image) => image.decode().catch(() => {})))
-  })
+  const response = await gotoAndWarmup(page)
   const result = await page.evaluate(() => {
     const root = document.documentElement
     const clientWidth = root.clientWidth || window.innerWidth
@@ -138,7 +131,7 @@ for (const vp of VIEWPORTS) {
 }
 
 await browser.close()
-fs.writeFileSync(`${OUT}/responsive-report.json`, JSON.stringify(report, null, 2))
+writeReport('responsive-report.json', report)
 for (const item of report.viewports) {
   const status = item.httpStatus === 200 && item.overflowX <= 1 && !item.smallTargets.length ? '✓' : '✗'
   console.log(`${status} ${item.viewport}: overflow ${item.overflowX}px; ${item.images.length} images; ${item.smallTargets.length} small targets`)

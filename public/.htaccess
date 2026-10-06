@@ -20,6 +20,8 @@
   DirectoryIndex index.html
 </IfModule>
 
+ErrorDocument 404 /404.html
+
 <IfModule mod_autoindex.c>
   Options -Indexes -MultiViews
 </IfModule>
@@ -156,7 +158,7 @@
   # font-src 'self'    — fonts are self-hosted from /fonts.
   # connect-src 'self' — the CTA tracker posts to /api/track.php.
   # ---------------------------------------------------------------------------
-  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' __GAMAS_SCRIPT_HASHES__; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' __GAMAS_SCRIPT_HASHES__; script-src-attr 'none'; style-src 'self' __GAMAS_STYLE_HASHES__; style-src-attr 'none'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; worker-src 'self'; report-uri /api/csp-report.php; upgrade-insecure-requests"
 
   # --- Cache-Control, driven by the env tags set in §5 ---
   # index.html: always revalidate so a new deploy is picked up immediately

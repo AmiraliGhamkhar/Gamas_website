@@ -1,32 +1,16 @@
 /* Optional Playwright checks for prerendered SEO metadata, assets and local requests. */
 import assert from 'node:assert/strict'
-import fs from 'node:fs'
 import { chromium } from 'playwright'
+import { ensureOut, writeReport, gotoAndWarmup, collectLocalErrors } from './scripts/verify-helpers.mjs'
 
-const BASE = process.env.BASE_URL || 'http://127.0.0.1:4173/'
-const OUT = process.env.VERIFY_OUT || 'docs/screenshots/current'
-fs.mkdirSync(OUT, { recursive: true })
+ensureOut()
 const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
-const localErrors = []
+const localErrors = collectLocalErrors(page)
 const requests = []
 page.on('request', (request) => requests.push({ method: request.method(), url: request.url() }))
-page.on('response', (response) => {
-  try {
-    if (new URL(response.url()).origin === new URL(BASE).origin && response.status() >= 400) {
-      localErrors.push({ status: response.status(), url: response.url() })
-    }
-  } catch {}
-})
-page.on('pageerror', (error) => localErrors.push({ status: 'pageerror', url: String(error) }))
 
-const response = await page.goto(BASE, { waitUntil: 'networkidle' })
-await page.evaluate(async () => {
-  await document.fonts.ready
-  const images = [...document.images]
-  images.forEach((image) => { image.loading = 'eager' })
-  await Promise.all(images.map((image) => image.decode().catch(() => {})))
-})
+const response = await gotoAndWarmup(page)
 const report = await page.evaluate(() => {
   const meta = (selector) => document.querySelector(selector)?.content ?? null
   const images = [...document.images].map((image) => ({
@@ -92,6 +76,5 @@ assert.equal(report.externalTargets.some((link) => !link.safe), false, 'new-tab 
 assert.equal(report.jsonLd.some((script) => !script.valid), false, 'JSON-LD should parse')
 assert.equal(localErrors.length, 0, 'no failed local asset/API requests or uncaught page errors')
 
-fs.writeFileSync(`${OUT}/metadata-assets-report.json`, JSON.stringify(report, null, 2))
-console.log(JSON.stringify(report, null, 2))
+writeReport('metadata-assets-report.json', report)
 await browser.close()

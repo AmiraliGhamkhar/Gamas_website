@@ -12,7 +12,7 @@ This repository builds a pre-rendered React/Vite site for static Apache hosting.
 | Canonical host | `gamas.bot` (non-www) |
 | Deploy path | root of `public_html/` (`VITE_BASE=/`) |
 | Build | Node 20.19+, 22.13+, or 24+ on a local machine/CI |
-| Server runtime | Apache 2.4 and maintained PHP (8.2+ recommended; 7.4 compatibility floor) |
+| Server runtime | Apache 2.4 and PHP 8.2+ (see `api/bootstrap.php` version guard) |
 | Data storage | Private account-home directory; SQLite for clicks if `pdo_sqlite` exists, otherwise NDJSON |
 | Email collection | None on the current website; `api/lead.php` returns HTTP 410 |
 
@@ -25,7 +25,13 @@ npm ci
 npm run lint
 npm test
 npm run build
+node scripts/images.mjs
 ```
+
+CI (`.github/workflows/ci.yml`) runs lint, tests, build, the image
+inventory, and all three Playwright verify harnesses against a preview
+server. Keep the last two release zips for rollback; the zip itself is
+built by CI and is git-ignored (`gamas-cpanel.zip` must never be hand-edited).
 
 The build runs `vite-react-ssg` and `scripts/postbuild.mjs`. Postbuild removes SSG manifests; emits base-aware `robots.txt`, `sitemap.xml` and `llms.txt`; hashes the exact prerendered inline scripts into the Apache CSP; and checks metadata, local HTML/CSS assets, `.htaccess`, deployment base and sensitive-file exclusions. It fails on unresolved placeholders or inline style/event-handler attributes.
 
@@ -168,13 +174,42 @@ A raw `curl` request is not a browser test: after deployment, also open the page
 
 ## 8. Content Security Policy
 
-The build-generated policy allows same-origin scripts plus SHA-256 hashes of the exact inline scripts present in the prerendered HTML (SSG bootstrap and JSON-LD). It uses `style-src 'self'` and `style-src-attr 'none'`; React UI state is represented with CSS classes/data attributes, not inline style attributes. Fonts, images, API connections and media are self-hosted/same-origin. If you add an inline script, the postbuild hash allowlist updates automatically; still review its source. If you add an external service, update CSP only for the exact required origin and verify it in a browser console; do not add broad wildcards. Do not upload `public/.htaccess` directly: deploy the generated `dist/.htaccess` so its hash placeholder has been replaced.
+The build-generated policy allows same-origin scripts plus SHA-256 hashes of the exact inline scripts present in the prerendered HTML (SSG bootstrap and JSON-LD), plus SHA-256 hashes of the exact inlined critical-CSS `<style>` blocks emitted by `beasties`. It uses `style-src-attr 'none'`; React UI state is represented with CSS classes/data attributes, not inline style attributes. Violation reports go to same-origin `/api/csp-report.php` via `report-uri` (see `nginx.sample.conf` for the Nginx mirror). Fonts, images, API connections and media are self-hosted/same-origin. If you add an inline script or the inlined CSS changes, the postbuild hash allowlist updates automatically; still review its source. If you add an external service, update CSP only for the exact required origin and verify it in a browser console; do not add broad wildcards. Do not upload `public/.htaccess` directly: deploy the generated `dist/.htaccess` so its hash placeholders have been replaced.
 
 The demo shown on the page is an interactive simulation. It is not connected to a live bot response. Product file handling, external providers and bot-side retention are described in the website privacy section and the public bot repository; confirm live bot configuration separately.
 
 ## 9. Rollback and operations
 
 Keep a copy of the previous **static build and API code** before an upload. Re-uploading them can roll back page code, but it does not reverse a database schema migration, restore deleted lead data, or purge old copies from backups. Keep private backups protected and apply the same retention policy to them.
+
+Rollback drill (keep the last two dated release zips, e.g. `gamas-2026-10-07.zip`):
+
+```bash
+# build the release
+npm ci && npm run lint && npm test && npm run build
+# pack dist/ + api/ (never the repo root, never gamas_data/)
+zip -r gamas-$(date +%F).zip dist api
+# to roll back: re-upload the previous zip's dist/ contents to public_html/
+# and its api/ over public_html/api/, then re-run the §6 smoke checks
+```
+
+Monitoring: put one uptime check on `https://gamas.bot/` (expect 200 + `lang="fa"`)
+and one on `https://gamas.bot/api/track.php` via OPTIONS (expect 204). Alert on
+any non-2xx or on a missing `content-security-policy` response header.
+
+Backups: copy `~/gamas_data/gamas.sqlite` weekly to private backup storage
+(`sqlite3 ~/gamas_data/gamas.sqlite ".backup ~/backups/gamas-$(date +%F).sqlite"`),
+retain 4 copies, and restore-test one copy per quarter. Apply the 90-day click
+retention to backups as well.
+
+Secrets: set `GAMAS_HMAC_KEY` (64+ hex chars, e.g. from
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
+in cPanel → Environment Variables so the rate-limit key does not live next to
+the data it pseudonymizes. Rotate by replacing the value; old buckets expire
+within an hour.
+
+To opt out of CTA analytics in a browser: enable Do Not Track, or run
+`localStorage.setItem('gamas_no_track','1')` on the site origin.
 
 For storage failures, the static page still renders; click tracking may fail. Since tracking is analytics only, it must not block the Telegram link. The browser-facing call is fire-and-forget and does not use `localhost`.
 
