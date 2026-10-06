@@ -14,7 +14,7 @@ export default function Privacy() {
       <div className="container privacy-layout">
         <div className="privacy-copy">
           <h2 className="section-title">فایل‌هایت را با چشم باز بفرست.</h2>
-          <p className="product-source-note privacy-source-note">
+          <p className="product-source-note">
             {PRODUCT.source.noticeFa}{' '}
           </p>
 

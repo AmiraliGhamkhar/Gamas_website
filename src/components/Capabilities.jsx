@@ -40,7 +40,7 @@ export default function Capabilities() {
               ))}
             </div>
             <div className="format-limit-note">
-              <span className="limit-mark"><bdi dir="ltr">۲GB</bdi></span>
+              <span className="limit-mark"><IsolatedText>{PRODUCT.files.defaultMaxLabelFa}</IsolatedText></span>
               <span>
                 سقف پیش‌فرض فایل {PRODUCT.files.defaultMaxLabelFa} است؛{' '}
                 <IsolatedText>{PRODUCT.files.unsupported.join('، ')}</IsolatedText> پشتیبانی نمی‌شوند.
@@ -60,6 +60,13 @@ export default function Capabilities() {
                   <li key={item}><span className="output-check"><Icon name="check" size={13} /></span><IsolatedText>{item}</IsolatedText></li>
                 ))}
               </ul>
+              <details className="output-sample">
+                <summary>نمونه‌ی ویراست‌شده‌ی خروجی (متن واقعی، بدون داده‌ی کاربر)</summary>
+                <div className="output-sample-body" dir="rtl">
+                  <p><strong>رونوشت (گزیده):</strong> «…پس انرژی جنبشی برابر است با یک‌دوم ام‌وی‌دو؛ این رابطه را برای مسئله‌ی بعد نگه دارید…»</p>
+                  <p><strong>جزوه (گزیده):</strong> تعریف انرژی جنبشی + فرمول + یک پرسش مرور: «واحد انرژی جنبشی در SI چیست؟»</p>
+                </div>
+              </details>
             </div>
           </div>
 

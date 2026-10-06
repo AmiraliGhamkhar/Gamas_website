@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import { BOT_HANDLE, PRODUCT, tgLink, toFa } from '../lib/constants'
-import { trackCTA } from '../lib/track'
+import TelegramCTA from './TelegramCTA'
+import { BOT_HANDLE, PRODUCT, toFa } from '../lib/constants'
 
 const stages = [
   { label: 'دریافت و آماده‌سازی فایل', pct: 20 },
@@ -125,17 +125,7 @@ export default function BotDemo() {
           </ol>
 
           <div className="demo-actions">
-            <a
-              href={tgLink('demo')}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackCTA('demo')}
-              className="button-primary demo-primary-cta"
-            >
-              <Icon name="telegram" size={20} />
-              باز کردن ربات تلگرام
-              <Icon name="arrow-left" size={18} className="cta-arrow" />
-            </a>
+            <TelegramCTA placement="demo" telegramSize={20} arrowSize={18} className="demo-primary-cta" aria-label="امتحان نمایشی در تلگرام — باز کردن ربات گاماس" />
             <button
               type="button"
               onClick={replay}
@@ -167,7 +157,7 @@ export default function BotDemo() {
                     <small>۲۴٫۶ مگابایت · صوت</small>
                   </span>
                   <span className="file-waveform" aria-hidden="true">
-                    {waveformBars.map((height, index) => <i key={`${height}-${index}`} className={`waveform-bar-${height}`} />)}
+                    {waveformBars.map((height, index) => <i key={`${height}-${index}`} data-lvl={Math.min(5, Math.max(1, Math.round(height / 20)))} />)}
                   </span>
                 </ChatBubble>
               )}

@@ -1,33 +1,9 @@
 import { useState } from 'react'
 import IsolatedText from './IsolatedText'
-import { PRODUCT, SITE_URL } from '../lib/constants'
+import { SITE_URL } from '../lib/constants'
+import { getFaqs } from '../lib/faq-data'
 
-const faqs = [
-  {
-    q: 'چه فایل‌هایی را می‌توانم بفرستم؟',
-    a: `ویس و فایل‌های صوتی رایج، ویدیو و فایل‌های PowerPoint پشتیبانی می‌شوند. ${PRODUCT.files.unsupported.join('، ')} پذیرفته نمی‌شوند.`,
-  },
-  {
-    q: 'سقف حجم فایل چقدر است؟',
-    a: `سقف پیش‌فرض ربات ${PRODUCT.files.defaultMaxLabelFa} است؛ تنظیم ربات و محدودیت سرویس پردازش می‌تواند بر اندازه‌ی قابل‌قبول اثر بگذارد.`,
-  },
-  {
-    q: 'چه خروجی‌ای می‌گیرم؟',
-    a: `رونوشت خام گفتار به‌صورت ${PRODUCT.outputs.transcriptExtension} و جزوه‌ی ساختاریافته به‌صورت Word (${PRODUCT.outputs.notesExtension}) فرستاده می‌شود. اگر ساخت جزوه انجام نشود، رونوشت خام همچنان در دسترس است.`,
-  },
-  {
-    q: 'دقت متن و جزوه تضمین شده است؟',
-    a: 'خیر؛ کیفیت ضبط، وضوح گفتار و نویز محیط روی متن اثر می‌گذارند و درصد دقت تضمین‌شده‌ای اعلام نمی‌شود. متن تولیدشده را با فایل اصلی تطبیق بده.',
-  },
-  {
-    q: 'فایل‌ها و متن‌های من چه مدت می‌مانند؟',
-    a: `${PRODUCT.privacy.retentionSummaryFa} جزئیات سرویس‌های بیرونی را در بخش حریم خصوصی بخوان.`,
-  },
-  {
-    q: 'چطور شروع کنم؟',
-    a: 'ربات گاماس را در تلگرام باز کن، فایل آموزشی را برایش بفرست و خروجی را در همان گفت‌وگو بگیر.',
-  },
-]
+const faqs = getFaqs()
 
 function FAQItem({ index, q, a, isOpen, onToggle }) {
   const panelId = `faq-panel-${index}`

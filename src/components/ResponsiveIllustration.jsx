@@ -24,6 +24,7 @@ export default function ResponsiveIllustration({ name, alt, sizes }) {
         height={FALLBACK_HEIGHT}
         loading="lazy"
         decoding="async"
+        fetchpriority="low"
         alt={alt}
       />
     </picture>
