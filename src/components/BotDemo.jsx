@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import { BOT_HANDLE, tgLink, toFa } from '../lib/constants'
+import { BOT_HANDLE, PRODUCT, tgLink, toFa } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const stages = [
@@ -115,7 +115,7 @@ export default function BotDemo() {
             این پیش‌نمایش، مراحل معمول پردازش را نشان می‌دهد: دریافت فایل، تبدیل گفتار به متن و آماده‌شدن خروجی‌ها.
           </p>
           <p className="demo-disclaimer">
-            شبیه‌سازی تعاملی است؛ به ربات زنده وصل نیست و پیام‌ها و متن‌های داخل گوشی نمونه‌اند.
+            {PRODUCT.demo.disclaimerFa}
           </p>
 
           <ol className="demo-flow-list" aria-label="مراحل نمایش داده‌شده">
@@ -167,7 +167,7 @@ export default function BotDemo() {
                     <small>۲۴٫۶ مگابایت · صوت</small>
                   </span>
                   <span className="file-waveform" aria-hidden="true">
-                    {waveformBars.map((height, index) => <i key={`${height}-${index}`} style={{ '--bar-height': `${height}%` }} />)}
+                    {waveformBars.map((height, index) => <i key={`${height}-${index}`} className={`waveform-bar-${height}`} />)}
                   </span>
                 </ChatBubble>
               )}
@@ -188,7 +188,7 @@ export default function BotDemo() {
                     aria-valuenow={progress}
                     aria-valuetext={`${activeStage.label}؛ ${toFa(progress)} درصد`}
                   >
-                    <span className="demo-progress-fill" style={{ width: `${progress}%` }} />
+                    <span className="demo-progress-fill" data-progress={progress} />
                   </div>
                   <small className="demo-progress-caption">داریم نکته‌ها را از دل کلاس بیرون می‌کشیم…</small>
                 </ChatBubble>
@@ -225,7 +225,7 @@ export default function BotDemo() {
               )}
             </div>
           </PhoneFrame>
-          <figcaption className="demo-caption"><Icon name="sparkles" size={15} /> پیش‌نمایش شبیه‌سازی‌شده؛ نه پاسخ زنده‌ی ربات</figcaption>
+          <figcaption className="demo-caption"><Icon name="sparkles" size={15} /> {PRODUCT.demo.captionFa}</figcaption>
         </figure>
       </div>
     </section>

@@ -1,5 +1,5 @@
 import Icon from './Icon'
-import { sitePath, tgLink } from '../lib/constants'
+import { BOT_IDENTITY_VERIFIED, PRODUCT, sitePath, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const proofPoints = [
@@ -42,6 +42,10 @@ export default function Hero() {
               دیدن نمونه‌ی نمایشی
             </a>
           </div>
+
+          {!BOT_IDENTITY_VERIFIED && (
+            <p className="bot-identity-note" role="note">{PRODUCT.bot.identityNoticeFa}</p>
+          )}
 
           <ul className="hero-proof-points" aria-label="فایل‌های آموزشی قابل ارسال">
             {proofPoints.map((point) => (

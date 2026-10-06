@@ -1,18 +1,23 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
 import ResponsiveIllustration from './ResponsiveIllustration'
+import { PRODUCT } from '../lib/constants'
 
 const formats = [
-  { icon: 'microphone', label: 'صدا', examples: 'MP3 · M4A · WAV · OGG · OPUS · FLAC · WMA · AMR' },
-  { icon: 'video', label: 'ویدیو', examples: 'MP4 · MKV · MOV · AVI · WEBM · ویدیوی گرد تلگرام' },
-  { icon: 'presentation', label: 'PowerPoint', examples: 'PPTX · PPTM · PPSX · PPSM · POTX · POTM · PPT · PPS · POT' },
+  { icon: 'microphone', label: 'صدا', examples: PRODUCT.files.audioExamples },
+  {
+    icon: 'video',
+    label: 'ویدیو',
+    examples: [...PRODUCT.files.videoExamples, 'ویدیوی گرد تلگرام'],
+  },
+  { icon: 'presentation', label: 'PowerPoint', examples: PRODUCT.files.powerpointExamples },
 ]
 
 const outputs = [
-  'جزوه‌ی مرتب در فایل Word با پسوند DOCX',
-  'رونوشت گفتار در فایل متنی TXT',
+  `جزوه‌ی مرتب در فایل Word با پسوند ${PRODUCT.outputs.notesExtension}، اگر ساخت جزوه موفق شود`,
+  `رونوشت گفتار در فایل متنی ${PRODUCT.outputs.transcriptExtension}`,
   'متن اسلایدها در کنار گفتارِ ارائه‌های PowerPoint',
-  'اگر ساخت جزوه انجام نشود، متن خام همچنان فرستاده می‌شود',
+  'اگر ساخت جزوه انجام نشود، متن خام گفتار همچنان فرستاده می‌شود',
 ]
 
 export default function Capabilities() {
@@ -32,15 +37,24 @@ export default function Capabilities() {
               {formats.map((format) => (
                 <article key={format.label} className="format-card">
                   <span className="format-icon"><Icon name={format.icon} size={23} /></span>
-                  <h3>{format.label}</h3>
-                  <p><IsolatedText>{format.examples}</IsolatedText></p>
+                  <h3><IsolatedText>{format.label}</IsolatedText></h3>
+                  <p><IsolatedText>{format.examples.join(' · ')}</IsolatedText></p>
                 </article>
               ))}
             </div>
             <div className="format-limit-note">
               <span className="limit-mark"><bdi dir="ltr">۲GB</bdi></span>
-              <span>سقف پیش‌فرض فایل ۲ گیگابایت است؛ ODP/OTP، PDF، تصویر و ZIP پشتیبانی نمی‌شوند.</span>
+              <span>
+                سقف پیش‌فرض فایل {PRODUCT.files.defaultMaxLabelFa} است؛{' '}
+                <IsolatedText>{PRODUCT.files.unsupported.join('، ')}</IsolatedText> پشتیبانی نمی‌شوند.
+              </span>
             </div>
+            <p className="product-source-note">
+              {PRODUCT.source.noticeFa}{' '}
+              <a href={PRODUCT.source.commitUrl} target="_blank" rel="noopener noreferrer">
+                نسخه‌ی کد بررسی‌شده
+              </a>
+            </p>
 
             <div className="output-card">
               <div className="output-card-heading">
@@ -49,7 +63,7 @@ export default function Capabilities() {
               </div>
               <ul>
                 {outputs.map((item) => (
-                  <li key={item}><span className="output-check"><Icon name="check" size={13} /></span>{item}</li>
+                  <li key={item}><span className="output-check"><Icon name="check" size={13} /></span><IsolatedText>{item}</IsolatedText></li>
                 ))}
               </ul>
             </div>
@@ -62,7 +76,7 @@ export default function Capabilities() {
             </div>
             <ResponsiveIllustration
               name="before-after"
-              sizes="(max-width: 639px) 394px, 600px"
+              sizes="(max-width: 360px) calc(100vw - 30px), (max-width: 639px) calc(100vw - 36px), (max-width: 833px) calc(100vw - 64px), (max-width: 1067px) calc(100vw - 80px), 600px"
               alt="تصویر مفهومی از یادداشت‌های شلوغ در کنار صفحه‌ای مرتب برای مرور درس"
             />
             <figcaption>تصویر مفهومی؛ نمونه‌ی واقعیِ خروجی نیست.</figcaption>

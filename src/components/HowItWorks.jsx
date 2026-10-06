@@ -1,7 +1,7 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
 import ResponsiveIllustration from './ResponsiveIllustration'
-import { BOT_HANDLE } from '../lib/constants'
+import { BOT_HANDLE, PRODUCT } from '../lib/constants'
 
 const steps = [
   {
@@ -20,7 +20,7 @@ const steps = [
     n: '۰۳',
     icon: 'notes',
     title: 'رونوشت و جزوه را بگیر',
-    desc: 'فایل Word جزوه و رونوشت متنی در همان گفت‌وگو فرستاده می‌شوند.',
+    desc: `رونوشت ${PRODUCT.outputs.transcriptExtension} فرستاده می‌شود؛ اگر ساخت جزوه موفق شود، فایل Word (${PRODUCT.outputs.notesExtension}) هم می‌آید.`,
   },
 ]
 
@@ -57,7 +57,7 @@ export default function HowItWorks() {
           <figure className="waveform-visual">
             <ResponsiveIllustration
               name="waveform"
-              sizes="(max-width: 639px) 394px, 600px"
+              sizes="(max-width: 360px) calc(100vw - 30px), (max-width: 639px) calc(100vw - 36px), (max-width: 833px) calc(100vw - 64px), (max-width: 1067px) calc((100vw - 118px) / 2), 600px"
               alt="تصویر مفهومی از صدای کلاس و یک صفحه‌ی یادداشت مرتب"
             />
             <figcaption className="waveform-visual-caption">

@@ -17,7 +17,12 @@ export default function Navbar() {
 
   useEffect(() => {
     const closeOnDesktop = () => {
-      if (window.matchMedia('(min-width: 834px)').matches) setOpen(false)
+      if (!window.matchMedia('(min-width: 834px)').matches) return
+      const activeElement = document.activeElement
+      if (drawerRef.current?.contains(activeElement) || activeElement === toggleButtonRef.current) {
+        document.querySelector('.desktop-nav a[href]')?.focus({ preventScroll: true })
+      }
+      setOpen(false)
     }
     window.addEventListener('resize', closeOnDesktop)
     return () => window.removeEventListener('resize', closeOnDesktop)

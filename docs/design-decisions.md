@@ -1,55 +1,56 @@
-# Design and engineering decisions — 2026-10-05
+# Design and engineering decisions — 2026-10-06
 
-This is the current decision record for the GAMAS landing page. The older redesign notes are archived in [`redesign-audit.md`](redesign-audit.md); the current findings and scorecard are in [`AUDIT.md`](../AUDIT.md).
+This is the current decision record for the Gamas landing page. Historical redesign notes and screenshots are archived; the current audit, score estimates and release checklist live in [`AUDIT.md`](../AUDIT.md).
 
 ## Scope kept intact
 
-- Keep React 18, Vite 6, `vite-react-ssg`, prerendered static HTML, the small PHP API, Apache/cPanel delivery, and the Persian RTL interface.
-- Node is a build-time dependency only; cPanel receives `dist/` and `api/`, not the Vite development server.
-- Do not turn the site into a full-stack app, introduce an email service, or add analytics vendors.
+- Keep React 18, Vite 6, `vite-react-ssg`, prerendered static HTML, plain CSS, the PHP API, SQLite/NDJSON storage, Apache/cPanel delivery and the Persian RTL interface.
+- Node is a build-time dependency only; cPanel receives `dist/` and `api/`, not the development server.
+- Do not add an email service, analytics vendor, framework migration or new runtime dependency.
 
-## Product and content decisions
+## Product and content
 
-- The H1 explicitly names AI, and the primary action opens the Telegram bot. The secondary hero action points to a **clearly simulated** demonstration, never a “live” demo.
-- The hero phone art now uses abstract, textless UI blocks instead of illustrative success/accuracy numbers or made-up lesson output. Its alt text and caption describe it as conceptual.
-- Format, size, transcript and DOCX claims were compared with the public bot repository. The page names the reviewed formats and the default 2 GB application limit, while noting provider/hosting limits. PDF, images, ZIP, ODP and OTP are not advertised as supported.
-- The bot implementation can send a TXT transcript and a structured DOCX when note generation succeeds; the site says the raw transcript remains available if note generation fails. No price, testimonial, success rate or accuracy percentage is asserted.
-- The bot repo’s reviewed code sends audio and, when configured, transcript/slide text to external services; temporary media is cleaned up, while transcripts and notes may remain in SQLite with no automatic expiry in the reviewed implementation. The site privacy copy distinguishes those cases and also describes hosting access logs and its own click tracker. Live provider/account settings were not inspected.
+- The hero describes the bot’s reviewed task and links to Telegram; the demo is labeled a simulation and never presented as a live response.
+- Product file/output/privacy/SEO facts are centralized in `src/lib/product.js` and checked against public bot source at `838184907bc828286d4f4782151c3c4fc3b8fc9d`.
+- Audio/video/PowerPoint examples, the default 2,000,000,000-byte app limit, TXT transcript, conditional DOCX notes and raw-transcript fallback are qualified. ODP/OTP, PDF, images and ZIP are not advertised as supported. No price, testimonial, usage figure, accuracy rate or performance promise is asserted.
+- Privacy copy distinguishes website click tracking and host access logs from bot-side data and external processing. Temporary media cleanup is not described as transcript/note deletion; the reviewed bot code defines no automatic expiry for those texts.
+- The default `GamasBot` Telegram destination is **not** live-verified. The hero shows a warning unless the operator configures a handle and explicitly attests verification. `VITE_BOT_USERNAME` alone is not evidence; `VITE_BOT_IDENTITY_VERIFIED=true` gates the JSON-LD `sameAs` edge and is an operator assertion, not an automated check.
 
-## Privacy and API decisions
+## Privacy, API and storage
 
-- Retire the email form. The page has no form/email field; `api/lead.php` is retained only as a JSON `410 Gone` response for stale clients.
-- The only current site API is `POST /api/track.php`, called on a Telegram CTA click rather than page load. Event records contain a section and time, not raw IP or user-agent. The short-window limiter stores a keyed HMAC pseudonym in private files; cPanel/provider access logs remain outside that promise.
-- Exact scheme + host + port are checked against `GAMAS_ALLOWED_ORIGINS`; do not infer a trusted origin from `HTTP_HOST`. Limiter/storage failure is distinguished from an exceeded limit (503 versus 429).
-- Keep SQLite optional, retain the flat-file fallback, put data outside `public_html` by default, and migrate the former SQLite waitlist table / NDJSON file after deployment. Local code cannot remove historical copies in provider backups or other data directories; the operator must check those.
+- Keep the retired email form removed. `api/lead.php` remains an explicit JSON `410 Gone` response for stale clients.
+- The site calls `POST /api/track.php` on CTA clicks only. Event names in Telegram `start` parameters match the tracked `landing_*` names; failures do not block navigation.
+- Click records contain section/time, not raw IP/user-agent. Short-window rate-limit buckets use a keyed HMAC pseudonym in private storage; cPanel/provider access logs are outside that statement.
+- Keep exact scheme + host + port origin checks, fixed trusted redirects, fail-closed analytics storage/rate limiting, private data directories, optional SQLite and the NDJSON fallback. Legacy data removal from provider backups remains an operator task.
 
-## Visual, mobile and accessibility decisions
+## Visual, mobile and accessibility
 
-- Preserve the Persian RTL layout and local Vazirmatn/Lalezar fonts. Styling remains plain CSS; removing Tailwind keeps the current custom page small and avoids adding a new UI dependency.
-- Correct overflow at the layout level instead of hiding it on `body`; section-local clipping remains only for decorative artwork and bounded UI components. Keep `minmax(0, 1fr)`, wrapping and logical sizing where needed.
-- Keep the 640/834/1068 px layout breakpoints and the ≤360 px action stacking. Primary/secondary controls, navigation, FAQ, privacy disclosure and footer/copy controls are sized for touch; the inline privacy link target was raised to 44 px.
-- Preserve skip navigation, landmarks, a keyboard-trapped mobile drawer with Escape/focus return, native privacy disclosure, FAQ button state, explicit demo progress semantics, and mixed-direction isolation. The demo starts only when activated and respects `prefers-reduced-motion`.
-- Adjusted sampled text/background token pairs. Examples calculated from the shipped hex colors: muted text `#5b737d` on `#fff9ef` = 4.78:1; primary `#15759f` on `#fff9ef` = 4.92:1; white on the CTA gradient endpoints `#15759f` / `#116d98` = 5.15:1 / 5.73:1; `#d1e2e4` on `#0c3040` = 10.39:1. These are sampled token calculations, not a full rendered WCAG audit.
+- Keep Persian RTL with self-hosted Vazirmatn/Lalezar. Fix constrained layouts rather than hiding overflow on `body`; retain local clipping only for artwork/bounded UI.
+- Preserve the 640/834/1068 px breakpoints and ≤360 px CTA stacking. Source links use 44px minimum block targets; responsive illustration `sizes` values match the layout tracks more closely.
+- Preserve skip navigation and landmarks, keyboard-trapped mobile drawer, Escape/focus return and focus handoff to desktop navigation at the breakpoint; keep native privacy disclosure, FAQ state, demo progress semantics, reduced-motion handling and bidi isolation.
+- Demo visuals use CSS classes/data attributes. No inline style attributes are allowed because the shipped CSP prohibits them. The progress visual is CSS-driven and its state is exposed to assistive technology.
+- Sampled contrast calculations from CSS tokens are estimates, not a rendered WCAG audit. See [`AUDIT.md`](../AUDIT.md).
 
-## Static deployment and SEO decisions
+## Static deployment, CSP and SEO/GEO
 
-- Keep prerendered HTML and metadata for the canonical origin. `scripts/postbuild.mjs` removes SSG manifests, checks for sensitive files and `.htaccess`, and regenerates base-aware `robots.txt`, `sitemap.xml` and `llms.txt`.
-- Preserve cPanel root deployment as the default and verify `/gamas/` as a supported subfolder build. Base-aware paths are required for HTML, JavaScript, API, images, fonts, crawler files and `RewriteBase`.
-- The Apache fallback intentionally does not rewrite `/api/`, PHP, real files, or missing dotted asset paths. Missing assets should remain 404s instead of receiving the app shell as a false 200.
-- `public/.htaccess` uses fixed production hosts for redirects, restrictive source/data rules, CSP/security headers and cache buckets; it must still be checked on the actual hosting account because Apache modules and proxy behavior vary.
+- Keep prerendered HTML and canonical metadata for the configured origin. `vite.config.js` loads `VITE_*` consistently from `.env` files or process environment; postbuild derives the public origin/base from the emitted canonical URL.
+- `scripts/postbuild.mjs` strips SSG manifests, checks sensitive-file exclusions, generates base-aware `robots.txt`/`sitemap.xml`/`llms.txt`, updates `RewriteBase`, validates local HTML/CSS references and generates exact SHA-256 CSP allowlists from final inline SSG/JSON-LD scripts.
+- CSP allows same-origin external scripts/styles and those exact script hashes; it prohibits inline script attributes and inline style attributes. Do not upload the unprocessed `public/.htaccess`; use `dist/.htaccess` from a passing build.
+- Apache fallback preserves `/api/`, native assets and missing-file 404s; it should serve the app shell only for intended page routes. AutoSSL exceptions are restricted to challenge paths.
+- HTTPS redirects trust Apache’s TLS state rather than arbitrary `X-Forwarded-Proto`. If Cloudflare is used, origin-side HTTPS redirect requires Full/Strict; Flexible mode can loop. Validate the actual proxy and host configuration.
+- JSON-LD keeps Organization/WebSite/WebPage/SoftwareApplication/FAQ entities aligned with visible content; Telegram `sameAs` is omitted absent explicit operator attestation. A subfolder `robots.txt` is not discoverable in place of the domain-root file.
 
-## Validation completed on the current source
+## Validation record
 
 | Check | Result |
 |---|---|
-| `npm ci` | Passed; dependencies installed from the lockfile. |
+| `npm ci` | Passed; 244 packages installed, 0 vulnerabilities reported. |
+| `npm audit --audit-level=low` | Passed; 0 vulnerabilities. |
 | `npm run lint` | Passed with zero warnings/errors. |
-| `npm audit` | `found 0 vulnerabilities` for the full lockfile at audit time. |
-| `npm run build` (root base) | Passed; Vite 6.4.3 prerendered `dist/index.html`; postbuild checks passed. |
-| `VITE_BASE=/gamas/ VITE_SITE_URL=https://gamas.bot npm run build` | Passed; subfolder postbuild checks passed. Static assertions confirmed `/gamas/` metadata/assets/fonts, `RewriteBase`, crawler URLs, and no form/retired endpoint in the prerendered HTML. |
-| Vite host smoke | `curl` received HTTP 200 locally and with an `.e2b.app` Host header; confirms preview-host allowlisting, not browser behavior. |
-| `node --check` (three optional browser harnesses and postbuild script) | Passed. |
-| PHP grammar parse | `api/bootstrap.php`, `api/track.php` and `api/lead.php` parsed with a PHP-7 grammar parser. This is not `php -l` or a runtime/API test. |
-| Browser, PHP CLI and Apache | Not verified. No browser/PHP/Apache executable was available. Chromium download was attempted but the Playwright CDN connection failed with `ECONNRESET`; the optional browser harnesses therefore were not run. |
+| `npm test` | Passed; 3 dependency-free product/CTA tests. |
+| `npm run build` | Root build passed; postbuild checks and exact inline CSP hashes passed. JS 196.74 kB (61.78 kB gzip); CSS 42.07 kB (9.14 kB gzip); HTML 42.84 KiB. |
+| `/gamas/` build using temporary `.env.production.local` | Passed; base-aware canonical/assets/fonts/crawler output/RewriteBase and build-time identity propagation checked. The fake handle was test-only and was removed with the temporary file; no live identity was asserted. |
+| Vite preview host smoke | Local and `.e2b.app`-style Host requests returned 200; an arbitrary Host returned 403. This is host-allowlist evidence, not a browser or Apache test. |
+| Browser/PHP/Apache/cPanel | Not verified in this environment. No current browser interaction/render test, PHP runtime, live API, Apache response/header, staging, backup migration, or Telegram identity test is claimed. |
 
-The root/subfolder builds validate emitted static files, not the live Telegram bot, PHP behavior, Apache directives, cPanel permissions, live redirects/headers, device rendering, screen-reader behavior or Web Vitals. The archived screenshots/Lighthouse JSON are from an older implementation and are not current evidence; see [`screenshots/README.md`](screenshots/README.md).
+The local builds prove generated-file invariants only. They do not prove live bot settings, cPanel permissions, proxy redirects, Apache module behavior, browser accessibility, rendered overflow or Web Vitals. Follow the release checklist in [`AUDIT.md`](../AUDIT.md) and the account-specific steps in [`DEPLOY.md`](../DEPLOY.md).

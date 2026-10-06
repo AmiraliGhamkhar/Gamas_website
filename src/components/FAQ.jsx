@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import IsolatedText from './IsolatedText'
+import { PRODUCT, SITE_URL } from '../lib/constants'
 
 const faqs = [
   {
     q: 'چه فایل‌هایی را می‌توانم بفرستم؟',
-    a: 'ویس و فایل‌های صوتی رایج، ویدیو و فایل‌های PowerPoint پشتیبانی می‌شوند. ODP و OTP، PDF، تصویر و ZIP پذیرفته نمی‌شوند.',
+    a: `ویس و فایل‌های صوتی رایج، ویدیو و فایل‌های PowerPoint پشتیبانی می‌شوند. ${PRODUCT.files.unsupported.join('، ')} پذیرفته نمی‌شوند.`,
   },
   {
     q: 'سقف حجم فایل چقدر است؟',
-    a: 'سقف پیش‌فرض ربات ۲ گیگابایت است؛ تنظیم ربات و محدودیت سرویس پردازش می‌تواند بر اندازه‌ی قابل‌قبول اثر بگذارد.',
+    a: `سقف پیش‌فرض ربات ${PRODUCT.files.defaultMaxLabelFa} است؛ تنظیم ربات و محدودیت سرویس پردازش می‌تواند بر اندازه‌ی قابل‌قبول اثر بگذارد.`,
   },
   {
     q: 'چه خروجی‌ای می‌گیرم؟',
-    a: 'رونوشت خام گفتار به‌صورت TXT و جزوه‌ی ساختاریافته به‌صورت Word (DOCX) فرستاده می‌شود. اگر ساخت جزوه انجام نشود، رونوشت خام همچنان در دسترس است.',
+    a: `رونوشت خام گفتار به‌صورت ${PRODUCT.outputs.transcriptExtension} و جزوه‌ی ساختاریافته به‌صورت Word (${PRODUCT.outputs.notesExtension}) فرستاده می‌شود. اگر ساخت جزوه انجام نشود، رونوشت خام همچنان در دسترس است.`,
   },
   {
     q: 'دقت متن و جزوه تضمین شده است؟',
@@ -20,7 +21,7 @@ const faqs = [
   },
   {
     q: 'فایل‌ها و متن‌های من چه مدت می‌مانند؟',
-    a: 'فایل کاری موقت پس از پردازش حذف می‌شود؛ رونوشت و جزوه ممکن است در پایگاه‌داده‌ی ربات بمانند و برای آن‌ها حذف خودکار تعریف نشده است. جزئیات سرویس‌های بیرونی را در بخش حریم خصوصی بخوان.',
+    a: `${PRODUCT.privacy.retentionSummaryFa} جزئیات سرویس‌های بیرونی را در بخش حریم خصوصی بخوان.`,
   },
   {
     q: 'چطور شروع کنم؟',
@@ -61,6 +62,10 @@ export default function FAQ() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    '@id': `${SITE_URL}#faq`,
+    url: SITE_URL,
+    inLanguage: 'fa-IR',
+    isPartOf: { '@id': `${SITE_URL}#webpage` },
     mainEntity: faqs.map((f) => ({
       '@type': 'Question',
       name: f.q,
