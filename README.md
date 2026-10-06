@@ -9,8 +9,17 @@ The site keeps its existing React + Vite + `vite-react-ssg` architecture. It is 
 ```bash
 npm ci
 npm run lint
+npm test
 npm run build       # static production output in dist/
 ```
+
+The default Telegram username (`GamasBot`) is an unverified fallback. Configure the intended handle at build time; the override itself does not prove ownership or live availability:
+
+```bash
+VITE_BOT_USERNAME=your_bot_username npm run build
+```
+
+Only after independently confirming the username and destination, a deploy operator may also set `VITE_BOT_IDENTITY_VERIFIED=true`; that explicit attestation is what allows JSON-LD to link the bot as the organization’s `sameAs`. No build or source snapshot verifies live Telegram identity.
 
 For a subfolder such as `https://gamas.bot/gamas/`:
 
@@ -27,8 +36,9 @@ Upload the contents of `dist/` (including `.htaccess`) to `public_html/`, then u
 | `src/` | React page, accessible components, Persian RTL copy and CSS |
 | `public/` | Self-hosted fonts, responsive image assets, crawler files and production `.htaccess` |
 | `api/` | `track.php` for CTA events, retired `lead.php` (410), shared PHP storage/security helpers |
-| `scripts/postbuild.mjs` | Removes SSG manifests, emits base-aware crawler files, checks deploy paths and sensitive files |
+| `scripts/postbuild.mjs` | Removes SSG manifests, emits base-aware crawler files, hashes inline scripts into CSP, and validates assets/deploy paths/sensitive files |
 | `verify-*.mjs` | Optional Playwright browser harnesses for viewports, interactions, metadata and local assets; outputs go to ignored `docs/screenshots/current/` |
+| `tests/product.test.js` | Dependency-free checks for username handling, CTA events and core product claims |
 | `DEPLOY.md` | cPanel deployment and operational guide |
 | `AUDIT.md` | Evidence-based engineering audit and validation limits |
 
@@ -57,4 +67,4 @@ The interaction harness stubs Telegram and `/api/track.php`; it does not test PH
 - Set `GAMAS_DATA_DIR` to a private directory outside `public_html` when cPanel does not derive a suitable account-home directory automatically.
 - Set `GAMAS_TRUST_CF_IP=1` only when Cloudflare is actually the trusted reverse proxy.
 
-The site does not collect email addresses. The bot repository describes the external processing and the transcript/note storage; the site’s privacy section summarizes the verified behavior and warns that no automatic deletion period is defined for bot transcripts or notes.
+The site does not collect email addresses. The site’s privacy section is based on the pinned, reviewed bot-source revision—not live provider/account settings—and warns that no automatic deletion period is defined for bot transcripts or notes. The default Telegram handle is unverified until the deploy operator checks it.

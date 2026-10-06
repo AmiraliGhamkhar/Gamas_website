@@ -45,20 +45,18 @@
   # ---------------------------------------------------------------------------
   # 2. ACME / AutoSSL must stay reachable (cPanel certificate renewal)
   # ---------------------------------------------------------------------------
-  RewriteRule ^\.well-known/ - [L]
+  # AutoSSL challenge paths only. Other dot-paths remain denied below.
+  RewriteRule ^\.well-known/(?:acme-challenge|pki-validation)/ - [L,NC]
 
   # ---------------------------------------------------------------------------
   # 3. Canonical redirect — force HTTPS and a single hostname (non-www)
   #    Handled first so no internal path ever leaks over http:// or www.
   #
   #    3a. www → apex (any scheme).
-  #    3b. http → https, but ONLY when the edge has NOT already terminated
-  #        TLS. X-Forwarded-Proto: https means the *visitor* is on https even
-  #        though this origin saw plain http — honouring that keeps the rule
-  #        loop-free behind Cloudflare Flexible AND Full SSL. (The previous
-  #        single-rule version OR-ed `%{HTTPS} !=on` with the header check, so
-  #        behind Flexible it 301-looped: origin http → redirect → CF → origin
-  #        http → …)
+  #    3b. http → https based on Apache's TLS state only. Do not trust an
+  #        arbitrary X-Forwarded-Proto header here: a direct origin request can
+  #        spoof it. Use TLS at the origin (for example Cloudflare Full/Strict),
+  #        not Flexible mode, which cannot satisfy this origin-side redirect.
   #
   #    >>> TO MAKE www.gamas.bot CANONICAL INSTEAD: see DEPLOY.md §7. <<<
   # ---------------------------------------------------------------------------
@@ -68,20 +66,19 @@
   RewriteRule ^ https://gamas.bot%{REQUEST_URI} [R=301,L]
 
   RewriteCond %{HTTP_HOST} ^gamas\.bot(?::\d+)?$ [NC]
-  RewriteCond %{HTTP:X-Forwarded-Proto} ^http$ [NC,OR]
   RewriteCond %{HTTPS} !=on
-  RewriteCond %{HTTP:X-Forwarded-Proto} !^https [NC]
   RewriteRule ^ https://gamas.bot%{REQUEST_URI} [R=301,L]
 
   # ---------------------------------------------------------------------------
   # 4. Deny everything that should never be served
   # ---------------------------------------------------------------------------
   # 4a. Dotfiles: .env, .git, .htaccess, .user.ini, .DS_Store, .vite, ...
-  RewriteCond %{REQUEST_URI} !^/\.well-known/
   RewriteRule (^|/)\. - [F,L]
 
   # 4b. Private / source / build directories
   RewriteRule (?:^|/)(vendor|node_modules|src|\.git|\.vite|data|logs)(?:/|$) - [F,L,NC]
+  # Bootstrap/configuration PHP must never be served as an endpoint.
+  RewriteRule ^api/(?:bootstrap|config|lib)\.php$ - [F,L,NC]
 
   # 4c. Config, backup, database, log and archive files
   RewriteRule (?:^|/)(?:composer\.(?:json|lock)|package\.json|package-lock\.json|php\.ini|\.user\.ini|phpunit\.xml(?:\.dist)?|error_log[0-9]*|\.htpasswd) - [F,L,NC]
@@ -114,8 +111,10 @@
   #    PHP endpoints are never rewritten, so missing assets still 404 and the
   #    PHP API is untouched.
   # ---------------------------------------------------------------------------
-  # Keep the API subtree native whether this app is deployed at / or /gamas/.
+  # Keep native API/assets paths as real files or real 404s, including
+  # extensionless missing assets, at both root and subfolder deployments.
   RewriteRule ^api(?:/|$) - [L,NC]
+  RewriteRule ^(?:assets|fonts|images|icons)(?:/|$) - [L,NC]
   RewriteCond %{REQUEST_URI} !\.php$ [NC]
   # Any other dotted path is a file request (assets, fonts, images, favicon…).
   # Missing ones must 404 — DEPLOY.md §6 step 6 verifies exactly that — instead
@@ -151,17 +150,13 @@
   # ---------------------------------------------------------------------------
   # Content-Security-Policy
   #
-  #  script-src 'unsafe-inline'  — required. vite-react-ssg injects one inline
-  #                                script (window.__VITE_REACT_SSG_HASH__).
-  #                                Its value changes per build so it cannot be
-  #                                pinned with a static hash. See DEPLOY.md §8
-  #                                for how to drop it if you want a strict CSP.
-  #  style-src  'unsafe-inline'  — required for small React-controlled style
-  #                                values (for example, the demo progress bar).
-  #  font-src 'self'             — fonts are self-hosted from /fonts.
-  #  connect-src 'self'          — the CTA tracker posts to /api/track.php.
+  # Inline SSG/JSON-LD scripts are allowlisted by build-generated SHA-256
+  # hashes. scripts/postbuild.mjs replaces the placeholder from final HTML.
+  # There are no inline style attributes; data attributes/classes drive demo UI.
+  # font-src 'self'    — fonts are self-hosted from /fonts.
+  # connect-src 'self' — the CTA tracker posts to /api/track.php.
   # ---------------------------------------------------------------------------
-  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' __GAMAS_SCRIPT_HASHES__; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests"
 
   # --- Cache-Control, driven by the env tags set in §5 ---
   # index.html: always revalidate so a new deploy is picked up immediately

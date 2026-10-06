@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import { chromium } from 'playwright'
+import { landingEventFor } from './src/lib/product.js'
 
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:4173/'
 const OUT = process.env.VERIFY_OUT || 'docs/screenshots/current'
@@ -64,6 +65,14 @@ await page.keyboard.press('Escape')
 await page.waitForFunction(() => document.querySelector('button[aria-controls="mobile-nav"]').getAttribute('aria-expanded') === 'false')
 assert.equal(await page.evaluate(() => document.activeElement === document.querySelector('button[aria-controls="mobile-nav"]')), true)
 assert.equal(await page.evaluate(() => document.body.style.overflow), '')
+await toggle.click()
+await page.waitForFunction(() => document.activeElement === document.querySelector('#mobile-nav a[href]'))
+await page.setViewportSize({ width: 834, height: 900 })
+await page.waitForFunction(() => document.querySelector('#mobile-nav').getAttribute('aria-hidden') === 'true')
+report.mobileNav.desktopFocusHandoff = await page.evaluate(() =>
+  document.activeElement === document.querySelector('.desktop-nav a[href]'))
+assert.equal(report.mobileNav.desktopFocusHandoff, true, 'resizing to desktop should close the drawer and hand off focus')
+await page.setViewportSize({ width: 320, height: 720 })
 
 // Native summary disclosure and FAQ accordion work with mouse/keyboard controls.
 await page.locator('.privacy-details > summary').click()
@@ -122,7 +131,7 @@ assert.equal(trackedRequests.some((request) => request.method === 'POST'
   && /\/api\/track\.php/.test(new URL(request.url).pathname)), true,
   'clicking Telegram CTA should POST a same-origin tracking event')
 assert.equal(trackedRequests.some((request) => {
-  try { return JSON.parse(request.body || '{}').section === 'hero' } catch { return false }
+  try { return JSON.parse(request.body || '{}').section === landingEventFor('hero') } catch { return false }
 }), true, 'CTA event should contain its section label')
 assert.equal(report.tracking.noLeadEndpoint, true)
 

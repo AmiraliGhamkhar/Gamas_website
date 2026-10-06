@@ -17,7 +17,7 @@ export default function App() {
       <a className="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
       <StructuredData />
       <Navbar />
-      <main id="main-content" className="app-main">
+      <main id="main-content" className="app-main" tabIndex="-1">
         <Hero />
         <Story />
         <BotDemo />

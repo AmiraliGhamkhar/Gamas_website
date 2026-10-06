@@ -23,10 +23,11 @@ The PHP API’s default exact-origin allowlist is `https://gamas.bot`. If the de
 ```bash
 npm ci
 npm run lint
+npm test
 npm run build
 ```
 
-The build runs `vite-react-ssg` and `scripts/postbuild.mjs`. Postbuild removes SSG manifests, checks the output for sensitive files and `.htaccess`, emits `robots.txt`, `sitemap.xml` and `llms.txt`, and verifies root-relative font URLs for subfolder deploys.
+The build runs `vite-react-ssg` and `scripts/postbuild.mjs`. Postbuild removes SSG manifests; emits base-aware `robots.txt`, `sitemap.xml` and `llms.txt`; hashes the exact prerendered inline scripts into the Apache CSP; and checks metadata, local HTML/CSS assets, `.htaccess`, deployment base and sensitive-file exclusions. It fails on unresolved placeholders or inline style/event-handler attributes.
 
 For a subfolder deployment such as `https://gamas.bot/gamas/`:
 
@@ -37,6 +38,14 @@ VITE_BASE=/gamas/ VITE_SITE_URL=https://gamas.bot npm run build
 Upload the **contents** of `dist/` to `public_html/gamas/` and upload `api/` to `public_html/gamas/api/`. The same origin remains `https://gamas.bot`; the base path does not belong in `GAMAS_ALLOWED_ORIGINS`.
 
 `VITE_BASE` must begin and end with `/` and match the public path exactly. `VITE_SITE_URL` is an origin only (no path/query/hash). Do not build for a subfolder and upload at the domain root, or vice versa.
+
+Configure the Telegram destination deliberately:
+
+```bash
+VITE_BOT_USERNAME=your_bot_username npm run build
+```
+
+The code falls back to `GamasBot` when no valid username is supplied; that fallback has **not** been live-verified. A build-time username override also does not prove ownership or availability. After the responsible operator has checked the destination, `VITE_BOT_IDENTITY_VERIFIED=true` may be set alongside `VITE_BOT_USERNAME`; only then does structured data assert the Telegram `sameAs` relationship. This flag is an operator attestation, not an automated check. Never set it merely to silence the disclosure in generated `llms.txt`.
 
 ## 3. Upload layout
 
@@ -73,7 +82,7 @@ Do not upload `src/`, `node_modules/`, `.git/`, `package*.json`, build configura
 
 Use restrictive permissions. The API attempts to create a private data directory as `0700` and data/key files as `0600`; do not use `chmod 777`. The fallback `public_html/data/` location is denied by `.htaccess`, but a private directory outside the web root is preferred.
 
-The production `.htaccess` redirects only the configured `www.gamas.bot` and `gamas.bot` hosts to the fixed canonical URL. It does not reflect an arbitrary `Host` header into a redirect. If you use a different domain, update the allowlisted host conditions in `public/.htaccess`, set `VITE_SITE_URL`, and set the exact PHP origin allowlist together.
+The production `.htaccess` redirects only the configured `www.gamas.bot` and `gamas.bot` hosts to the fixed canonical URL. It does not reflect an arbitrary `Host` header into a redirect. Its HTTPS redirect uses Apache’s actual TLS state and deliberately ignores an arbitrary `X-Forwarded-Proto` header. If Cloudflare proxies the origin, use **Full (strict)** TLS; Flexible mode can loop. If another trusted proxy terminates TLS before Apache, configure HTTPS canonicalization at that trusted edge or add an explicit proxy-IP trust rule—do not trust forwarded headers from arbitrary clients. If you use a different domain, update the allowlisted host conditions in `public/.htaccess`, set `VITE_SITE_URL`, and set the exact PHP origin allowlist together.
 
 ## 5. What the website API stores
 
@@ -154,11 +163,12 @@ A raw `curl` request is not a browser test: after deployment, also open the page
 - `Origin` or `Referer` must be present and match the allowlist. A missing header is rejected. The front end sends the event only after a user activates a CTA.
 - The `.htaccess` redirects use the fixed canonical hostname, not `%{HTTP_HOST}` as a destination. For custom domains, change the allowlisted host expressions intentionally; do not replace them with an arbitrary host reflection.
 - Subfolder URLs use `VITE_BASE` in JavaScript, HTML metadata, API links, crawler output and CSS font URLs. `scripts/postbuild.mjs` updates `RewriteBase`; still verify the emitted font URLs and actual deployed `.woff2` requests.
+- Search crawlers request `robots.txt` at the **domain root**. A copy emitted inside `/gamas/` is not a substitute for `https://gamas.bot/robots.txt`; if deploying only to a subfolder, coordinate the root robots file and sitemap URL with the domain owner.
 - The API directory must sit under the same host and subfolder as the page. `/api/` is excluded from the static-page fallback.
 
 ## 8. Content Security Policy
 
-The shipped policy allows same-origin scripts/styles and the Vite SSG bootstrap. Inline styles are used for small React-controlled values such as the demo progress bar. Fonts, images, API connections and media are self-hosted/same-origin. If you add an external service, update CSP only for the exact required origin and verify it in a browser console; do not add broad wildcards.
+The build-generated policy allows same-origin scripts plus SHA-256 hashes of the exact inline scripts present in the prerendered HTML (SSG bootstrap and JSON-LD). It uses `style-src 'self'` and `style-src-attr 'none'`; React UI state is represented with CSS classes/data attributes, not inline style attributes. Fonts, images, API connections and media are self-hosted/same-origin. If you add an inline script, the postbuild hash allowlist updates automatically; still review its source. If you add an external service, update CSP only for the exact required origin and verify it in a browser console; do not add broad wildcards. Do not upload `public/.htaccess` directly: deploy the generated `dist/.htaccess` so its hash placeholder has been replaced.
 
 The demo shown on the page is an interactive simulation. It is not connected to a live bot response. Product file handling, external providers and bot-side retention are described in the website privacy section and the public bot repository; confirm live bot configuration separately.
 

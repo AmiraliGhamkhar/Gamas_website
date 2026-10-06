@@ -1,10 +1,11 @@
 import Icon from './Icon'
-import { tgLink } from '../lib/constants'
+import IsolatedText from './IsolatedText'
+import { PRODUCT, tgLink } from '../lib/constants'
 import { trackCTA } from '../lib/track'
 
 const deliverables = [
-  'جزوه‌ی دسته‌بندی‌شده در فایل Word',
-  'رونوشت گفتار در فایل متنی جداگانه',
+  `جزوه‌ی دسته‌بندی‌شده در فایل Word (${PRODUCT.outputs.notesExtension})`,
+  `رونوشت گفتار در فایل متنی ${PRODUCT.outputs.transcriptExtension}`,
 ]
 
 export default function FinalCTA() {
@@ -37,14 +38,14 @@ export default function FinalCTA() {
             <span className="access-card-icon"><Icon name="notes" size={22} /></span>
             <div>
               <h3>تا دو خروجی برای مرور</h3>
-              <p>رونوشت TXT و جزوه‌ی Word، اگر ساخت جزوه با موفقیت انجام شود.</p>
+              <p><IsolatedText>{`رونوشت ${PRODUCT.outputs.transcriptExtension} و جزوه‌ی Word${PRODUCT.outputs.notesConditional ? '، اگر ساخت جزوه با موفقیت انجام شود.' : '.'}`}</IsolatedText></p>
             </div>
           </div>
           <ul className="cta-output-list">
             {deliverables.map((item) => (
               <li key={item}>
                 <span className="output-check"><Icon name="check" size={13} /></span>
-                {item}
+                <IsolatedText>{item}</IsolatedText>
               </li>
             ))}
           </ul>

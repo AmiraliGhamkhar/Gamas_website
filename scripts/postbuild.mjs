@@ -15,13 +15,12 @@
  *      site with no warning).
  */
 
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-// Shared with the page so the bot handle in llms.txt cannot drift from the
-// handle rendered in the UI. normaliseUsername() is the single owner of the
-// sanitising; this script supplies the env value Node cannot see through
-// import.meta.env.
-import { normaliseUsername } from '../src/lib/constants.js'
+// Shared product facts are used for crawler output; bot/site identity is read
+// from prerendered HTML so .env and CI build settings cannot drift from the UI.
+import { BOT_USERNAME_DEFAULT, PRODUCT, normaliseUsername } from '../src/lib/product.js'
 
 const dist = path.resolve(process.cwd(), 'dist')
 
@@ -63,24 +62,36 @@ if (removed.length) {
 //    Public files are copied verbatim by Vite, so rewrite these after copying
 //    when the site is deployed below a cPanel domain root.
 // ---------------------------------------------------------------------------
-const configuredBase = process.env.VITE_BASE || '/'
-const configuredSite = (process.env.VITE_SITE_URL || 'https://gamas.bot').replace(/\/+$/, '')
+const indexPath = path.join(dist, 'index.html')
+let configuredBase = ''
 let siteOrigin = ''
-try {
-  const parsedSite = new URL(configuredSite)
-  if (!['https:', 'http:'].includes(parsedSite.protocol) || parsedSite.pathname !== '/' || parsedSite.search || parsedSite.hash) {
-    throw new Error('VITE_SITE_URL must be an origin only, such as https://gamas.bot')
+let canonicalUrl = ''
+let builtHtml = ''
+if (!fs.existsSync(indexPath)) {
+  fail('dist/index.html is missing; cannot determine the built site origin/base')
+} else {
+  builtHtml = fs.readFileSync(indexPath, 'utf8')
+  const canonicalValue = builtHtml.match(/<link\b[^>]*rel="canonical"[^>]*href="([^"]+)"/i)?.[1]
+  try {
+    const parsedCanonical = new URL(canonicalValue || '')
+    if (!['https:', 'http:'].includes(parsedCanonical.protocol) || parsedCanonical.search || parsedCanonical.hash || !parsedCanonical.pathname.endsWith('/')) {
+      throw new Error('the prerendered canonical URL must be an HTTP(S) origin and a trailing-slash base path')
+    }
+    configuredBase = parsedCanonical.pathname
+    if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
+      throw new Error(`invalid canonical base path "${configuredBase}"`)
+    }
+    siteOrigin = parsedCanonical.origin
+    canonicalUrl = `${siteOrigin}${configuredBase}`
+  } catch (error) {
+    fail(error.message || 'invalid/missing canonical URL in dist/index.html')
   }
-  siteOrigin = parsedSite.origin
-} catch (error) {
-  fail(error.message || `invalid VITE_SITE_URL "${configuredSite}"`)
 }
 
 if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
-  fail(`invalid VITE_BASE "${configuredBase}" — use / or a path such as /gamas/`)
+  fail(`cannot infer a valid VITE_BASE from the built canonical URL — use / or a path such as /gamas/`)
 } else if (siteOrigin) {
   const prefix = configuredBase === '/' ? '' : configuredBase.slice(0, -1)
-  const today = new Date().toISOString().slice(0, 10)
   const robots = [
     'User-agent: *',
     `Disallow: ${prefix}/api/`,
@@ -97,9 +108,6 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     '  <url>',
     `    <loc>${siteOrigin}${prefix}/</loc>`,
-    `    <lastmod>${today}</lastmod>`,
-    '    <changefreq>weekly</changefreq>',
-    '    <priority>1.0</priority>',
     '  </url>',
     '</urlset>',
     '',
@@ -112,9 +120,17 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
   // 2b. llms.txt — a plain-text summary aligned with the bot and page.
   //     Avoid unsupported access, price, proof and retention promises.
   // --------------------------------------------------------------------------
-  const bot = normaliseUsername(process.env.VITE_BOT_USERNAME)
-  const site = `${siteOrigin}${prefix}/`
+  const renderedBot = builtHtml.match(/href="https:\/\/t\.me\/([a-z0-9_]{5,32})\?start=landing_[^"]+"/i)?.[1]
+  const bot = normaliseUsername(renderedBot) || BOT_USERNAME_DEFAULT
+  if (!renderedBot || !normaliseUsername(renderedBot)) {
+    fail('could not find a valid Telegram CTA destination in the prerendered page')
+  }
   const botLink = `https://t.me/${bot}`
+  const identityMarkedVerified = builtHtml.includes(`"sameAs":["${botLink}"]`)
+  const botStatus = identityMarkedVerified
+    ? 'The deploy operator explicitly attested VITE_BOT_IDENTITY_VERIFIED=true; Telegram availability can still change and should be rechecked.'
+    : 'The rendered Telegram handle is not independently verified for ownership or live availability; confirm the destination before release.'
+  const site = `${siteOrigin}${prefix}/`
   const llms = [
     '# گاماس (Gamas)',
     '',
@@ -122,47 +138,48 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
     '',
     `- Site: ${site}`,
     `- Telegram bot: ${botLink} (@${bot})`,
+    `- Telegram identity status: ${botStatus}`,
+    `- Product facts reviewed at source revision ${PRODUCT.source.commit}: ${PRODUCT.source.commitUrl}`,
     '- Language: Persian (fa), right-to-left',
     '',
     '## What it does',
     '',
-    'Send an audio recording, video or PowerPoint file to the Telegram bot. It transcribes',
+    'Send a supported audio recording, video or PowerPoint file to the Telegram bot. It transcribes',
     'speech and can use slide text when processing a presentation. The bot returns a raw',
-    'transcript and, when note generation succeeds, a structured Word study guide in the chat.',
+    `transcript and, when note generation succeeds, a structured Word ${PRODUCT.outputs.notesExtension} study guide in the chat.`,
     '',
     '## Supported files',
     '',
-    '- Audio examples: MP3, M4A, WAV, OGG, FLAC, WMA, AMR and other formats readable by the bundled media libraries',
-    '- Video: MP4, MKV, MOV, AVI, WEBM and Telegram video notes',
-    '- PowerPoint: PPTX, PPTM, PPSX, PPSM, POTX, POTM, PPT, PPS and POT',
-    '- Not supported: ODP, OTP, PDF, images and ZIP',
-    '- Default application file-size limit: 2 GB; provider and hosting limits may differ',
+    `- Audio examples: ${PRODUCT.files.audioExamples.join(', ')}`,
+    `- Video examples: ${PRODUCT.files.videoExamples.join(', ')}; the bot source also handles Telegram video notes`,
+    `- PowerPoint examples: ${PRODUCT.files.powerpointExamples.join(', ')}`,
+    `- Not supported by the reviewed bot implementation: ${PRODUCT.files.unsupported.join(', ')}`,
+    `- Default application file-size limit: ${PRODUCT.files.defaultMaxLabelFa}; provider and hosting limits may differ`,
     '',
     '## Output',
     '',
-    '- Raw Persian speech transcript as a TXT file',
-    '- Structured study notes as a Word DOCX file when note generation succeeds',
+    `- Raw Persian speech transcript as a ${PRODUCT.outputs.transcriptExtension} file`,
+    `- Structured study notes as a Word ${PRODUCT.outputs.notesExtension} file when note generation succeeds`,
     '- Slide text can be included when the input is a supported PowerPoint file',
     '- If note generation fails, the raw transcript is still delivered',
     '',
     '## Demo',
     '',
-    'The conversation shown on the website is a simulation. It is not connected to a live bot response.',
+    PRODUCT.demo.disclaimerFa,
     '',
     '## Privacy',
     '',
     '- The current landing page does not collect email addresses.',
-    '- CTA analytics records the page section and event time; a private rate-limit bucket uses a keyed IP pseudonym.',
-    '- The hosting provider may keep separate access logs, subject to its own settings and retention policy.',
-    '- The bot forwards audio and, when configured, transcript or slide text to external processing providers.',
-    '- Temporary working media is removed after processing.',
-    '- The reviewed bot implementation stores Telegram user identifiers, file metadata, transcripts and notes in SQLite; no automatic transcript/note expiry is defined there.',
+    '- CTA analytics records the clicked section and event time; a private rate-limit bucket uses a keyed IP pseudonym.',
+    ...PRODUCT.privacy.details.map((detail) => `- ${detail}`),
+    `- ${PRODUCT.privacy.retentionSummaryFa}`,
+    `- ${PRODUCT.source.noticeFa}`,
     '- Do not send files you are not comfortable processing with external services.',
     `- Full details: ${site}#privacy`,
     '',
     '## Start',
     '',
-    `Open ${botLink} and send an eligible class file. This page does not state a verified price.`,
+    `Before relying on ${botLink}, confirm it is the intended bot and remains available. This page does not state a verified price.`,
     '',
     '## Page sections',
     '',
@@ -260,15 +277,207 @@ if (offenders.length) {
 // 4. .htaccess must be there (and RewriteBase aligned with VITE_BASE)
 // ---------------------------------------------------------------------------
 const htaccess = path.join(dist, '.htaccess')
+let expectedScriptHashes = []
 if (fs.existsSync(htaccess)) {
+  let htContent = fs.readFileSync(htaccess, 'utf8')
   if (configuredBase !== '/' && /^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
-    const htContent = fs.readFileSync(htaccess, 'utf8')
-    const updatedHt = htContent.replace(/^(\s*RewriteBase\s+)\/\s*$/m, `$1${configuredBase}`)
-    fs.writeFileSync(htaccess, updatedHt)
+    htContent = htContent.replace(/^(\s*RewriteBase\s+)\/\s*$/m, `$1${configuredBase}`)
   }
+
+  const indexFile = path.join(dist, 'index.html')
+  if (!fs.existsSync(indexFile)) {
+    fail('dist/index.html is missing; cannot generate the script CSP hashes')
+  } else {
+    const html = fs.readFileSync(indexFile, 'utf8')
+    const inlineScripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
+      .filter(([, attributes, body]) => !/\bsrc\s*=/i.test(attributes) && body.length > 0)
+      .map(([, , body]) => `sha256-${crypto.createHash('sha256').update(body, 'utf8').digest('base64')}`)
+    const uniqueHashes = [...new Set(inlineScripts)]
+    expectedScriptHashes = uniqueHashes
+
+    if (!uniqueHashes.length) {
+      fail('no inline scripts found; review the CSP template rather than shipping a permissive fallback')
+    } else if (!htContent.includes('__GAMAS_SCRIPT_HASHES__')) {
+      fail('.htaccess CSP hash placeholder is missing; refusing to ship an unverified inline-script policy')
+    } else {
+      htContent = htContent.replace('__GAMAS_SCRIPT_HASHES__', uniqueHashes.map((hash) => `'${hash}'`).join(' '))
+      ok(`CSP allowlists ${uniqueHashes.length} exact inline script hash${uniqueHashes.length === 1 ? '' : 'es'}`)
+    }
+
+    if (/\sstyle\s*=/i.test(html)) {
+      fail('inline style attribute found in prerendered HTML; style-src-attr is intentionally locked to none')
+    }
+    if (/\son[a-z]+\s*=/i.test(html)) {
+      fail('inline event-handler attribute found in prerendered HTML')
+    }
+    if (/__GAMAS_[A-Z0-9_]+__|%GAMAS_[A-Z0-9_]+%/.test(html)) {
+      fail('unresolved metadata/build placeholder found in dist/index.html')
+    }
+  }
+
+  const cspMatch = htContent.match(/Content-Security-Policy\s+"([^"]+)"/i)
+  if (!cspMatch) {
+    fail('Content-Security-Policy header is missing from dist/.htaccess')
+  } else {
+    const csp = cspMatch[1]
+    if (/__GAMAS_SCRIPT_HASHES__|unsafe-inline|unsafe-eval/i.test(csp)) {
+      fail('CSP contains an unresolved placeholder or an unsafe inline/eval source')
+    }
+    if (!/script-src\s+'self'\s+'sha256-[A-Za-z0-9+/=]+'/.test(csp)) {
+      fail('CSP does not contain a self source and a generated SHA-256 script source')
+    }
+    const policyHashes = [...csp.matchAll(/'sha256-([A-Za-z0-9+/=]+)'/g)].map(([, hash]) => `sha256-${hash}`)
+    const expectedHashes = new Set(expectedScriptHashes)
+    if (policyHashes.length !== expectedHashes.size || policyHashes.some((hash) => !expectedHashes.has(hash))) {
+      fail('CSP inline-script hashes do not exactly match the prerendered HTML')
+    }
+    if (!/style-src\s+'self'(?:\s|;)/.test(csp) || !/style-src-attr\s+'none'/.test(csp)) {
+      fail('CSP must restrict styles to same-origin stylesheets and prohibit inline style attributes')
+    }
+  }
+
+  fs.writeFileSync(htaccess, htContent)
   ok('.htaccess present in dist/')
 } else {
   fail('.htaccess missing from dist/ — public/.htaccess was not copied')
+}
+
+// ---------------------------------------------------------------------------
+// 5. Validate prerendered SEO, RTL shell, local assets and crawler output
+// ---------------------------------------------------------------------------
+if (fs.existsSync(indexPath) && siteOrigin && /^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
+  const html = fs.readFileSync(indexPath, 'utf8')
+  const basePrefix = configuredBase === '/' ? '' : configuredBase.slice(0, -1)
+  const expectedCanonicalUrl = canonicalUrl
+
+  if (!/<html\b[^>]*\blang="fa"[^>]*\bdir="rtl"|<html\b[^>]*\bdir="rtl"[^>]*\blang="fa"/i.test(html)) {
+    fail('prerendered HTML must declare Persian (fa) and right-to-left direction')
+  }
+  if (!/<h1\b/i.test(html)) fail('prerendered page is missing its primary heading')
+  if (!/<a\b[^>]*class="[^"]*skip-link[^"]*"[^>]*href="#main-content"/i.test(html)) {
+    fail('prerendered page is missing the keyboard skip link')
+  }
+  const canonicalValue = html.match(/<link\b[^>]*rel="canonical"[^>]*href="([^"]+)"/i)?.[1]
+  if (canonicalValue !== expectedCanonicalUrl) {
+    fail(`canonical URL is "${canonicalValue || '(missing)'}"; expected ${expectedCanonicalUrl}`)
+  }
+  if (!/<meta\b[^>]*name="description"[^>]*content="[^"]+"/i.test(html)) {
+    fail('prerendered page is missing a non-empty meta description')
+  }
+  if (/<form\b/i.test(html)) fail('unexpected form found; the landing page is intended to collect no form submissions')
+  ok('Persian RTL shell, heading, skip link and metadata checked')
+
+  const appBaseUrl = `${siteOrigin}${configuredBase}`
+  const checkLocalReference = (rawValue, contextLabel) => {
+    const value = rawValue.trim().replace(/&amp;/g, '&')
+    if (!value || value.startsWith('#') || /^(?:data:|blob:|mailto:|tel:|javascript:)/i.test(value)) {
+      if (/^javascript:/i.test(value)) fail(`javascript: URL found in ${contextLabel}`)
+      return
+    }
+
+    let url
+    try {
+      url = new URL(value, appBaseUrl)
+    } catch {
+      fail(`invalid URL "${value}" found in ${contextLabel}`)
+      return
+    }
+    if (url.origin !== siteOrigin) return
+    if (!url.pathname.startsWith(configuredBase)) {
+      fail(`same-origin reference escapes configured base ${configuredBase}: ${value} (${contextLabel})`)
+      return
+    }
+
+    let relativePath
+    try {
+      relativePath = decodeURIComponent(url.pathname.slice(configuredBase.length))
+    } catch {
+      fail(`invalid encoded local path "${value}" in ${contextLabel}`)
+      return
+    }
+    const outputPath = path.resolve(dist, relativePath || 'index.html')
+    const fromDist = path.relative(dist, outputPath)
+    if (fromDist.startsWith('..') || path.isAbsolute(fromDist)) {
+      fail(`local reference escapes dist/: ${value} (${contextLabel})`)
+    } else if (!fs.existsSync(outputPath)) {
+      fail(`local reference has no generated file: ${value} (${contextLabel})`)
+    }
+  }
+
+  const referenceAttributes = /\b(href|src|poster|xlink:href|imagesrc|imagesrcset|srcset)\s*=\s*(["'])(.*?)\2/gi
+  for (const [, attribute, , rawValue] of html.matchAll(referenceAttributes)) {
+    const label = 'prerendered HTML'
+    if (/^(?:imagesrcset|srcset)$/i.test(attribute)) {
+      for (const candidate of rawValue.split(',')) {
+        const imageUrl = candidate.trim().split(/\s+/)[0]
+        if (imageUrl) checkLocalReference(imageUrl, label)
+      }
+    } else {
+      checkLocalReference(rawValue, label)
+    }
+  }
+
+  for (const [, rawImageUrl] of html.matchAll(/<meta\b[^>]*(?:property|name)="(?:og:image|twitter:image)"[^>]*content="([^"]+)"/gi)) {
+    checkLocalReference(rawImageUrl, 'social preview metadata')
+  }
+
+  const cssFiles = []
+  const scanCss = (dir) => {
+    if (!fs.existsSync(dir)) return
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name)
+      if (entry.isDirectory()) scanCss(entryPath)
+      else if (entry.isFile() && entry.name.endsWith('.css')) cssFiles.push(entryPath)
+    }
+  }
+  scanCss(path.join(dist, 'assets'))
+  for (const cssFile of cssFiles) {
+    const css = fs.readFileSync(cssFile, 'utf8')
+    const cssBase = `${siteOrigin}${configuredBase}${path.relative(dist, cssFile).split(path.sep).join('/')}`
+    for (const match of css.matchAll(/url\(\s*(?:(["'])(.*?)\1|([^)]*?))\s*\)/gi)) {
+      const assetUrl = (match[2] ?? match[3] ?? '').trim()
+      if (!assetUrl || /^(?:data:|blob:|https?:|\/\/)/i.test(assetUrl)) continue
+      checkLocalReference(new URL(assetUrl, cssBase).href, path.relative(dist, cssFile))
+    }
+  }
+  ok(`generated local links and CSS assets checked (${cssFiles.length} stylesheet${cssFiles.length === 1 ? '' : 's'})`)
+
+  const robotsPath = path.join(dist, 'robots.txt')
+  const sitemapPath = path.join(dist, 'sitemap.xml')
+  const llmsPath = path.join(dist, 'llms.txt')
+  if (![robotsPath, sitemapPath, llmsPath].every(fs.existsSync)) {
+    fail('robots.txt, sitemap.xml and llms.txt must all be present in dist/')
+  } else {
+    const robots = fs.readFileSync(robotsPath, 'utf8')
+    const sitemap = fs.readFileSync(sitemapPath, 'utf8')
+    const llms = fs.readFileSync(llmsPath, 'utf8')
+    if (!robots.includes(`Sitemap: ${siteOrigin}${basePrefix}/sitemap.xml`)) {
+      fail('robots.txt sitemap URL does not match the configured deployment base')
+    }
+    if (!robots.includes(`Disallow: ${basePrefix}/api/`)) {
+      fail('robots.txt API disallow path does not match the configured deployment base')
+    }
+    if (!sitemap.includes(`<loc>${expectedCanonicalUrl}</loc>`)) {
+      fail('sitemap.xml does not contain the configured canonical URL')
+    }
+    if (!llms.includes(PRODUCT.source.commit) || !llms.includes('identity status')) {
+      fail('llms.txt must disclose its reviewed source revision and Telegram identity verification status')
+    }
+    ok('robots.txt, sitemap.xml and llms.txt checked against product facts and deployment base')
+  }
+
+  if (fs.existsSync(htaccess)) {
+    const htContent = fs.readFileSync(htaccess, 'utf8')
+    const rewriteBase = htContent.match(/^\s*RewriteBase\s+(\S+)/m)?.[1]
+    if (rewriteBase !== configuredBase) {
+      fail(`.htaccess RewriteBase is "${rewriteBase || '(missing)'}"; expected ${configuredBase}`)
+    }
+    if (!/^\s*RewriteRule\s+\^api\(\?:\/\|\$\)\s+-\s+\[L,NC\]/m.test(htContent)) {
+      fail('.htaccess must leave the API subtree native so PHP routes and 404s are not swallowed by the SPA fallback')
+    }
+  }
+} else {
+  fail('cannot validate prerendered output because dist/index.html or valid deployment settings are missing')
 }
 
 // ---------------------------------------------------------------------------

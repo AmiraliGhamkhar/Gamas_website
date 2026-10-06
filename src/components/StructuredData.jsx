@@ -1,13 +1,23 @@
 /**
- * Machine-readable entity graph for the site. Constants are shared with page
- * links and postbuild output so identity, canonical URL and deploy path agree.
- * Rendered by vite-react-ssg into the static HTML.
+ * Machine-readable entity graph for the page. Identity and deployment URLs are
+ * shared with the UI; Telegram is linked only after an explicit build-time
+ * identity attestation, not merely because a username override was supplied.
  */
-import { BOT_URL_BASE, SITE_ORIGIN, SITE_URL, sitePath } from '../lib/constants'
+import {
+  BOT_IDENTITY_VERIFIED,
+  BOT_URL_BASE,
+  PRODUCT,
+  SITE_ORIGIN,
+  SITE_URL,
+  sitePath,
+} from '../lib/constants'
 
-const DESCRIPTION =
-  'ربات تلگرامی فارسی برای تبدیل فایل‌های آموزشی به رونوشت گفتار و جزوه‌ی قابل مرور.'
+const DESCRIPTION = PRODUCT.seo.description
 const ORGANIZATION_ID = `${SITE_URL}#organization`
+const WEBSITE_ID = `${SITE_URL}#website`
+const WEBPAGE_ID = `${SITE_URL}#webpage`
+const SOFTWARE_ID = `${SITE_URL}#software`
+const verifiedBotIdentity = BOT_IDENTITY_VERIFIED ? { sameAs: [BOT_URL_BASE] } : {}
 
 const graph = {
   '@context': 'https://schema.org',
@@ -15,8 +25,8 @@ const graph = {
     {
       '@type': 'Organization',
       '@id': ORGANIZATION_ID,
-      name: 'گاماس',
-      alternateName: 'Gamas Bot',
+      name: PRODUCT.nameFa,
+      alternateName: PRODUCT.nameLatin,
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
@@ -24,29 +34,46 @@ const graph = {
         width: 64,
         height: 64,
       },
-      sameAs: [BOT_URL_BASE],
+      ...verifiedBotIdentity,
     },
     {
       '@type': 'WebSite',
-      '@id': `${SITE_URL}#website`,
+      '@id': WEBSITE_ID,
       url: SITE_URL,
-      name: 'گاماس',
+      name: PRODUCT.nameFa,
       description: DESCRIPTION,
       inLanguage: 'fa-IR',
       publisher: { '@id': ORGANIZATION_ID },
     },
     {
+      '@type': 'WebPage',
+      '@id': WEBPAGE_ID,
+      url: SITE_URL,
+      name: PRODUCT.seo.title,
+      description: DESCRIPTION,
+      inLanguage: 'fa-IR',
+      isPartOf: { '@id': WEBSITE_ID },
+      about: { '@id': SOFTWARE_ID },
+      mainEntity: { '@id': SOFTWARE_ID },
+      primaryImageOfPage: {
+        '@type': 'ImageObject',
+        url: `${SITE_ORIGIN}${sitePath('og-image.jpg')}`,
+        width: 1200,
+        height: 630,
+      },
+    },
+    {
       '@type': 'SoftwareApplication',
-      '@id': `${SITE_URL}#software`,
-      name: 'گاماس',
-      alternateName: 'Gamas Bot',
+      '@id': SOFTWARE_ID,
+      name: PRODUCT.nameFa,
+      alternateName: PRODUCT.nameLatin,
       url: SITE_URL,
       description: DESCRIPTION,
       applicationCategory: 'EducationApplication',
       applicationSubCategory: 'Persian lecture transcription and notes',
       inLanguage: 'fa',
       publisher: { '@id': ORGANIZATION_ID },
-      sameAs: [BOT_URL_BASE],
+      ...verifiedBotIdentity,
     },
   ],
 }

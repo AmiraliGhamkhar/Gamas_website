@@ -1,19 +1,19 @@
-// `import.meta.env` only exists under Vite. The fallback keeps this module
-// importable from plain Node — scripts/postbuild.mjs generates dist/llms.txt
-// from these exact values, so the bot identity can never drift from the page.
-const env = import.meta.env ?? {}
+import {
+  BOT_IDENTITY_VERIFIED,
+  BOT_USERNAME,
+  BOT_USERNAME_CONFIGURED,
+  PRODUCT,
+  landingEventFor,
+  normaliseUsername,
+} from './product.js'
 
-/** Normalise a Telegram handle from any source (build-time env, CLI input). */
-export function normaliseUsername(raw) {
-  return String(raw || '').trim().replace(/^@/, '').replace(/[^a-z0-9_]/gi, '') || 'GamasBot'
-}
-
-export const BOT_USERNAME = normaliseUsername(env.VITE_BOT_USERNAME)
+export { BOT_IDENTITY_VERIFIED, BOT_USERNAME, BOT_USERNAME_CONFIGURED, PRODUCT, landingEventFor, normaliseUsername }
 export const BOT_HANDLE = `@${BOT_USERNAME}`
 export const BOT_URL_BASE = `https://t.me/${BOT_USERNAME}`
 
-// Deploy origin and path, matching vite.config.js defaults. Used by the
-// JSON-LD entity graph so @id values follow a subfolder deploy too.
+// Deploy origin and path, matching vite.config.js defaults. Used by metadata
+// and JSON-LD so @id values follow a subfolder deployment too.
+const env = import.meta.env ?? {}
 export const SITE_ORIGIN = (env.VITE_SITE_URL || 'https://gamas.bot').replace(/\/+$/, '')
 const base = typeof env.BASE_URL === 'string' && env.BASE_URL ? env.BASE_URL : '/'
 const sitePath_ = base.endsWith('/') ? base : `${base}/`
@@ -24,8 +24,12 @@ export function sitePath(path = '') {
   return `${base}${String(path).replace(/^\/+/, '')}`
 }
 
-export function tgLink(section = 'hero') {
-  return `${BOT_URL_BASE}?start=landing_${section}`
+/**
+ * Telegram deep links carry the same landing event name that the click tracker
+ * records, allowing future bot-side attribution without adding a new platform.
+ */
+export function tgLink(placement = 'hero') {
+  return `${BOT_URL_BASE}?start=${encodeURIComponent(landingEventFor(placement))}`
 }
 
 /** Format visible numbers in Persian without changing values used by APIs or logic. */
