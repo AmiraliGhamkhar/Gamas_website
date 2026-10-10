@@ -36,7 +36,7 @@ inventory, and all three Playwright verify harnesses against a preview
 server. Keep the last two release zips for rollback; the zip itself is
 built by CI and is git-ignored (`gamadesk-cpanel.zip` must never be hand-edited).
 
-The build runs `vite-react-ssg` and `scripts/postbuild.mjs`. Postbuild removes SSG manifests; emits base-aware `robots.txt`, `sitemap.xml` and `llms.txt`; hashes the exact prerendered inline scripts into the Apache CSP; and checks metadata, local HTML/CSS assets, `.htaccess`, deployment base and sensitive-file exclusions. It fails on unresolved placeholders or inline style/event-handler attributes.
+The build runs `vite-react-ssg` and `scripts/postbuild.mjs`. Postbuild removes SSG manifests; emits base-aware `robots.txt` (which explicitly allows classic search and AI answer crawlers such as `OAI-SearchBot`, `PerplexityBot` and `Claude-SearchBot` while keeping `/api/` disallowed for every group), `sitemap.xml` (with the image namespace) and a Persian `llms.txt`; hashes the exact prerendered inline scripts into the Apache CSP; and checks snippets/keyword/hreflang metadata, the product JSON-LD entities, local HTML/CSS assets, `.htaccess`, deployment base and sensitive-file exclusions. It fails on unresolved placeholders or inline style/event-handler attributes. See [`docs/seo-geo.md`](docs/seo-geo.md) for the SEO/GEO rationale and its evidence limits.
 
 For a subfolder deployment such as `https://gamadesk.ir/gamas/`:
 
@@ -138,6 +138,11 @@ done
 
 # The retired endpoint must return 410, not accept/store an email.
 curl -s -i https://gamadesk.ir/api/lead.php | head -12
+
+# AI/LLM discovery files must be live and base-correct.
+curl -s https://gamadesk.ir/llms.txt | head -8
+curl -s https://gamadesk.ir/robots.txt | grep -E 'OAI-SearchBot|PerplexityBot|GPTBot|Sitemap'
+curl -s https://gamadesk.ir/sitemap.xml | grep -E '<loc>|image:loc'
 
 # Valid CTA event. Expect 200 and {"ok":true,"section":"deploy_check"}.
 curl -s -i -H 'Origin: https://gamadesk.ir' \

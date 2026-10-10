@@ -41,6 +41,7 @@ Upload the contents of `dist/` (including `.htaccess`) to `public_html/`, then u
 | `scripts/postbuild.mjs` | Removes SSG manifests, emits base-aware crawler files, hashes inline scripts into CSP, and validates assets/deploy paths/sensitive files |
 | `verify-*.mjs` | Optional Playwright browser harnesses for viewports, interactions, metadata and local assets; outputs go to ignored `docs/screenshots/current/` |
 | `tests/product.test.js` | Dependency-free checks for username handling, CTA events and core product claims |
+| `docs/seo-geo.md` | SEO / GEO / LLM-discovery strategy, its evidence and its limits |
 | `DEPLOY.md` | cPanel deployment and operational guide |
 | `AUDIT.md` | Evidence-based engineering audit and validation limits |
 

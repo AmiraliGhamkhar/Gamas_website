@@ -21,6 +21,7 @@ import path from 'node:path'
 // Shared product facts are used for crawler output; bot/site identity is read
 // from prerendered HTML so .env and CI build settings cannot drift from the UI.
 import { BOT_USERNAME_DEFAULT, PRODUCT, normaliseUsername } from '../src/lib/product.js'
+import { getFaqs } from '../src/lib/faq-data.js'
 
 const dist = path.resolve(process.cwd(), 'dist')
 
@@ -92,23 +93,50 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
   fail(`cannot infer a valid VITE_BASE from the built canonical URL — use / or a path such as /gamas/`)
 } else if (siteOrigin) {
   const prefix = configuredBase === '/' ? '' : configuredBase.slice(0, -1)
+  // Policy for a public marketing page that WANTS classic search plus AI
+  // citations. Named search/answer agents are listed explicitly so the intent
+  // survives future default changes; the wildcard group covers everything else.
+  // Each group repeats the API disallow because a bot matching a specific group
+  // ignores the '*' group entirely (robots.txt group-matching rule).
+  // Training-only crawlers are allowed so the product can enter model knowledge;
+  // add `Disallow: ${prefix}/` for one of them below to opt out of its data use.
+  const searchAndAiAgents = [
+    'Googlebot', 'Bingbot', 'Applebot',
+    'OAI-SearchBot', 'ChatGPT-User', 'GPTBot',
+    'PerplexityBot', 'Perplexity-User',
+    'Claude-SearchBot', 'Claude-User', 'ClaudeBot',
+    'Google-Extended', 'Applebot-Extended', 'CCBot',
+  ]
   const robots = [
-    'User-agent: *',
-    `Disallow: ${prefix}/api/`,
-    `Allow: ${prefix}/`,
+    '# Public marketing page: classic search and AI answer crawlers welcome.',
+    '# The API subtree is private and never indexable.',
     '',
+    'User-agent: *',
+    `Allow: ${prefix}/`,
+    `Disallow: ${prefix}/api/`,
+    '',
+    ...searchAndAiAgents.flatMap((agent) => [
+      `User-agent: ${agent}`,
+      `Allow: ${prefix}/`,
+      `Disallow: ${prefix}/api/`,
+      '',
+    ]),
     `Sitemap: ${siteOrigin}${prefix}/sitemap.xml`,
     '',
     '# Plain-text summary for AI answer engines and LLM crawlers:',
     `# ${siteOrigin}${prefix}/llms.txt`,
     '',
   ].join('\n')
+  const sitemapImages = ['og-image.jpg', 'images/hero-phone.jpg']
   const sitemap = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
     '  <url>',
     `    <loc>${siteOrigin}${prefix}/</loc>`,
     `    <lastmod>${new Date().toISOString().slice(0, 10)}</lastmod>`,
+    '    <changefreq>weekly</changefreq>',
+    '    <priority>1.0</priority>',
+    ...sitemapImages.map((image) => `    <image:image><image:loc>${siteOrigin}${prefix}/${image}</image:loc></image:image>`),
     '  </url>',
     '</urlset>',
     '',
@@ -132,65 +160,68 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(configuredBase)) {
     ? 'The deploy operator explicitly attested VITE_BOT_IDENTITY_VERIFIED=true; Telegram availability can still change and should be rechecked.'
     : 'The rendered Telegram handle is not independently verified for ownership or live availability; confirm the destination before release.'
   const site = `${siteOrigin}${prefix}/`
+  // llms.txt follows the llmstxt.org convention: one H1 (name), a blockquote
+  // summary, context paragraphs, then H2 sections that are link lists. It is an
+  // optional, low-cost discovery aid - it does not affect Google Search ranking
+  // (see docs/seo-geo.md) - so it stays concise and links to real page anchors.
+  const faqs = getFaqs()
   const llms = [
     '# گاماس (Gamas)',
     '',
-    '> ربات تلگرامی فارسی که با کمک هوش مصنوعی گفتار کلاس را به رونوشت و جزوه‌ی قابل مرور تبدیل می‌کند.',
+    '> ربات تلگرامی فارسی که با کمک هوش مصنوعی گفتار کلاس را به رونوشت متنی و جزوه‌ی قابل مرور تبدیل می‌کند.',
+    '',
+    'گاماس برای دانشجوها و هرکسی است که فایل آموزشی دارد. ویس، فایل صوتی، ویدیو یا پاورپوینت کلاس را',
+    'در تلگرام می‌فرستی و رونوشت فارسی و جزوه‌ی Word را در همان گفت‌وگو می‌گیری.',
     '',
     `- Site: ${site}`,
     `- Telegram bot: ${botLink} (@${bot})`,
     `- Telegram identity status: ${botStatus}`,
+    `- Language: Persian (${PRODUCT.seo.language}), right-to-left`,
     `- Product facts reviewed at source revision ${PRODUCT.source.commit}: ${PRODUCT.source.commitUrl}`,
-    '- Language: Persian (fa), right-to-left',
+    `- Page last updated: ${PRODUCT.seo.updatedOn}`,
     '',
-    '## What it does',
+    '## شروع و استفاده',
     '',
-    'Send a supported audio recording, video or PowerPoint file to the Telegram bot. It transcribes',
-    'speech and can use slide text when processing a presentation. The bot returns a raw',
-    `transcript and, when note generation succeeds, a structured Word ${PRODUCT.outputs.notesExtension} study guide in the chat.`,
+    `- [باز کردن ربات در تلگرام](${botLink}): شروع کار در تلگرام`,
+    `- [مراحل کار: از فایل کلاس تا جزوه](${site}#how): سه قدم`,
+    `- [قابلیت‌ها و فرمت‌های پشتیبانی‌شده](${site}#features): صدا، ویدیو و پاورپوینت`,
+    `- [سقف حجم فایل](${site}#features): ${PRODUCT.files.defaultMaxLabelFa}`,
     '',
-    '## Supported files',
+    '## خروجی‌ها',
     '',
-    `- Audio examples: ${PRODUCT.files.audioExamples.join(', ')}`,
-    `- Video examples: ${PRODUCT.files.videoExamples.join(', ')}; the bot source also handles Telegram video notes`,
-    `- PowerPoint examples: ${PRODUCT.files.powerpointExamples.join(', ')}`,
-    `- Not supported by the reviewed bot implementation: ${PRODUCT.files.unsupported.join(', ')}`,
-    `- Default application file-size limit: ${PRODUCT.files.defaultMaxLabelFa}; provider and hosting limits may differ`,
+    `- رونوشت گفتار فارسی در فایل ${PRODUCT.outputs.transcriptExtension}`,
+    `- جزوه‌ی ساختاریافته در فایل Word (${PRODUCT.outputs.notesExtension})، اگر ساخت جزوه موفق شود`,
+    '- اگر ساخت جزوه انجام نشود، رونوشت خام همچنان فرستاده می‌شود',
     '',
-    '## Output',
+    '## قابلیت‌ها',
     '',
-    `- Raw Persian speech transcript as a ${PRODUCT.outputs.transcriptExtension} file`,
-    `- Structured study notes as a Word ${PRODUCT.outputs.notesExtension} file when note generation succeeds`,
-    '- Slide text can be included when the input is a supported PowerPoint file',
-    '- If note generation fails, the raw transcript is still delivered',
+    ...PRODUCT.features.map((feature) => `- ${feature}`),
     '',
-    '## Demo',
+    '## فرمت‌های پشتیبانی‌شده',
     '',
-    PRODUCT.demo.disclaimerFa,
+    `- صدا: ${PRODUCT.files.audioExamples.join(', ')}`,
+    `- ویدیو: ${PRODUCT.files.videoExamples.join(', ')}؛ ویدیوی گرد تلگرام هم پردازش می‌شود`,
+    `- پاورپوینت: ${PRODUCT.files.powerpointExamples.join(', ')}`,
+    `- پشتیبانی‌نشده در کد بررسی‌شده: ${PRODUCT.files.unsupported.join(', ')}`,
     '',
-    '## Privacy',
+    '## پرسش‌های پرتکرار',
     '',
-    '- The current landing page does not collect email addresses.',
-    '- CTA analytics records the clicked section and event time; a private rate-limit bucket uses a keyed IP pseudonym.',
+    ...faqs.map((faq) => `- [${faq.q}](${site}#faq): ${faq.a}`),
+    '',
+    '## حریم خصوصی و نگهداری داده',
+    '',
+    '- این صفحه ایمیل جمع نمی‌کند.',
     ...PRODUCT.privacy.details.map((detail) => `- ${detail}`),
     `- ${PRODUCT.privacy.retentionSummaryFa}`,
     `- ${PRODUCT.source.noticeFa}`,
-    '- Do not send files you are not comfortable processing with external services.',
-    `- Full details: ${site}#privacy`,
+    `- جزئیات کامل: ${site}#privacy`,
     '',
-    '## Start',
+    '## Optional',
     '',
-    `Before relying on ${botLink}, confirm it is the intended bot and remains available. This page does not state a verified price.`,
-    '',
-    '## Page sections',
-    '',
-    `- [Overview and start](${site}#top): what the bot does and how to open it`,
-    `- [Why it exists](${site}#story): a common class-note problem`,
-    `- [Simulated demo](${site}#demo): a sample processing flow, not a live response`,
-    `- [How it works](${site}#how): the three steps`,
-    `- [Capabilities](${site}#features): accepted formats, size limit and outputs`,
-    `- [Privacy](${site}#privacy): providers and data retention`,
-    `- [FAQ](${site}#faq): files, outputs, accuracy and storage`,
+    `- [صفحه‌ی اصلی گاماس](${site}): توضیح کامل محصول`,
+    `- [نمایش شبیه‌سازی‌شده](${site}#demo): نمونه‌ی جریان پردازش، نه پاسخ زنده‌ی ربات`,
+    `- [سورس عمومی ربات](${PRODUCT.source.repository}): مخزن کد`,
+    `- پیش از تکیه بر ${botLink} مطمئن شو همان ربات موردنظر است و در دسترس می‌ماند. این صفحه قیمت تأییدشده‌ای اعلام نمی‌کند.`,
     '',
   ].join('\n')
   fs.writeFileSync(path.join(dist, 'llms.txt'), llms)
@@ -398,7 +429,22 @@ if (fs.existsSync(indexPath) && siteOrigin && /^\/(?:[A-Za-z0-9_-]+\/)*$/.test(c
     fail('prerendered page is missing a non-empty meta description')
   }
   if (/<form\b/i.test(html)) fail('unexpected form found; the landing page is intended to collect no form submissions')
-  ok('Persian RTL shell, heading, skip link and metadata checked')
+  if (!/<meta\b[^>]*name="robots"[^>]*content="[^"]*max-snippet:-1[^"]*"/i.test(html)) {
+    fail('prerendered page must allow full snippets (robots max-snippet:-1) for search and AI answer engines')
+  }
+  if (!/<meta\b[^>]*name="keywords"[^>]*content="[^"]+"/i.test(html)) {
+    fail('prerendered page is missing its (non-empty) keyword meta')
+  }
+  if (!/<link\b[^>]*hreflang="fa-IR"[^>]*href="[^"]+"/i.test(html)) {
+    fail('prerendered page must declare the fa-IR alternate link')
+  }
+  if (!/"@type":"HowTo"/.test(html) || !/"@type":"SoftwareApplication"/.test(html)) {
+    fail('prerendered JSON-LD must describe the product with HowTo and SoftwareApplication entities')
+  }
+  if (!/"applicationCategory":"EducationApplication"/.test(html)) {
+    fail('prerendered SoftwareApplication must keep its applicationCategory')
+  }
+  ok('Persian RTL shell, heading, skip link, snippets policy and metadata checked')
 
   const appBaseUrl = `${siteOrigin}${configuredBase}`
   const checkLocalReference = (rawValue, contextLabel) => {
@@ -496,7 +542,27 @@ if (fs.existsSync(indexPath) && siteOrigin && /^\/(?:[A-Za-z0-9_-]+\/)*$/.test(c
     if (!llms.includes(PRODUCT.source.commit) || !llms.includes('identity status')) {
       fail('llms.txt must disclose its reviewed source revision and Telegram identity verification status')
     }
-    ok('robots.txt, sitemap.xml and llms.txt checked against product facts and deployment base')
+    if (!/^# .+\n\n> /m.test(llms)) {
+      fail('llms.txt must start with an H1 name followed by a blockquote summary')
+    }
+    if (!llms.includes('\n## ')) {
+      fail('llms.txt must expose H2 link sections')
+    }
+    if (!llms.includes(`https://t.me/${PRODUCT.bot.username}`)) {
+      fail('llms.txt must link the configured Telegram destination')
+    }
+    for (const agent of ['OAI-SearchBot', 'PerplexityBot', 'Claude-SearchBot', 'GPTBot', 'Googlebot']) {
+      if (!new RegExp(`^User-agent: ${agent}$`, 'm').test(robots)) {
+        fail(`robots.txt is missing an explicit AI/search crawler group for ${agent}`)
+      }
+    }
+    if (!robots.includes(`Disallow: ${basePrefix}/api/`)) {
+      fail('robots.txt must keep the API subtree disallowed for every group')
+    }
+    if (!/xmlns:image="http:\/\/www\.google\.com\/schemas\/sitemap-image\/1\.1"/.test(sitemap) || !/<image:image>/.test(sitemap)) {
+      fail('sitemap.xml must declare the image namespace and at least one image entry')
+    }
+    ok('robots.txt, sitemap.xml and llms.txt checked against product facts, AI-crawler policy and deployment base')
   }
 
   if (fs.existsSync(htaccess)) {

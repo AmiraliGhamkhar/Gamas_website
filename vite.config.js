@@ -76,6 +76,7 @@ export default defineConfig(({ mode }) => {
             .replace(/https:\/\/gamadesk\.ir/g, siteOrigin)
             .replaceAll('%GAMAS_TITLE%', escapeHtmlAttribute(PRODUCT.seo.title))
             .replaceAll('%GAMAS_DESCRIPTION%', escapeHtmlAttribute(PRODUCT.seo.description))
+            .replaceAll('%GAMAS_KEYWORDS%', escapeHtmlAttribute(PRODUCT.seo.keywords.join(', ')))
         },
       },
     ],

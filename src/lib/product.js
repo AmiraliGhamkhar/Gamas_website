@@ -46,9 +46,28 @@ export const PRODUCT = Object.freeze({
   nameFa: 'گاماس',
   nameLatin: 'Gamas',
   seo: Object.freeze({
-    title: 'گاماس | جزوه‌ی کلاس با هوش مصنوعی',
+    // Keyword-forward Persian title/description for the Iranian student audience.
+    // Keep the brand ("گاماس") and a natural reading order; no keyword stuffing.
+    title: 'تبدیل ویس و فایل کلاس به متن و جزوه با هوش مصنوعی | ربات تلگرام گاماس',
     description:
-      'فایل صوتی، ویدیویی یا پاورپوینت کلاس را در تلگرام برای ربات گاماس بفرستید. گفتار با کمک هوش مصنوعی به رونوشت فارسی و جزوه‌ی قابل مرور تبدیل می‌شود.',
+      'ویس، فایل صوتی، ویدیوی کلاس یا پاورپوینت را در تلگرام برای ربات گاماس (@Gamas_jozveh_bot) بفرستید؛ هوش مصنوعی گفتار فارسی را به رونوشت متنی و جزوه‌ی Word تبدیل می‌کند. مناسب دانشجوها برای خلاصه‌کردن و مرور درس.',
+    // Google ignores meta keywords; this list is kept short and honest and is
+    // reused for the meta tag and documentation only. Local/legacy engines may
+    // still read it, and it documents the query families the page targets.
+    keywords: Object.freeze([
+      'تبدیل ویس به متن',
+      'تبدیل صوت به متن فارسی',
+      'تبدیل فایل صوتی کلاس به متن',
+      'جزوه‌نویسی با هوش مصنوعی',
+      'ساخت جزوه از پاورپوینت',
+      'خلاصه درس با هوش مصنوعی',
+      'ربات تلگرام تبدیل ویس به متن',
+      'هوش مصنوعی برای دانشجویان',
+    ]),
+    language: 'fa-IR',
+    locale: 'fa_IR',
+    publishedOn: '2026-10-06',
+    updatedOn: '2026-10-10',
   }),
   source: Object.freeze({
     repository: 'https://github.com/AmiraliGhamkhar/Gamas_bot',
@@ -79,6 +98,17 @@ export const PRODUCT = Object.freeze({
     notesConditional: true,
     rawTranscriptOnNotesFailure: true,
   }),
+  // Truthful capability list, drawn from the reviewed bot source. Used for
+  // SoftwareApplication.featureList and the llms.txt / HowTo summaries.
+  features: Object.freeze([
+    'تبدیل ویس و فایل صوتی به متن فارسی',
+    'تبدیل گفتار ویدیوی کلاس به متن',
+    'استخراج متن اسلایدهای PowerPoint برای جزوه',
+    'ساخت جزوه‌ی Word از مطالب درس',
+    'تحویل رونوشت خام به‌صورت فایل TXT',
+    'پشتیبانی از ویدیوی گرد تلگرام',
+    'حذف فایل‌های کاری موقت پس از پردازش',
+  ]),
   privacy: Object.freeze({
     sourceNoticeFa: SOURCE_NOTICE_FA,
     temporarySummaryFa: 'پس از پردازش پاک می‌شود؛ فایل‌های باقی‌مانده پس از توقف ناگهانی، هنگام راه‌اندازی بعدی پاک‌سازی می‌شوند.',

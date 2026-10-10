@@ -40,6 +40,14 @@ This is the current decision record for the Gamas landing page. Historical redes
 - HTTPS redirects trust Apache’s TLS state rather than arbitrary `X-Forwarded-Proto`. If Cloudflare is used, origin-side HTTPS redirect requires Full/Strict; Flexible mode can loop. Validate the actual proxy and host configuration.
 - JSON-LD keeps Organization/WebSite/WebPage/SoftwareApplication/FAQ entities aligned with visible content; Telegram `sameAs` is omitted absent explicit operator attestation. A subfolder `robots.txt` is not discoverable in place of the domain-root file.
 
+## SEO, GEO and LLM discovery
+
+- Persian copy uses correct orthography (ZWNJ, Persian ی/ک); no duplicate pages or spellings are created for search variants, and meta keywords are treated as decorative because Google ignores them.
+- Titles/descriptions are keyword-forward but honest; `robots` allows full snippets; a self-referencing `fa-IR` hreflang plus `x-default` is kept for locale clarity even though Google infers language from content.
+- Structured data uses ordinary Schema.org types that match visible content (`Organization` with a 512×512 logo, `WebSite`, `WebPage` with dates, `SoftwareApplication` with `featureList`, and a real `HowTo`). No "AI schema", no invented ratings, offers or statistics; Telegram `sameAs` stays gated on the explicit operator attestation.
+- `robots.txt`, `sitemap.xml` (image namespace) and a Persian `llms.txt` are generated at build time. The AI-crawler allow policy is explicit and `/api/` stays disallowed in every group; `llms.txt` is documented as an optional convention, not a ranking lever. Full rationale and sources: [`seo-geo.md`](seo-geo.md).
+- Postbuild fails if the snippets policy, keyword meta, `fa-IR` alternate, product JSON-LD entities, AI-crawler groups or image sitemap go missing.
+
 ## Validation record
 
 | Check | Result |
