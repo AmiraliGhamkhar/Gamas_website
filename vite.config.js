@@ -40,12 +40,12 @@ export default defineConfig(({ mode }) => {
     throw new Error(`Invalid VITE_BASE "${base}". Use / or a path such as /gamas/`)
   }
 
-  const rawSiteUrl = (viteEnv.VITE_SITE_URL || 'https://gamas.bot').replace(/\/+$/, '')
-  let siteOrigin = 'https://gamas.bot'
+  const rawSiteUrl = (viteEnv.VITE_SITE_URL || 'https://gamadesk.ir').replace(/\/+$/, '')
+  let siteOrigin = 'https://gamadesk.ir'
   try {
     const parsedSite = new URL(rawSiteUrl)
     if (!['https:', 'http:'].includes(parsedSite.protocol) || parsedSite.username || parsedSite.password || parsedSite.pathname !== '/' || parsedSite.search || parsedSite.hash) {
-      throw new Error('VITE_SITE_URL must be an origin only, such as https://gamas.bot')
+      throw new Error('VITE_SITE_URL must be an origin only, such as https://gamadesk.ir')
     }
     siteOrigin = parsedSite.origin
   } catch (error) {
@@ -73,7 +73,7 @@ export default defineConfig(({ mode }) => {
         name: 'gamas-site-origin',
         transformIndexHtml(html) {
           return html
-            .replace(/https:\/\/gamas\.bot/g, siteOrigin)
+            .replace(/https:\/\/gamadesk\.ir/g, siteOrigin)
             .replaceAll('%GAMAS_TITLE%', escapeHtmlAttribute(PRODUCT.seo.title))
             .replaceAll('%GAMAS_DESCRIPTION%', escapeHtmlAttribute(PRODUCT.seo.description))
         },

@@ -14,7 +14,7 @@ This is the current decision record for the Gamas landing page. Historical redes
 - Product file/output/privacy/SEO facts are centralized in `src/lib/product.js` and checked against public bot source at `838184907bc828286d4f4782151c3c4fc3b8fc9d`.
 - Audio/video/PowerPoint examples, the default 2,000,000,000-byte app limit, TXT transcript, conditional DOCX notes and raw-transcript fallback are qualified. ODP/OTP, PDF, images and ZIP are not advertised as supported. No price, testimonial, usage figure, accuracy rate or performance promise is asserted.
 - Privacy copy distinguishes website click tracking and host access logs from bot-side data and external processing. Temporary media cleanup is not described as transcript/note deletion; the reviewed bot code defines no automatic expiry for those texts.
-- The default `GamasBot` Telegram destination is **not** live-verified. The hero shows a warning unless the operator configures a handle and explicitly attests verification. `VITE_BOT_USERNAME` alone is not evidence; `VITE_BOT_IDENTITY_VERIFIED=true` gates the JSON-LD `sameAs` edge and is an operator assertion, not an automated check.
+- The default `Gamas_jozveh_bot` Telegram destination is **not** live-verified. The hero shows a warning unless the operator configures a handle and explicitly attests verification. `VITE_BOT_USERNAME` alone is not evidence; `VITE_BOT_IDENTITY_VERIFIED=true` gates the JSON-LD `sameAs` edge and is an operator assertion, not an automated check.
 
 ## Privacy, API and storage
 

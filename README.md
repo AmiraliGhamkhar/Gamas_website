@@ -13,6 +13,8 @@ npm test
 npm run build       # static production output in dist/
 ```
 
+The production target is **`https://gamadesk.ir`** deployed at the `public_html/` root with the Telegram bot at **`https://t.me/Gamas_jozveh_bot`**. Both are the source defaults, so a plain `npm run build` produces the correct canonical URLs and CTA links. Build-time overrides are documented in [`.env.example`](.env.example); copy it to an untracked `.env.local` or export the variables.
+
 The default Telegram username (`Gamas_jozveh_bot`) is the fallback baked into the source. It can still be overridden at build time; the override itself does not prove ownership or live availability:
 
 ```bash
@@ -21,10 +23,10 @@ VITE_BOT_USERNAME=your_bot_username npm run build
 
 Only after independently confirming the username and destination, a deploy operator may also set `VITE_BOT_IDENTITY_VERIFIED=true`; that explicit attestation is what allows JSON-LD to link the bot as the organization’s `sameAs`. No build or source snapshot verifies live Telegram identity.
 
-For a subfolder such as `https://gamas.bot/gamas/`:
+For a subfolder such as `https://gamadesk.ir/gamas/`:
 
 ```bash
-VITE_BASE=/gamas/ VITE_SITE_URL=https://gamas.bot npm run build
+VITE_BASE=/gamas/ VITE_SITE_URL=https://gamadesk.ir npm run build
 ```
 
 Upload the contents of `dist/` (including `.htaccess`) to `public_html/`, then upload `api/` to `public_html/api/`. For a subfolder build, put both under the matching subfolder. Node is not required on cPanel. See [`DEPLOY.md`](DEPLOY.md) for PHP, Apache, storage, privacy, exact-origin configuration, verification and rollback details.
@@ -63,7 +65,7 @@ The interaction harness stubs Telegram and `/api/track.php`; it does not test PH
 - Build: Node 20.19+, 22.13+, or 24+.
 - PHP: 7.4 is the compatibility floor; use a maintained release (8.2+ recommended).
 - `pdo_sqlite` is optional for the small CTA tracker; it falls back to a private NDJSON file.
-- Set `GAMAS_ALLOWED_ORIGINS` to a comma-separated list of **full origins** only when the canonical deployed origin differs from `https://gamas.bot`. Scheme and port are checked, not just the hostname.
+- Set `GAMAS_ALLOWED_ORIGINS` to a comma-separated list of **full origins** only when the canonical deployed origin differs from `https://gamadesk.ir`. Scheme and port are checked, not just the hostname.
 - Set `GAMAS_DATA_DIR` to a private directory outside `public_html` when cPanel does not derive a suitable account-home directory automatically.
 - Set `GAMAS_TRUST_CF_IP=1` only when Cloudflare is actually the trusted reverse proxy.
 

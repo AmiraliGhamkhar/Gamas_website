@@ -816,7 +816,7 @@ function gamas_allowed_origins(): array
         return array_values(array_unique($origins));
     }
 
-    return ['https://gamas.bot'];
+    return ['https://gamadesk.ir'];
 }
 
 /** Require a browser-supplied Origin or Referer matching the exact allowlist. */

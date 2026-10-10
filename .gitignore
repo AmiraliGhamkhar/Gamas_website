@@ -29,5 +29,5 @@ Thumbs.db
 *.log
 
 # Release artifact (built by CI, never hand-edited)
-gamas-cpanel.zip
-gamas-cpanel-*.zip
+gamadesk-cpanel.zip
+gamadesk-cpanel-*.zip

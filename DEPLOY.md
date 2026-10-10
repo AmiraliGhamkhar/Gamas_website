@@ -8,15 +8,16 @@ This repository builds a pre-rendered React/Vite site for static Apache hosting.
 
 | Setting | Default |
 |---|---|
-| Canonical site origin | `https://gamas.bot` |
-| Canonical host | `gamas.bot` (non-www) |
+| Canonical site origin | `https://gamadesk.ir` |
+| Canonical host | `gamadesk.ir` (non-www) |
+| Telegram bot | `https://t.me/Gamas_jozveh_bot` (source default; live identity is an operator check) |
 | Deploy path | root of `public_html/` (`VITE_BASE=/`) |
 | Build | Node 20.19+, 22.13+, or 24+ on a local machine/CI |
 | Server runtime | Apache 2.4 and PHP 8.2+ (see `api/bootstrap.php` version guard) |
 | Data storage | Private account-home directory; SQLite for clicks if `pdo_sqlite` exists, otherwise NDJSON |
 | Email collection | None on the current website; `api/lead.php` returns HTTP 410 |
 
-The PHP API’s default exact-origin allowlist is `https://gamas.bot`. If the deployed site has another origin, set `GAMAS_ALLOWED_ORIGINS` in cPanel to a comma-separated list of full origins (scheme + host + optional port), such as `https://staging.example.com`. The code does not add `HTTP_HOST` to the allowlist.
+The PHP API’s default exact-origin allowlist is `https://gamadesk.ir`. If the deployed site has another origin, set `GAMAS_ALLOWED_ORIGINS` in cPanel to a comma-separated list of full origins (scheme + host + optional port), such as `https://staging.example.com`. The code does not add `HTTP_HOST` to the allowlist.
 
 ## 2. Build locally or in CI
 
@@ -28,30 +29,32 @@ npm run build
 node scripts/images.mjs
 ```
 
+No build variables are required for the production target: the source defaults are `VITE_SITE_URL=https://gamadesk.ir`, `VITE_BASE=/` and `VITE_BOT_USERNAME=Gamas_jozveh_bot`. [`.env.example`](.env.example) lists the overrides; copy it to an untracked `.env.local` or pass the variables inline. Do not commit `.env`/`.env.local`.
+
 CI (`.github/workflows/ci.yml`) runs lint, tests, build, the image
 inventory, and all three Playwright verify harnesses against a preview
 server. Keep the last two release zips for rollback; the zip itself is
-built by CI and is git-ignored (`gamas-cpanel.zip` must never be hand-edited).
+built by CI and is git-ignored (`gamadesk-cpanel.zip` must never be hand-edited).
 
 The build runs `vite-react-ssg` and `scripts/postbuild.mjs`. Postbuild removes SSG manifests; emits base-aware `robots.txt`, `sitemap.xml` and `llms.txt`; hashes the exact prerendered inline scripts into the Apache CSP; and checks metadata, local HTML/CSS assets, `.htaccess`, deployment base and sensitive-file exclusions. It fails on unresolved placeholders or inline style/event-handler attributes.
 
-For a subfolder deployment such as `https://gamas.bot/gamas/`:
+For a subfolder deployment such as `https://gamadesk.ir/gamas/`:
 
 ```bash
-VITE_BASE=/gamas/ VITE_SITE_URL=https://gamas.bot npm run build
+VITE_BASE=/gamas/ VITE_SITE_URL=https://gamadesk.ir npm run build
 ```
 
-Upload the **contents** of `dist/` to `public_html/gamas/` and upload `api/` to `public_html/gamas/api/`. The same origin remains `https://gamas.bot`; the base path does not belong in `GAMAS_ALLOWED_ORIGINS`.
+Upload the **contents** of `dist/` to `public_html/gamas/` and upload `api/` to `public_html/gamas/api/`. The same origin remains `https://gamadesk.ir`; the base path does not belong in `GAMAS_ALLOWED_ORIGINS`.
 
 `VITE_BASE` must begin and end with `/` and match the public path exactly. `VITE_SITE_URL` is an origin only (no path/query/hash). Do not build for a subfolder and upload at the domain root, or vice versa.
 
-Configure the Telegram destination deliberately:
+Configure the Telegram destination deliberately (the default is already `Gamas_jozveh_bot` → `https://t.me/Gamas_jozveh_bot`):
 
 ```bash
-VITE_BOT_USERNAME=your_bot_username npm run build
+VITE_BOT_USERNAME=Gamas_jozveh_bot npm run build
 ```
 
-The code falls back to `GamasBot` when no valid username is supplied; that fallback has **not** been live-verified. A build-time username override also does not prove ownership or availability. After the responsible operator has checked the destination, `VITE_BOT_IDENTITY_VERIFIED=true` may be set alongside `VITE_BOT_USERNAME`; only then does structured data assert the Telegram `sameAs` relationship. This flag is an operator attestation, not an automated check. Never set it merely to silence the disclosure in generated `llms.txt`.
+The code falls back to `Gamas_jozveh_bot` when no valid username is supplied; that fallback has **not** been live-verified. A build-time username override also does not prove ownership or availability. After the responsible operator has checked the destination, `VITE_BOT_IDENTITY_VERIFIED=true` may be set alongside `VITE_BOT_USERNAME`; only then does structured data assert the Telegram `sameAs` relationship. This flag is an operator attestation, not an automated check. Never set it merely to silence the disclosure in generated `llms.txt`.
 
 ## 3. Upload layout
 
@@ -82,13 +85,13 @@ Do not upload `src/`, `node_modules/`, `.git/`, `package*.json`, build configura
 1. Select PHP 8.2+ (PHP 7.4 is only a compatibility floor).
 2. Enable `pdo_sqlite` if available. It is optional; click logging falls back to NDJSON. `json`, `hash` and `pcre` are core PHP extensions.
 3. Set `GAMAS_DATA_DIR` to a private, writable directory **outside** all `public_html` trees if the account’s default derived location is unsuitable. Example: `/home/ACCOUNT/gamas_data`.
-4. Set `GAMAS_ALLOWED_ORIGINS=https://gamas.bot` explicitly for production if your host supports environment variables. Add another complete origin only when the site is intentionally served from it.
+4. Set `GAMAS_ALLOWED_ORIGINS=https://gamadesk.ir` explicitly for production if your host supports environment variables. Add another complete origin only when the site is intentionally served from it.
 5. Set `GAMAS_TRUST_CF_IP=1` only if Cloudflare is the trusted reverse proxy in front of the origin. Otherwise leave it unset; PHP then uses `REMOTE_ADDR`.
 6. Upload `api/.user.ini` beside the PHP endpoints. cPanel may cache `.user.ini` values for several minutes.
 
 Use restrictive permissions. The API attempts to create a private data directory as `0700` and data/key files as `0600`; do not use `chmod 777`. The fallback `public_html/data/` location is denied by `.htaccess`, but a private directory outside the web root is preferred.
 
-The production `.htaccess` redirects only the configured `www.gamas.bot` and `gamas.bot` hosts to the fixed canonical URL. It does not reflect an arbitrary `Host` header into a redirect. Its HTTPS redirect uses Apache’s actual TLS state and deliberately ignores an arbitrary `X-Forwarded-Proto` header. If Cloudflare proxies the origin, use **Full (strict)** TLS; Flexible mode can loop. If another trusted proxy terminates TLS before Apache, configure HTTPS canonicalization at that trusted edge or add an explicit proxy-IP trust rule—do not trust forwarded headers from arbitrary clients. If you use a different domain, update the allowlisted host conditions in `public/.htaccess`, set `VITE_SITE_URL`, and set the exact PHP origin allowlist together.
+The production `.htaccess` redirects only the configured `www.gamadesk.ir` and `gamadesk.ir` hosts to the fixed canonical URL. It does not reflect an arbitrary `Host` header into a redirect. Its HTTPS redirect uses Apache’s actual TLS state and deliberately ignores an arbitrary `X-Forwarded-Proto` header. If Cloudflare proxies the origin, use **Full (strict)** TLS; Flexible mode can loop. If another trusted proxy terminates TLS before Apache, configure HTTPS canonicalization at that trusted edge or add an explicit proxy-IP trust rule—do not trust forwarded headers from arbitrary clients. If you use a different domain, update the allowlisted host conditions in `public/.htaccess`, set `VITE_SITE_URL`, and set the exact PHP origin allowlist together.
 
 ## 5. What the website API stores
 
@@ -115,38 +118,38 @@ Run these against the live cPanel host after uploading both `dist/` and `api/`. 
 
 ```bash
 # HTTPS and canonical host. Expect HTTP→HTTPS and www→apex redirects.
-curl -sI http://gamas.bot/ | head -5
-curl -sI https://www.gamas.bot/ | head -5
+curl -sI http://gamadesk.ir/ | head -5
+curl -sI https://www.gamadesk.ir/ | head -5
 
 # Security headers and HTML revalidation.
-curl -sI https://gamas.bot/ | grep -iE 'strict-transport|content-security|x-frame|x-content-type|referrer-policy|cache-control'
+curl -sI https://gamadesk.ir/ | grep -iE 'strict-transport|content-security|x-frame|x-content-type|referrer-policy|cache-control'
 
 # Hashed Vite asset should be immutable; use an actual file from dist/assets.
 ASSET=$(find dist/assets -maxdepth 1 -type f | head -1 | xargs basename)
-curl -sI "https://gamas.bot/assets/$ASSET" | grep -i cache-control
+curl -sI "https://gamadesk.ir/assets/$ASSET" | grep -i cache-control
 
 # A missing asset must be a real 404, not index.html with status 200.
-curl -s -o /dev/null -w '%{http_code}\n' https://gamas.bot/assets/not-a-real-file.js
+curl -s -o /dev/null -w '%{http_code}\n' https://gamadesk.ir/assets/not-a-real-file.js
 
 # Hidden/config/source files and directory listings should be denied (usually 403).
 for p in .env package.json data/ .git/ api/bootstrap.php; do
-  printf '%-24s %s\n' "$p" "$(curl -s -o /dev/null -w '%{http_code}' "https://gamas.bot/$p")"
+  printf '%-24s %s\n' "$p" "$(curl -s -o /dev/null -w '%{http_code}' "https://gamadesk.ir/$p")"
 done
 
 # The retired endpoint must return 410, not accept/store an email.
-curl -s -i https://gamas.bot/api/lead.php | head -12
+curl -s -i https://gamadesk.ir/api/lead.php | head -12
 
 # Valid CTA event. Expect 200 and {"ok":true,"section":"deploy_check"}.
-curl -s -i -H 'Origin: https://gamas.bot' \
+curl -s -i -H 'Origin: https://gamadesk.ir' \
   -H 'Content-Type: application/json' \
   -d '{"section":"deploy_check"}' \
-  https://gamas.bot/api/track.php
+  https://gamadesk.ir/api/track.php
 
 # Exact-origin checks: each should return 403 (scheme/port/host are significant).
-for origin in 'http://gamas.bot' 'https://gamas.bot:8443' 'https://evil.example'; do
+for origin in 'http://gamadesk.ir' 'https://gamadesk.ir:8443' 'https://evil.example'; do
   printf '%-32s %s\n' "$origin" "$(curl -s -o /dev/null -w '%{http_code}' \
     -H "Origin: $origin" -H 'Content-Type: application/json' \
-    -d '{"section":"origin_check"}' https://gamas.bot/api/track.php)"
+    -d '{"section":"origin_check"}' https://gamadesk.ir/api/track.php)"
 done
 ```
 
@@ -165,11 +168,11 @@ A raw `curl` request is not a browser test: after deployment, also open the page
 
 ## 7. Origin, redirects and subfolder notes
 
-- The PHP check compares normalized **scheme + host + effective port**. The default is `https://gamas.bot`, not “whatever `HTTP_HOST` says.”
+- The PHP check compares normalized **scheme + host + effective port**. The default is `https://gamadesk.ir`, not “whatever `HTTP_HOST` says.”
 - `Origin` or `Referer` must be present and match the allowlist. A missing header is rejected. The front end sends the event only after a user activates a CTA.
 - The `.htaccess` redirects use the fixed canonical hostname, not `%{HTTP_HOST}` as a destination. For custom domains, change the allowlisted host expressions intentionally; do not replace them with an arbitrary host reflection.
 - Subfolder URLs use `VITE_BASE` in JavaScript, HTML metadata, API links, crawler output and CSS font URLs. `scripts/postbuild.mjs` updates `RewriteBase`; still verify the emitted font URLs and actual deployed `.woff2` requests.
-- Search crawlers request `robots.txt` at the **domain root**. A copy emitted inside `/gamas/` is not a substitute for `https://gamas.bot/robots.txt`; if deploying only to a subfolder, coordinate the root robots file and sitemap URL with the domain owner.
+- Search crawlers request `robots.txt` at the **domain root**. A copy emitted inside `/gamas/` is not a substitute for `https://gamadesk.ir/robots.txt`; if deploying only to a subfolder, coordinate the root robots file and sitemap URL with the domain owner.
 - The API directory must sit under the same host and subfolder as the page. `/api/` is excluded from the static-page fallback.
 
 ## 8. Content Security Policy
@@ -193,8 +196,8 @@ zip -r gamas-$(date +%F).zip dist api
 # and its api/ over public_html/api/, then re-run the §6 smoke checks
 ```
 
-Monitoring: put one uptime check on `https://gamas.bot/` (expect 200 + `lang="fa"`)
-and one on `https://gamas.bot/api/track.php` via OPTIONS (expect 204). Alert on
+Monitoring: put one uptime check on `https://gamadesk.ir/` (expect 200 + `lang="fa"`)
+and one on `https://gamadesk.ir/api/track.php` via OPTIONS (expect 204). Alert on
 any non-2xx or on a missing `content-security-policy` response header.
 
 Backups: copy `~/gamas_data/gamas.sqlite` weekly to private backup storage

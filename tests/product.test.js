@@ -12,7 +12,7 @@ import { tgLink } from '../src/lib/constants.js'
 test('Telegram username normalization accepts handles, not URLs or malformed identifiers', () => {
   assert.equal(normaliseUsername(' @Gamas_Bot9 '), 'Gamas_Bot9')
   assert.equal(normaliseUsername('tiny'), '')
-  assert.equal(normaliseUsername('https://t.me/GamasBot'), '')
+  assert.equal(normaliseUsername('https://t.me/Gamas_jozveh_bot'), '')
   assert.equal(normaliseUsername('Gamas Bot'), '')
   assert.equal(normaliseUsername('a'.repeat(33)), '')
   assert.equal(BOT_USERNAME_DEFAULT, 'Gamas_jozveh_bot')

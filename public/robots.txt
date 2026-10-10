@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /api/
 Allow: /
 
-Sitemap: https://gamas.bot/sitemap.xml
+Sitemap: https://gamadesk.ir/sitemap.xml

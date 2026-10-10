@@ -60,16 +60,16 @@ ErrorDocument 404 /404.html
   #        spoof it. Use TLS at the origin (for example Cloudflare Full/Strict),
   #        not Flexible mode, which cannot satisfy this origin-side redirect.
   #
-  #    >>> TO MAKE www.gamas.bot CANONICAL INSTEAD: see DEPLOY.md §7. <<<
+  #    >>> TO MAKE www.gamadesk.ir CANONICAL INSTEAD: see DEPLOY.md §7. <<<
   # ---------------------------------------------------------------------------
   # Only redirect requests addressed to the two configured production hosts.
   # Never reflect an arbitrary Host header into a Location response.
-  RewriteCond %{HTTP_HOST} ^www\.gamas\.bot(?::\d+)?$ [NC]
-  RewriteRule ^ https://gamas.bot%{REQUEST_URI} [R=301,L]
+  RewriteCond %{HTTP_HOST} ^www\.gamadesk\.ir(?::\d+)?$ [NC]
+  RewriteRule ^ https://gamadesk.ir%{REQUEST_URI} [R=301,L]
 
-  RewriteCond %{HTTP_HOST} ^gamas\.bot(?::\d+)?$ [NC]
+  RewriteCond %{HTTP_HOST} ^gamadesk\.ir(?::\d+)?$ [NC]
   RewriteCond %{HTTPS} !=on
-  RewriteRule ^ https://gamas.bot%{REQUEST_URI} [R=301,L]
+  RewriteRule ^ https://gamadesk.ir%{REQUEST_URI} [R=301,L]
 
   # ---------------------------------------------------------------------------
   # 4. Deny everything that should never be served

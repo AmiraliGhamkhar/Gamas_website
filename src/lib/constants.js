@@ -13,7 +13,7 @@ export const BOT_URL_BASE = `https://t.me/${BOT_USERNAME}`
 // Deploy origin and path, matching vite.config.js defaults. Used by metadata
 // and JSON-LD so @id values follow a subfolder deployment too.
 const env = import.meta.env ?? {}
-export const SITE_ORIGIN = (env.VITE_SITE_URL || 'https://gamas.bot').replace(/\/+$/, '')
+export const SITE_ORIGIN = (env.VITE_SITE_URL || 'https://gamadesk.ir').replace(/\/+$/, '')
 const base = typeof env.BASE_URL === 'string' && env.BASE_URL ? env.BASE_URL : '/'
 const sitePath_ = base.endsWith('/') ? base : `${base}/`
 export const SITE_URL = `${SITE_ORIGIN}${sitePath_}`

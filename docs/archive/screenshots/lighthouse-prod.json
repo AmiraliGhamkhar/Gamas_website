@@ -1564,7 +1564,7 @@
                 "width": 388,
                 "height": 51
               },
-              "snippet": "<a href=\"https://t.me/GamasBot?start=landing_mobile_sticky\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary flex w-full items-center justify-center gap-2 rounded-pill …\">",
+              "snippet": "<a href=\"https://t.me/Gamas_jozveh_bot?start=landing_mobile_sticky\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary flex w-full items-center justify-center gap-2 rounded-pill …\">",
               "nodeLabel": "شروع در تلگرام"
             },
             "score": 0.0003396844443394569,
@@ -2961,7 +2961,7 @@
                 "width": 152,
                 "height": 44
               },
-              "snippet": "<a href=\"https://t.me/GamasBot?start=landing_navbar\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary hidden min-h-11 items-center gap-2 rounded-pill bg-primary …\">",
+              "snippet": "<a href=\"https://t.me/Gamas_jozveh_bot?start=landing_navbar\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary hidden min-h-11 items-center gap-2 rounded-pill bg-primary …\">",
               "nodeLabel": "شروع در تلگرام",
               "explanation": "Fix all of the following:\n  Check that links have the same purpose, or are intentionally ambiguous."
             },
@@ -2982,7 +2982,7 @@
                       "width": 380,
                       "height": 57
                     },
-                    "snippet": "<a href=\"https://t.me/GamasBot?start=landing_hero\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary group inline-flex items-center justify-center gap-2.5 round…\">",
+                    "snippet": "<a href=\"https://t.me/Gamas_jozveh_bot?start=landing_hero\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary group inline-flex items-center justify-center gap-2.5 round…\">",
                     "nodeLabel": "شروع در تلگرام"
                   }
                 },
@@ -3000,7 +3000,7 @@
                       "width": 110,
                       "height": 44
                     },
-                    "snippet": "<a href=\"https://t.me/GamasBot?start=landing_story_cta\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-secondary-pill rounded-pill bg-white text-zinc-900 px-4 py-2 text-x…\">",
+                    "snippet": "<a href=\"https://t.me/Gamas_jozveh_bot?start=landing_story_cta\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-secondary-pill rounded-pill bg-white text-zinc-900 px-4 py-2 text-x…\">",
                     "nodeLabel": "شروع در تلگرام"
                   }
                 },
@@ -3018,7 +3018,7 @@
                       "width": 160,
                       "height": 46
                     },
-                    "snippet": "<a href=\"https://t.me/GamasBot?start=landing_demo\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary inline-flex items-center gap-2 rounded-pill bg-primary px-6…\">",
+                    "snippet": "<a href=\"https://t.me/Gamas_jozveh_bot?start=landing_demo\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary inline-flex items-center gap-2 rounded-pill bg-primary px-6…\">",
                     "nodeLabel": "شروع در تلگرام"
                   }
                 }
@@ -4516,7 +4516,7 @@
                     "width": 388,
                     "height": 51
                   },
-                  "snippet": "<a href=\"https://t.me/GamasBot?start=landing_mobile_sticky\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary flex w-full items-center justify-center gap-2 rounded-pill …\">",
+                  "snippet": "<a href=\"https://t.me/Gamas_jozveh_bot?start=landing_mobile_sticky\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary flex w-full items-center justify-center gap-2 rounded-pill …\">",
                   "nodeLabel": "شروع در تلگرام"
                 },
                 "score": 0.0003396844443394569,
@@ -4904,7 +4904,7 @@
               "width": 388,
               "height": 51
             },
-            "snippet": "<a href=\"https://t.me/GamasBot?start=landing_mobile_sticky\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary flex w-full items-center justify-center gap-2 rounded-pill …\">",
+            "snippet": "<a href=\"https://t.me/Gamas_jozveh_bot?start=landing_mobile_sticky\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"button-primary flex w-full items-center justify-center gap-2 rounded-pill …\">",
             "nodeLabel": "شروع در تلگرام"
           }
         ]
