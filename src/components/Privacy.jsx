@@ -1,6 +1,6 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import ResponsiveIllustration from './ResponsiveIllustration'
+import StudyArtwork from './StudyArtwork'
 import { PRODUCT } from '../lib/constants'
 
 const privacyFacts = [
@@ -50,11 +50,7 @@ export default function Privacy() {
         </div>
 
         <figure className="privacy-visual">
-          <ResponsiveIllustration
-            name="teacher-privacy"
-            sizes="(max-width: 360px) calc(100vw - 30px), (max-width: 639px) calc(100vw - 36px), (max-width: 833px) calc(100vw - 64px), (max-width: 1067px) calc((100vw - 118px) / 2), 600px"
-            alt="تصویر مفهومی سه‌بعدی از پنل آموزشی مدرس در کنار سپر و قفل"
-          />
+          <StudyArtwork variant="privacy" />
           <figcaption><span><Icon name="lock" size={15} /> تصویر مفهومی</span> اطلاعات واقعی کاربر نمایش داده نمی‌شود</figcaption>
         </figure>
       </div>

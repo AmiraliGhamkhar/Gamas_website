@@ -71,3 +71,18 @@ The interaction harness stubs Telegram and `/api/track.php`; it does not test PH
 - Set `GAMAS_TRUST_CF_IP=1` only when Cloudflare is actually the trusted reverse proxy.
 
 The site does not collect email addresses. The site’s privacy section is based on the pinned, reviewed bot-source revision—not live provider/account settings—and warns that no automatic deletion period is defined for bot transcripts or notes. The default Telegram handle is unverified until the deploy operator checks it.
+
+## Editorial redesign delivery
+
+See [`docs/redesign-delivery.md`](docs/redesign-delivery.md) for the 2026-11-02
+visual direction, reference-access limitation, current validation evidence,
+screenshot paths, dependency audit caveat and cPanel release checklist. Optional
+supplemental browser checks after a build and preview startup:
+
+```bash
+BASE_URL=http://127.0.0.1:4173/ node scripts/verify-editorial.mjs
+```
+
+This enforces the generated CSP in the browser, runs an automated accessibility
+scan, captures desktop/mobile screenshots, and checks prerendered no-JS content
+and Telegram navigation when tracking fails. It does not contact the real bot.

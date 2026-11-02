@@ -31,8 +31,7 @@ export default function Navbar() {
   useEffect(() => {
     if (!open) return undefined
 
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    document.body.classList.add('menu-is-open')
     const focusFrame = window.requestAnimationFrame(() => {
       drawerRef.current?.querySelector('a[href]')?.focus()
     })
@@ -63,7 +62,7 @@ export default function Navbar() {
     window.addEventListener('keydown', onKeyDown)
     return () => {
       window.cancelAnimationFrame(focusFrame)
-      document.body.style.overflow = previousOverflow
+      document.body.classList.remove('menu-is-open')
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [open])

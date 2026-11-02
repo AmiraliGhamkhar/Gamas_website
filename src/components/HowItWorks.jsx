@@ -1,6 +1,6 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import ResponsiveIllustration from './ResponsiveIllustration'
+import StudyArtwork from './StudyArtwork'
 import { BOT_HANDLE, PRODUCT } from '../lib/constants'
 
 const steps = [
@@ -55,11 +55,7 @@ export default function HowItWorks() {
           </ol>
 
           <figure className="waveform-visual">
-            <ResponsiveIllustration
-              name="waveform"
-              sizes="(max-width: 360px) calc(100vw - 30px), (max-width: 639px) calc(100vw - 36px), (max-width: 833px) calc(100vw - 64px), (max-width: 1067px) calc((100vw - 118px) / 2), 600px"
-              alt="تصویر مفهومی از صدای کلاس و یک صفحه‌ی یادداشت مرتب"
-            />
+            <StudyArtwork variant="process" />
             <figcaption className="waveform-visual-caption">
               <span className="waveform-caption-icon"><Icon name="audio" size={18} /></span>
               گفتار کلاس به متن فارسی تبدیل می‌شود
