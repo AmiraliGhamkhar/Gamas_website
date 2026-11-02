@@ -1,88 +1,115 @@
-# Gamas website
+# وب‌سایت گاماس (Gamas Website)
 
-Persian, right-to-left landing page for **Gamas**, a Telegram bot that uses AI to transcribe class speech and prepare study notes from supported audio, video and PowerPoint files.
+صفحه فرود (Landing Page) فارسی و راست‌چین برای **گاماس**؛ ربات تلگرامی هوش مصنوعی برای تبدیل گفتار کلاس (صوت، ویدیو و فایل‌های پاورپوینت) به متن و جزوه خلاصه درس.
 
-The site keeps its existing React + Vite + `vite-react-ssg` architecture. It is pre-rendered as static HTML for cPanel; Node is used only at build time. Styling is plain CSS, with self-hosted Vazirmatn and Lalezar fonts. A small PHP endpoint records CTA clicks; the former email form is retired.
+معماری پروژه مبتنی بر **React 18**، **Vite 6** و **vite-react-ssg** به صورت تولید فایل‌های ایستا (Static HTML Prerender) به همراه یک API ساده با **PHP 8.2+** برای ثبت آماری کلیک دکمه‌ها و استقرار روی هاست اشتراکی cPanel با وب‌سرور Apache طراحی شده است. اجرای سایت در محیط عملیاتی به سرور Node.js نیاز ندارد.
 
-## Build and deploy
+---
 
-```bash
+## ابزارها و نیازمندی‌های توسعه
+
+- **Node.js**: نگارش `^20.19.0` یا `^22.13.0` یا `>=24.0.0` (نگارش‌های LTS سازگار)
+- **npm**: نگارش `10+` (استفاده از فایل قفل `package-lock.json`)
+- **PHP**: نگارش `8.2+` (سازگار با `api/bootstrap.php`) روی سرور cPanel
+
+---
+
+## راهنمای توسعه در ویندوز پاورشل (Windows PowerShell)
+
+تمام دستورهای زیر در محیط **Windows PowerShell** قابل اجرا هستند:
+
+### ۱. بررسی پیش‌نیازها
+```powershell
+node --version
+npm --version
+```
+
+### ۲. کلون و نصب وابستگی‌ها
+```powershell
+git clone https://github.com/AmiraliGhamkhar/Gamas_website.git
+cd Gamas_website
 npm ci
-npm run lint
-npm test
-npm run build       # static production output in dist/
 ```
 
-The production target is **`https://gamadesk.ir`** deployed at the `public_html/` root with the Telegram bot at **`https://t.me/Gamas_jozveh_bot`**. Both are the source defaults, so a plain `npm run build` produces the correct canonical URLs and CTA links. Build-time overrides are documented in [`.env.example`](.env.example); copy it to an untracked `.env.local` or export the variables.
-
-The default Telegram username (`Gamas_jozveh_bot`) is the fallback baked into the source. It can still be overridden at build time; the override itself does not prove ownership or live availability:
-
-```bash
-VITE_BOT_USERNAME=your_bot_username npm run build
-```
-
-Only after independently confirming the username and destination, a deploy operator may also set `VITE_BOT_IDENTITY_VERIFIED=true`; that explicit attestation is what allows JSON-LD to link the bot as the organization’s `sameAs`. No build or source snapshot verifies live Telegram identity.
-
-For a subfolder such as `https://gamadesk.ir/gamas/`:
-
-```bash
-VITE_BASE=/gamas/ VITE_SITE_URL=https://gamadesk.ir npm run build
-```
-
-Upload the contents of `dist/` (including `.htaccess`) to `public_html/`, then upload `api/` to `public_html/api/`. For a subfolder build, put both under the matching subfolder. Node is not required on cPanel. See [`DEPLOY.md`](DEPLOY.md) for PHP, Apache, storage, privacy, exact-origin configuration, verification and rollback details.
-
-## Repository map
-
-| Path | Purpose |
-|---|---|
-| `src/` | React page, accessible components, Persian RTL copy and CSS |
-| `public/` | Self-hosted fonts, responsive image assets, crawler files and production `.htaccess` |
-| `api/` | `track.php` for CTA events, retired `lead.php` (410), shared PHP storage/security helpers |
-| `scripts/postbuild.mjs` | Removes SSG manifests, emits base-aware crawler files, hashes inline scripts into CSP, and validates assets/deploy paths/sensitive files |
-| `verify-*.mjs` | Optional Playwright browser harnesses for viewports, interactions, metadata and local assets; outputs go to ignored `docs/screenshots/current/` |
-| `tests/product.test.js` | Dependency-free checks for username handling, CTA events and core product claims |
-| `docs/seo-geo.md` | SEO / GEO / LLM-discovery strategy, its evidence and its limits |
-| `DEPLOY.md` | cPanel deployment and operational guide |
-| `AUDIT.md` | Evidence-based engineering audit and validation limits |
-
-## Optional browser regression checks
-
-The page itself needs no browser-test package. To run the optional Playwright harnesses locally, install the tool/browser temporarily, start the Vite server in another terminal, then run the checks:
-
-```bash
-npm install --no-save --package-lock=false playwright
-npx playwright install chromium
+### ۳. اجرای سرور توسعه محلی
+```powershell
 npm run dev
-# in another terminal:
-BASE_URL=http://127.0.0.1:5173/ node verify-redesign.mjs
-BASE_URL=http://127.0.0.1:5173/ node verify-deep.mjs
-BASE_URL=http://127.0.0.1:5173/ node verify-final.mjs
+```
+پیش‌نمایش محلی در آدرس `http://localhost:5173` در دسترس خواهد بود.
+
+### ۴. اجرای تست‌ها و اعتبارسنجی کیفیت کد
+```powershell
+npm run lint
+npm run typecheck
+npm test
+node scripts/images.mjs
 ```
 
-The interaction harness stubs Telegram and `/api/track.php`; it does not test PHP or contact the live bot. Screenshots/reports go under ignored `docs/screenshots/current/`. These tools are optional and are not part of the production build or cPanel upload.
-
-## Runtime notes
-
-- Build: Node 20.19+, 22.13+, or 24+.
-- PHP: 7.4 is the compatibility floor; use a maintained release (8.2+ recommended).
-- `pdo_sqlite` is optional for the small CTA tracker; it falls back to a private NDJSON file.
-- Set `GAMAS_ALLOWED_ORIGINS` to a comma-separated list of **full origins** only when the canonical deployed origin differs from `https://gamadesk.ir`. Scheme and port are checked, not just the hostname.
-- Set `GAMAS_DATA_DIR` to a private directory outside `public_html` when cPanel does not derive a suitable account-home directory automatically.
-- Set `GAMAS_TRUST_CF_IP=1` only when Cloudflare is actually the trusted reverse proxy.
-
-The site does not collect email addresses. The site’s privacy section is based on the pinned, reviewed bot-source revision—not live provider/account settings—and warns that no automatic deletion period is defined for bot transcripts or notes. The default Telegram handle is unverified until the deploy operator checks it.
-
-## Editorial redesign delivery
-
-See [`docs/redesign-delivery.md`](docs/redesign-delivery.md) for the 2026-11-02
-visual direction, reference-access limitation, current validation evidence,
-screenshot paths, dependency audit caveat and cPanel release checklist. Optional
-supplemental browser checks after a build and preview startup:
-
-```bash
-BASE_URL=http://127.0.0.1:4173/ node scripts/verify-editorial.mjs
+### ۵. ساخت نسخه نهایی (Production Build)
+```powershell
+npm run build
 ```
+خروجی نهایی بیلد به طور خودکار در پوشه `dist/` ایجاد شده و فایل‌های امنیتی `.htaccess`، `robots.txt`، `sitemap.xml` و `llms.txt` همراه با مقادیر امن CSP تولید می‌شوند.
 
-This enforces the generated CSP in the browser, runs an automated accessibility
-scan, captures desktop/mobile screenshots, and checks prerendered no-JS content
-and Telegram navigation when tracking fails. It does not contact the real bot.
+---
+
+## راهنمای استقرار روی هاست cPanel (cPanel Deployment Guide)
+
+معماری عملیاتی پروژه از فایل‌های ایستای داخل `dist/` و فایل‌های PHP داخل `api/` تشکیل شده است و **هیچ نیازی به سرور نود (Node.js) در محیط پروداکشن ندارد**.
+
+### مراحل مرحله‌به‌مرحله استقرار:
+
+۱. **ساخت بیلد نهایی در سیستم محلی:**
+   ```powershell
+   npm ci
+   npm run lint
+   npm test
+   npm run build
+   node scripts/images.mjs
+   ```
+
+۲. **پشتیبان‌گیری (Backup):**
+   پیش از هر تغییر، یک نسخه پشتیبان از فایل‌های موجود در `public_html` و پوشه داده خارج از روت (`gamas_data`) تهیه کنید.
+
+۳. **آپلود محتوای بیلد (`dist/`):**
+   - در cPanel وارد **File Manager** شوید و گزینه **Show Hidden Files** را فعال کنید.
+   - تمام فایل‌ها و پوشه‌های موجود **داخل** پوشه `dist/` را مستقیماً در مسیر روت وب‌سایت (معمولاً `public_html/`) بارگذاری کنید.
+   - مطمئن شوید فایل `dist/.htaccess` حتماً به ریشه منتقل شده است.
+   - **توجه:** پوشه‌های توسعه مانند `node_modules`، `.git`، `src` و فایل‌های محیطی محلی را به هیچ وجه آپلود نکنید.
+
+۴. **آپلود پوشه API:**
+   - پوشه `api/` موجود در پروژه را مستقیماً در روت هاست کپی کنید تا مسیر آن `public_html/api/` باشد.
+   - فایل‌های این پوشه شامل `bootstrap.php`، `track.php`، `lead.php`، `csp-report.php`، `.user.ini` و `api/.htaccess` هستند.
+
+۵. **تنظیمات نسخه PHP و متغیرهای محیطی:**
+   - در cPanel نگارش PHP را روی **PHP 8.2** یا جدیدتر تنظیم کنید.
+   - افزونه اختیاری `pdo_sqlite` را در صورت تمایل فعال کنید (در صورت عدم فعال‌سازی، ذخیره‌سازی داده به طور خودکار به فرمت NDJSON سویچ می‌کند).
+   - متغیرهای محیطی اختیاری زیر در صورت نیاز قابل تنظیم هستند:
+     - `GAMAS_DATA_DIR`: مسیر ذخیره داده در خارج از وب‌روت (مثلاً `/home/USER/gamas_data`).
+     - `GAMAS_ALLOWED_ORIGINS`: مبدأ مجاز درخواست‌های API (پیش‌فرض: `https://gamadesk.ir`).
+
+۶. **بررسی پس از استقرار:**
+   - عملکرد صحیح ریدایرکت‌های HTTPS و non-www را بررسی کنید.
+   - اتصال به ربات تلگرام از طریق دکمه‌های صفحه را تست کنید.
+   - هدرهای امنیتی (CSP و Strict-Transport-Security) و کنسول مرورگر را برای اطمینان از عدم خطای شبکه بررسی نمایید.
+
+---
+
+## عیب‌یابی مشکلات متداول (Troubleshooting)
+
+| نشانه و خطا | علت احتمالی | دستور یا مسیر بررسی | راه‌حل ایمن |
+|---|---|---|---|
+| **خطای `npm ci` هنگام نصب وابستگی‌ها** | عدم هماهنگی Node.js با قفل پروژه یا اختلال شبکه | `node --version`<br>`npm --version` | از نسخه سازگار Node (`20.x` یا `22.x`) استفاده کرده و مجدداً `npm ci` را بدون دستکاری قفل اجرا کنید. |
+| **خطای ۵۰۰ در روت سایت بعد از آپلود روی cPanel** | آپلود اشتباه `.htaccess` خام یا دستورهای ناسازگار | لاگ خطا در cPanel: **Metrics > Errors** | حتماً از فایل `dist/.htaccess` بیلدشده استفاده کنید؛ هرگز دستورات `php_value` را در `.htaccess` قرار ندهید. |
+| **خطای ۴۰۳ هنگام ارسال کلیک به `/api/track.php`** | ناهماهنگی مبدأ درخواست (Origin/Referer) با دامنه | سربرگ `Origin` در درخواست شبکه | متغیر `GAMAS_ALLOWED_ORIGINS` را روی هاست با آدرس دقیق مبدأ دامنه تنظیم کنید. |
+| **خطای ۵۰۰ در فراخوانی `/api/track.php`** | نگارش قدیمی PHP روی هاست (پایین‌تر از ۸.۲) | بخش **Select PHP Version** در cPanel | نگارش PHP هاست را به PHP 8.2+ تغییر دهید. |
+| **خطای ۴۰۴ در بارگذاری فونت‌ها یا فایل‌های CSS** | آپلود ناقص پوشه‌های `assets/` یا `fonts/` | تب Network در Developer Tools مرورگر | تمام زیرپوشه‌های موجود در `dist/` را کامل در هاست بارگذاری کنید. |
+
+---
+
+## مستندات تفصیلی پروژه
+
+- [`DEPLOY.md`](DEPLOY.md): راهنمای جامع و فنی استقرار، قواعد امنیتی وب‌سرور، استقرار در زیرپوشه‌ها و سناریوی بازگشت (Rollback).
+- [`AUDIT.md`](AUDIT.md): گزارش ممیزی امنیتی وابستگی‌ها، کد، سربرگ‌های CSP و شواهد اعتبارسنجی پروژه.
+- [`docs/design-decisions.md`](docs/design-decisions.md): مستند تصمیمات طراحی بصری، چیدمان RTL و دسترسی‌پذیری.
+- [`docs/seo-geo.md`](docs/seo-geo.md): راهبرد سئو، داده‌های ساختاریافته Schema.org و نمایه‌سازی موتورهای جستجو و ابزارهای هوش مصنوعی.
