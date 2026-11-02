@@ -1,74 +1,25 @@
-import Icon from './Icon'
 import TelegramCTA from './TelegramCTA'
-import { sitePath } from '../lib/constants'
-
-const proofPoints = [
-  { icon: 'microphone', label: 'ویس و فایل صوتی' },
-  { icon: 'presentation', label: 'ویدیو و پاورپوینت' },
-]
+import StudyArtwork from './StudyArtwork'
 
 export default function Hero() {
   return (
     <section id="top" aria-labelledby="hero-title" className="hero-section product-tile product-tile-light">
-      <div className="hero-backdrop-orb hero-backdrop-orb-one" aria-hidden="true" />
-      <div className="hero-backdrop-orb hero-backdrop-orb-two" aria-hidden="true" />
-
-      <div className="container hero-layout">
-        <div className="hero-copy">
-          <h1 id="hero-title" className="hero-headline">
-            با هوش مصنوعی،
-            <span className="hero-headline-accent">صدای کلاس را به جزوه تبدیل کن.</span>
-          </h1>
-
-          <p className="hero-lede">
-            سه ساعت ضبط مانده و فردا امتحان است؟ فایل صوتی، ویدیوی کلاس یا پاورپوینت را در تلگرام بفرست. گاماس با کمک هوش مصنوعی گفتار را به متن فارسی تبدیل می‌کند و نکته‌ها را برای مرور مرتب می‌کند.
-            <span className="hero-audience"> برای دانشجوها و هرکسی که فایل آموزشی دارد.</span>
-          </p>
-
-          <div className="hero-actions">
-            <TelegramCTA placement="hero" telegramSize={20} arrowSize={18} className="hero-primary-cta" aria-label="شروع در تلگرام — باز کردن ربات گاماس" />
-            <a href="#demo" className="button-secondary-pill hero-secondary-cta">
-              <span className="play-dot" aria-hidden="true">▶</span>
-              دیدن نمونه‌ی نمایشی
-            </a>
+      <div className="container">
+        <div className="editorial-kicker"><span>گاماس — دستیار آموزشی در تلگرام</span><span>برای آنچه از کلاس می‌ماند</span></div>
+        <div className="hero-layout">
+          <div className="hero-copy">
+            <p className="chapter-label">گوش بده. ثبت کن. برگرد.</p>
+            <h1 id="hero-title" className="hero-headline">صدای کلاس،<br /><span className="hero-headline-accent">حالا خواندنی‌ست.</span></h1>
+            <p className="hero-lede">فایل صوتی، ویدیوی کلاس یا پاورپوینت را در تلگرام بفرست. گاماس با کمک هوش مصنوعی گفتار را به متن فارسی تبدیل می‌کند و نکته‌ها را برای مرور مرتب می‌کند.</p>
+            <div className="hero-actions">
+              <TelegramCTA placement="hero" showTelegram={false} className="hero-primary-cta" aria-label="شروع در تلگرام — باز کردن ربات گاماس" />
+              <a href="#demo" className="button-secondary-pill hero-secondary-cta">دیدن نمونه‌ی نمایشی <span aria-hidden="true">↙</span></a>
+            </div>
+            <p className="hero-file-note">صوت / ویدیو / پاورپوینت <span>←</span> رونوشت فارسی و جزوه</p>
           </div>
-
-
-          <ul className="hero-proof-points" aria-label="فایل‌های آموزشی قابل ارسال">
-            {proofPoints.map((point) => (
-              <li key={point.label}>
-                <span className="hero-proof-icon"><Icon name={point.icon} size={17} /></span>
-                {point.label}
-              </li>
-            ))}
-          </ul>
+          <figure className="hero-visual"><StudyArtwork /><figcaption className="sr-only">تصویر مفهومی تبدیل گفتار به یادداشت؛ نمونه‌ی واقعی خروجی نیست.</figcaption></figure>
         </div>
-
-        <figure className="hero-visual">
-          <div className="hero-visual-halo" aria-hidden="true" />
-          <div className="hero-icon-orbit" aria-hidden="true">
-            <span className="hero-float-icon hero-float-icon-mic"><Icon name="microphone" size={22} /></span>
-            <span className="hero-float-icon hero-float-icon-ppt"><Icon name="presentation" size={22} /></span>
-            <span className="hero-float-icon hero-float-icon-notes"><Icon name="notes" size={21} /></span>
-            <span className="hero-float-icon hero-float-icon-lock"><Icon name="lock" size={20} /></span>
-          </div>
-          <picture>
-            <source srcSet={`${sitePath('images/hero-phone.avif')} 941w`} sizes="(max-width: 639px) 270px, (max-width: 833px) 330px, 430px" type="image/avif" />
-            <source srcSet={`${sitePath('images/hero-phone.webp')} 941w`} sizes="(max-width: 639px) 270px, (max-width: 833px) 330px, 430px" type="image/webp" />
-            <img
-              src={sitePath('images/hero-phone.jpg')}
-              srcSet={`${sitePath('images/hero-phone.jpg')} 941w`}
-              sizes="(max-width: 639px) 270px, (max-width: 833px) 330px, 430px"
-              width="941"
-              height="1672"
-              alt="تصویر مفهومی از گوشی با حباب‌های گفت‌وگو و صفحه‌ی یادداشتِ بدون متن"
-              loading="eager"
-              decoding="async"
-              fetchpriority="high"
-              className="hero-phone-image"
-            />
-          </picture>
-        </figure>
+        <div className="hero-bottom"><span>یادگیری، فراتر از لحظه‌ی کلاس.</span><a href="#story">داستان را دنبال کن <span aria-hidden="true">↓</span></a><span>۰۱ / ۰۸</span></div>
       </div>
     </section>
   )

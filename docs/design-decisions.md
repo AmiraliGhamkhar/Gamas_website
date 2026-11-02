@@ -62,3 +62,23 @@ This is the current decision record for the Gamas landing page. Historical redes
 | Browser/PHP/Apache/cPanel | Not verified in this environment. No current browser interaction/render test, PHP runtime, live API, Apache response/header, staging, backup migration, or Telegram identity test is claimed. |
 
 The local builds prove generated-file invariants only. They do not prove live bot settings, cPanel permissions, proxy redirects, Apache module behavior, browser accessibility, rendered overflow or Web Vitals. Follow the release checklist in [`AUDIT.md`](../AUDIT.md) and the account-specific steps in [`DEPLOY.md`](../DEPLOY.md).
+
+## Editorial redesign — 2026-11-02
+
+### Reference limitation and visual specification
+
+`https://layersoftime.studio/` could not be reached from this sandbox. Direct TLS failed and an actual Chromium navigation returned `net::ERR_CONNECTION_CLOSED`. No reference screenshots or observed colors, interactions, maps, 3D, or layout are claimed. The implemented direction is an **independent editorial interpretation**, not a verified reproduction. A reference comparison remains an acceptance limitation.
+
+Design specification: paper `#f2efe7`, ink `#292b24`, vermilion `#a73822`, muted olive panels, fine rules, large local Lalezar headlines, Vazirmatn reading copy, asymmetric desktop compositions and stacked mobile layouts. Original CSS study sheets connect recorded speech to readable notes; the process diagram and privacy ledger have distinct roles. Existing product copy and conditional output/privacy qualifications remain. Hover tilts use transforms only and are disabled for reduced motion. Essential content never waits for an animation.
+
+### Implementation
+
+- `src/editorial.css` is the visual layer imported **after** the existing structural/interaction stylesheet. Keeping the existing demo/progress/disclosure styles avoids replacing working behavior. A future CSS consolidation can remove unused legacy illustration rules; it is not required for runtime correctness.
+- `StudyArtwork.jsx` replaces raster illustrations for scalable, locally rendered visuals with no image fetches. Existing optimized files remain for backwards compatibility and metadata; the unused hero-image preload was removed.
+- Mobile scroll locking now toggles a class instead of an inline style. Drawer visibility changes immediately while transform/opacity animate, allowing reliable initial keyboard focus. Footer targets have a minimum 44px inline size.
+- No package manifest or lockfile change, no runtime dependency, no new font, no external assets. A temporary npm-distributed Chromium and its bundled NSS libraries were used outside the repository to enable testing; they are not deployment dependencies.
+- React/Vite/SSG, canonical `https://gamadesk.ir/`, CTA event names, destination configuration, product facts, PHP API, Apache rules and postbuild CSP hashing are unchanged.
+
+### Current validation
+
+See `docs/redesign-delivery.md` for this release's actual results. Earlier validation tables above describe historical environments, not this session. In particular, the current `npm ci` reports 38 dependency advisories; do not interpret the historical zero-vulnerability result as current evidence.

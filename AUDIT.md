@@ -72,3 +72,11 @@ Under the requested readiness bands, **77/100 is not a deployment sign-off**. Pr
 4. Deploy to staging and verify Apache modules/`AllowOverride`, HTTPS/proxy mode (not Cloudflare Flexible with the origin redirect), fixed-host redirects, CSP/security/cache headers, genuine missing-asset 404s, deep links, API routing, root/subfolder assets and `GAMAS_DATA_DIR` permissions.
 5. Inspect every legacy data directory, host snapshot and backup for retired email records; the application migration cannot erase copies it cannot access.
 6. Confirm live bot settings and external-provider data terms with the product owner. Generate new Lighthouse/Web Vitals results only after the target deploy is available; do not reuse archived artifacts.
+
+## 2026-11-02 editorial redesign validation
+
+Current evidence supersedes historical environment-specific results above: see
+[`docs/redesign-delivery.md`](docs/redesign-delivery.md) for executed checks,
+reference-access limits, current dependency advisories, browser/CSP/accessibility
+results, screenshots and unverified production gates. The PHP API and Apache
+configuration were preserved, not live-tested. No cPanel deployment is claimed.

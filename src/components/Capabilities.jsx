@@ -1,6 +1,6 @@
 import Icon from './Icon'
 import IsolatedText from './IsolatedText'
-import ResponsiveIllustration from './ResponsiveIllustration'
+import StudyArtwork from './StudyArtwork'
 import { PRODUCT } from '../lib/constants'
 
 const formats = [
@@ -75,11 +75,7 @@ export default function Capabilities() {
               <span className="before-label">جزوه مرتب</span>
               <span className="after-label">یادداشت‌های پراکنده </span>
             </div>
-            <ResponsiveIllustration
-              name="before-after"
-              sizes="(max-width: 360px) calc(100vw - 30px), (max-width: 639px) calc(100vw - 36px), (max-width: 833px) calc(100vw - 64px), (max-width: 1067px) calc(100vw - 80px), 600px"
-              alt="تصویر مفهومی از یادداشت‌های شلوغ در کنار صفحه‌ای مرتب برای مرور درس"
-            />
+            <StudyArtwork variant="formats" />
             <figcaption>به همین سادگی</figcaption>
           </figure>
         </div>
