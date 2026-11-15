@@ -2,11 +2,28 @@
 export default function StudyArtwork({ variant = 'notes' }) {
   if (variant === 'privacy') return (
     <div className="privacy-ledger" aria-hidden="true">
-      <span className="ledger-index">گاماس / شفافیت</span>
-      <span className="ledger-symbol">↗</span>
-      <strong>انتخاب آگاهانه،<br />پیش از ارسال.</strong>
-      <p>فایل‌های حساس را نفرست.</p>
-      <span className="ledger-bottom">درباره‌ی پردازش و نگهداری داده بخوان ↓</span>
+      <div className="privacy-ledger-header">
+        <span className="ledger-index">یادداشت حریم خصوصی</span>
+        <span className="ledger-edition">۰۱ / ۰۲</span>
+      </div>
+      <strong className="privacy-ledger-title">چرخه‌ی داده</strong>
+      <div className="privacy-ledger-rows">
+        <div className="privacy-ledger-row">
+          <span className="ledger-row-number">۰۱</span>
+          <div className="ledger-row-copy">
+            <strong>فایل کاری</strong>
+            <span className="ledger-row-state ledger-row-state-temporary">پس از پردازش پاک می‌شود</span>
+          </div>
+        </div>
+        <div className="privacy-ledger-row">
+          <span className="ledger-row-number">۰۲</span>
+          <div className="ledger-row-copy">
+            <strong>رونوشت و جزوه</strong>
+            <span className="ledger-row-state ledger-row-state-retained">نگه‌داری؛ حذف خودکار تعریف نشده</span>
+          </div>
+        </div>
+      </div>
+      <span className="ledger-bottom">فایل ورودی ≠ متن خروجی</span>
     </div>
   )
   if (variant === 'process') return (
@@ -24,6 +41,7 @@ export default function StudyArtwork({ variant = 'notes' }) {
   return (
     <div className={`study-art study-art-${variant}`} aria-hidden="true">
       <div className="study-orbit" />
+      {variant === 'notes' && <div className="study-sheet sheet-middle" />}
       <div className="study-sheet sheet-back"><span>گاماس / یادگیری</span><div className="sheet-rules" /></div>
       <div className="study-sheet sheet-front">
         <div className="sheet-meta"><span>یادداشت‌های کلاس</span><span>۰۱ — گاماس</span></div>

@@ -5,6 +5,7 @@ import { trackCTA } from '../lib/track'
 export default function TelegramCTA({
   placement,
   className = '',
+  label = 'باز کردن ربات تلگرام',
   telegramSize = 20,
   arrowSize = 18,
   showTelegram = true,
@@ -27,7 +28,7 @@ export default function TelegramCTA({
       {...rest}
     >
       {showTelegram && <Icon name="telegram" size={telegramSize} />}
-      باز کردن ربات تلگرام
+      {label}
       {showArrow && <Icon name="arrow-left" size={arrowSize} className="cta-arrow" />}
     </a>
   )

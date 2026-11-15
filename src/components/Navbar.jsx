@@ -12,12 +12,35 @@ const navLinks = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const toggleButtonRef = useRef(null)
   const drawerRef = useRef(null)
+  const scrollStateRef = useRef(false)
+
+  useEffect(() => {
+    let frameId = 0
+    const syncScrollState = () => {
+      if (frameId) return
+      frameId = window.requestAnimationFrame(() => {
+        frameId = 0
+        const nextState = window.scrollY > 8
+        if (nextState === scrollStateRef.current) return
+        scrollStateRef.current = nextState
+        setIsScrolled(nextState)
+      })
+    }
+
+    syncScrollState()
+    window.addEventListener('scroll', syncScrollState, { passive: true })
+    return () => {
+      window.cancelAnimationFrame(frameId)
+      window.removeEventListener('scroll', syncScrollState)
+    }
+  }, [])
 
   useEffect(() => {
     const closeOnDesktop = () => {
-      if (!window.matchMedia('(min-width: 834px)').matches) return
+      if (!window.matchMedia('(min-width: 960px)').matches) return
       const activeElement = document.activeElement
       if (drawerRef.current?.contains(activeElement) || activeElement === toggleButtonRef.current) {
         document.querySelector('.desktop-nav a[href]')?.focus({ preventScroll: true })
@@ -73,7 +96,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="global-nav">
+    <header className={`global-nav${isScrolled ? ' is-scrolled' : ''}`}>
       <div className="container nav-inner">
         <a href="#top" className="brand-link" aria-label="گاماس — صفحه‌ی اصلی">
           <img src={sitePath('logo-mark.svg')} alt="" width="42" height="42" className="brand-mark" />
@@ -87,7 +110,7 @@ export default function Navbar() {
         </nav>
 
         <div className="nav-actions">
-          <TelegramCTA placement="navbar" showTelegram={false} arrowSize={16} className="nav-cta" aria-label="باز کردن ربات گاماس از ناوبری" />
+          <TelegramCTA placement="navbar" showTelegram={false} arrowSize={16} className="nav-cta" aria-label="باز کردن ربات تلگرام گاماس از ناوبری" />
           <button
             ref={toggleButtonRef}
             type="button"

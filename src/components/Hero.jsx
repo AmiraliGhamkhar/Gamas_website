@@ -10,12 +10,12 @@ export default function Hero() {
           <div className="hero-copy">
             <p className="chapter-label">گوش بده. ثبت کن. برگرد.</p>
             <h1 id="hero-title" className="hero-headline">صدای کلاس،<br /><span className="hero-headline-accent">حالا خواندنی‌ست.</span></h1>
-            <p className="hero-lede">فایل صوتی، ویدیوی کلاس یا پاورپوینت را در تلگرام بفرست. گاماس با کمک هوش مصنوعی گفتار را به متن فارسی تبدیل می‌کند و نکته‌ها را برای مرور مرتب می‌کند.</p>
+            <p className="hero-lede">فایل صوتی، ویدیوی کلاس یا پاورپوینت را در تلگرام بفرست. گاماس با کمک هوش مصنوعی گفتار را به رونوشت فارسی تبدیل می‌کند؛ اگر ساخت جزوه موفق باشد، نکته‌ها هم در فایل Word مرتب می‌شوند.</p>
             <div className="hero-actions">
-              <TelegramCTA placement="hero" showTelegram={false} className="hero-primary-cta" aria-label="شروع در تلگرام — باز کردن ربات گاماس" />
-              <a href="#demo" className="button-secondary-pill hero-secondary-cta">دیدن نمونه‌ی نمایشی <span aria-hidden="true">↙</span></a>
+              <TelegramCTA placement="hero" className="hero-primary-cta" aria-label="باز کردن ربات تلگرام گاماس — شروع در تلگرام" />
+              <a href="#demo" className="button-secondary-pill hero-secondary-cta">دیدن نمونه‌ی نمایشی <span className="hero-secondary-arrow" aria-hidden="true">↓</span></a>
             </div>
-            <p className="hero-file-note">صوت / ویدیو / پاورپوینت <span>←</span> رونوشت فارسی و جزوه</p>
+            <p className="hero-file-note">صوت / ویدیو / پاورپوینت <span aria-hidden="true">←</span> رونوشت فارسی + جزوه‌ی Word (در صورت موفقیت)</p>
           </div>
           <figure className="hero-visual"><StudyArtwork /><figcaption className="sr-only">تصویر مفهومی تبدیل گفتار به یادداشت؛ نمونه‌ی واقعی خروجی نیست.</figcaption></figure>
         </div>

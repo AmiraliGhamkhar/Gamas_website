@@ -4,43 +4,79 @@ import TelegramCTA from './TelegramCTA'
 import { PRODUCT } from '../lib/constants'
 
 const deliverables = [
-  `جزوه‌ی دسته‌بندی‌شده در فایل Word (${PRODUCT.outputs.notesExtension})`,
-  `رونوشت گفتار در فایل متنی ${PRODUCT.outputs.transcriptExtension}`,
+  {
+    id: 'transcript',
+    number: '۰۱',
+    title: 'رونوشت گفتار',
+    format: `فایل متنی ${PRODUCT.outputs.transcriptExtension}`,
+  },
+  {
+    id: 'notes',
+    number: '۰۲',
+    title: 'جزوه‌ی ساختاریافته',
+    format: `${PRODUCT.outputs.notesLabelFa} (${PRODUCT.outputs.notesExtension})`,
+    condition: PRODUCT.outputs.notesConditional ? 'در صورت موفقیت ساخت' : '',
+  },
 ]
 
 export default function FinalCTA() {
   return (
-    <section id="final-cta" className="product-tile product-tile-dark cta-section">
-      <div className="cta-glow cta-glow-one" aria-hidden="true" />
-      <div className="cta-glow cta-glow-two" aria-hidden="true" />
+    <section
+      id="final-cta"
+      className="product-tile product-tile-dark cta-section"
+      aria-labelledby="cta-title"
+    >
       <div className="container cta-layout">
         <div className="cta-copy">
-          <h2 className="cta-title">فایل کلاس را بفرست؛<br /><span>مرور را سبک‌تر کن.</span></h2>
+          <p className="cta-kicker">گام بعدی</p>
+          <h2 id="cta-title" className="cta-title">
+            فایل کلاس را در تلگرام بفرست؛
+            <span>رونوشت فارسی را همان‌جا بگیر.</span>
+          </h2>
           <p className="cta-description">
-            ربات گاماس را در تلگرام باز کن و فایل آموزشی‌ات را بفرست. نتیجه‌ی پردازش در همان گفت‌وگو می‌رسد.
+            فایل صوتی، ویدیوی کلاس یا پاورپوینت را به ربات گاماس در تلگرام بفرست. رونوشت در همان گفت‌وگو برمی‌گردد؛ جزوه‌ی Word هم در صورت موفقیت ساخت آماده است.
           </p>
-          <TelegramCTA placement="final_cta" telegramSize={21} arrowSize={19} className="cta-main-button" aria-label="ارسال فایل کلاس در تلگرام — باز کردن ربات گاماس" />
-          <div className="cta-micro-proof"><Icon name="check" size={16} /> ربات تلگرامی گاماس <span>·</span> فایل را در همان گفت‌وگو می‌فرستی</div>
+          <div className="cta-actions">
+            <TelegramCTA
+              placement="final_cta"
+              label="باز کردن ربات برای ارسال فایل"
+              telegramSize={20}
+              arrowSize={18}
+              className="cta-main-button"
+              aria-label="باز کردن ربات برای ارسال فایل — ربات گاماس در تلگرام"
+            />
+            <a className="cta-privacy-link" href="#privacy">
+              <Icon name="lock" size={17} />
+              <span>پیش از ارسال، جزئیات پردازش و نگه‌داری فایل را بخوان</span>
+            </a>
+          </div>
         </div>
 
-        <div className="cta-output-card">
+        <aside className="cta-output-card" aria-labelledby="cta-output-title">
           <div className="cta-output-card-head">
-            <span className="access-card-icon"><Icon name="notes" size={22} /></span>
-            <div>
-              <h3>تا دو خروجی برای مرور</h3>
-              <p><IsolatedText>{`رونوشت ${PRODUCT.outputs.transcriptExtension} و جزوه‌ی Word${PRODUCT.outputs.notesConditional ? '، اگر ساخت جزوه با موفقیت انجام شود.' : '.'}`}</IsolatedText></p>
-            </div>
+            <p className="cta-output-kicker">خروجی‌ها</p>
+            <h3 id="cta-output-title">برای مرور بعد از کلاس</h3>
           </div>
-          <ul className="cta-output-list">
+          <ol className="cta-output-list" aria-label="خروجی‌های فایل ارسالی" role="list">
             {deliverables.map((item) => (
-              <li key={item}>
-                <span className="output-check"><Icon name="check" size={13} /></span>
-                <IsolatedText>{item}</IsolatedText>
+              <li className="cta-output-item" key={item.id}>
+                <span className="cta-output-number" aria-hidden="true">{item.number}</span>
+                <div className="cta-output-copy">
+                  <strong>{item.title}</strong>
+                  <span className="cta-output-format"><IsolatedText>{item.format}</IsolatedText></span>
+                  {item.condition && (
+                    <small className="cta-output-condition"><IsolatedText>{item.condition}</IsolatedText></small>
+                  )}
+                </div>
               </li>
             ))}
-          </ul>
-          <p className="cta-output-note">اگر ساخت جزوه موقتاً در دسترس نباشد، متن خام گفتار همچنان فرستاده می‌شود.</p>
-        </div>
+          </ol>
+          {PRODUCT.outputs.rawTranscriptOnNotesFailure && (
+            <p className="cta-output-note">
+              اگر ساخت جزوه انجام نشود، رونوشت خام گفتار همچنان فرستاده می‌شود.
+            </p>
+          )}
+        </aside>
       </div>
     </section>
   )
