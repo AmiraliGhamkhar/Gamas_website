@@ -57,7 +57,7 @@ export default function Footer() {
               type="button"
               onClick={copyHandle}
               className={`copy-handle ${copied ? 'is-copied' : ''}`}
-              aria-label={copied ? 'کپی شد' : 'کپی آیدی تلگرام'}
+              aria-label={copied ? 'کپی شد ✓' : `کپی آیدی تلگرام ${BOT_HANDLE}`}
             >
               <bdi dir="ltr">{copied ? 'کپی شد ✓' : BOT_HANDLE}</bdi>
             </button>

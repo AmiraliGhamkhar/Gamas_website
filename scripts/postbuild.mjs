@@ -542,6 +542,10 @@ if (fs.existsSync(indexPath) && siteOrigin && /^\/(?:[A-Za-z0-9_-]+\/)*$/.test(c
     if (!llms.includes(PRODUCT.source.commit) || !llms.includes('identity status')) {
       fail('llms.txt must disclose its reviewed source revision and Telegram identity verification status')
     }
+    const privacyDetails = PRODUCT.privacy.details
+    if (llms.includes('[object Object]') || privacyDetails.some((detail) => !llms.includes(detail))) {
+      fail('llms.txt must preserve every grouped privacy fact as readable text')
+    }
     if (!/^# .+\n\n> /m.test(llms)) {
       fail('llms.txt must start with an H1 name followed by a blockquote summary')
     }

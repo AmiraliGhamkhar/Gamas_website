@@ -55,6 +55,7 @@ report.mobileNav = await page.evaluate(() => ({
   first: document.querySelector('#mobile-nav a[href]') === document.activeElement,
   last: document.querySelector('#mobile-nav a[href]:last-of-type') === document.activeElement,
 }))
+assert.equal(report.mobileNav.first, false, 'Shift+Tab from the first drawer link should not remain on the first')
 assert.equal(report.mobileNav.last, true, 'Shift+Tab from the first drawer link should wrap to the last')
 await page.keyboard.press('Tab')
 assert.equal(await page.evaluate(() => document.activeElement === document.querySelector('#mobile-nav a[href]')), true,
@@ -65,7 +66,7 @@ assert.equal(await page.evaluate(() => document.activeElement === document.query
 assert.equal(await page.evaluate(() => document.body.style.overflow), '')
 await toggle.click()
 await page.waitForFunction(() => document.activeElement === document.querySelector('#mobile-nav a[href]'))
-await page.setViewportSize({ width: 834, height: 900 })
+await page.setViewportSize({ width: 960, height: 900 })
 await page.waitForFunction(() => document.querySelector('#mobile-nav').getAttribute('aria-hidden') === 'true')
 report.mobileNav.desktopFocusHandoff = await page.evaluate(() =>
   document.activeElement === document.querySelector('.desktop-nav a[href]'))

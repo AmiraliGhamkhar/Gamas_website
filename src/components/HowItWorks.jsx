@@ -19,28 +19,31 @@ const steps = [
   {
     n: '۰۳',
     icon: 'notes',
-    title: 'رونوشت و جزوه را بگیر',
+    title: 'رونوشت را دریافت کن',
     desc: `رونوشت ${PRODUCT.outputs.transcriptExtension} فرستاده می‌شود؛ اگر ساخت جزوه موفق شود، فایل Word (${PRODUCT.outputs.notesExtension}) هم می‌آید.`,
   },
 ]
 
 export default function HowItWorks() {
   return (
-    <section id="how" className="product-tile product-tile-light how-section">
+    <section id="how" className="product-tile product-tile-light how-section" aria-labelledby="how-title">
       <div className="container">
         <div className="section-heading how-heading">
-          <h2 className="section-title">از فایل کلاس تا جزوه، در سه قدم.</h2>
+          <p className="how-kicker">مسیر انجام کار</p>
+          <h2 id="how-title" className="section-title">از فایل کلاس تا رونوشت، در سه قدم.</h2>
           <p className="section-description">گاماس یک ربات تلگرامی است؛ فایل را همان‌جا می‌فرستی و نتیجه را همان‌جا می‌گیری.</p>
         </div>
 
         <div className="how-layout">
-          <ol className="steps-list">
+          <ol className="steps-list" aria-label="سه گام کار با ربات گاماس" role="list">
             {steps.map((step) => (
               <li key={step.n} className="step-card">
-                <span className="step-number">{step.n}</span>
-                <span className="step-icon"><Icon name={step.icon} size={22} /></span>
+                <span className="step-number" aria-hidden="true">{step.n}</span>
                 <div className="step-content">
-                  <h3>{step.title}</h3>
+                  <div className="step-heading">
+                    <span className="step-icon" aria-hidden="true"><Icon name={step.icon} size={19} /></span>
+                    <h3>{step.title}</h3>
+                  </div>
                   <p>
                     {step.desc.split(BOT_HANDLE).map((part, index) => (
                       <span key={`${step.n}-${index}`}>
@@ -57,8 +60,8 @@ export default function HowItWorks() {
           <figure className="waveform-visual">
             <StudyArtwork variant="process" />
             <figcaption className="waveform-visual-caption">
-              <span className="waveform-caption-icon"><Icon name="audio" size={18} /></span>
-              گفتار کلاس به متن فارسی تبدیل می‌شود
+              <span className="waveform-caption-icon" aria-hidden="true"><Icon name="audio" size={17} /></span>
+              <span>گفتار کلاس به رونوشت فارسی می‌رسد</span>
             </figcaption>
           </figure>
         </div>
